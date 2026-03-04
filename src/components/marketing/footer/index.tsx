@@ -17,6 +17,9 @@ export const Footer: React.FC<FooterProps> = (props) => {
           <span className="text-sm font-semibold">{t("anchr")}</span>
         </div>
         <div className="flex items-center gap-6">
+          <Link className="text-xs transition-colors" href="/pricing" style={{ color: `rgb(var(--m-muted) / 0.4)` }}>
+            {t("pricing")}
+          </Link>
           <Link
             className="text-xs transition-colors"
             href="/legal/privacy"
