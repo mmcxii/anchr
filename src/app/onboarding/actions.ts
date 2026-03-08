@@ -3,10 +3,10 @@
 import { db } from "@/lib/db/client";
 import { linksTable } from "@/lib/db/schema/link";
 import { usersTable } from "@/lib/db/schema/user";
+import { linkSchema } from "@/lib/schemas/link";
 import { usernameSchema } from "@/lib/schemas/username";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq, ne, sql } from "drizzle-orm";
-import { z } from "zod";
 
 export type CheckUsernameResult = {
   available: boolean;
@@ -75,11 +75,6 @@ export async function updateUsername(username: string): Promise<UpdateUsernameRe
   return { success: true };
 }
 
-const addLinkSchema = z.object({
-  title: z.string().min(1).max(100),
-  url: z.url(),
-});
-
 export type AddLinkResult = {
   error?: string;
   success: boolean;
@@ -92,7 +87,7 @@ export async function addFirstLink(title: string, url: string): Promise<AddLinkR
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
-  const result = addLinkSchema.safeParse({ title, url });
+  const result = linkSchema.safeParse({ title, url });
 
   if (!result.success) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
