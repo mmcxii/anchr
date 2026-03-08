@@ -1,10 +1,12 @@
 "use server";
 
 import { db } from "@/lib/db/client";
+import { linksTable } from "@/lib/db/schema/link";
 import { usersTable } from "@/lib/db/schema/user";
 import { usernameSchema } from "@/lib/schemas/username";
 import { auth } from "@clerk/nextjs/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
+import { z } from "zod";
 
 export type CheckUsernameResult = {
   available: boolean;
@@ -65,11 +67,83 @@ export async function updateUsername(username: string): Promise<UpdateUsernameRe
   await db
     .update(usersTable)
     .set({
-      onboardingComplete: true,
       updatedAt: new Date(),
       username: result.data,
     })
     .where(eq(usersTable.id, userId));
+
+  return { success: true };
+}
+
+const addLinkSchema = z.object({
+  title: z.string().min(1).max(100),
+  url: z.url(),
+});
+
+export type AddLinkResult = {
+  error?: string;
+  success: boolean;
+};
+
+export async function addFirstLink(title: string, url: string): Promise<AddLinkResult> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const result = addLinkSchema.safeParse({ title, url });
+
+  if (!result.success) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const maxPosition = await db
+    .select({ max: sql<number>`coalesce(max(${linksTable.position}), -1)` })
+    .from(linksTable)
+    .where(eq(linksTable.userId, userId));
+
+  await db.insert(linksTable).values({
+    position: (maxPosition[0]?.max ?? -1) + 1,
+    title: result.data.title,
+    url: result.data.url,
+    userId,
+  });
+
+  return { success: true };
+}
+
+const VALID_THEMES = ["minimal", "stateroom", "obsidian", "seafoam"] as const;
+
+export type UpdateThemeResult = {
+  error?: string;
+  success: boolean;
+};
+
+export async function updateTheme(theme: string): Promise<UpdateThemeResult> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (!VALID_THEMES.includes(theme as (typeof VALID_THEMES)[number])) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  await db.update(usersTable).set({ theme, updatedAt: new Date() }).where(eq(usersTable.id, userId));
+
+  return { success: true };
+}
+
+export async function completeOnboarding(): Promise<{ success: boolean }> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { success: false };
+  }
+
+  await db.update(usersTable).set({ onboardingComplete: true, updatedAt: new Date() }).where(eq(usersTable.id, userId));
 
   return { success: true };
 }
