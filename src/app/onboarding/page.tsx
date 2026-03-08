@@ -18,7 +18,9 @@ const OnboardingPage: React.FC = async () => {
 
   return (
     <div className="bg-background text-foreground flex min-h-dvh items-center justify-center p-6">
-      <OnboardingForm defaultUsername={user.username} />
+      <React.Suspense>
+        <OnboardingForm defaultUsername={user.username} />
+      </React.Suspense>
     </div>
   );
 };
