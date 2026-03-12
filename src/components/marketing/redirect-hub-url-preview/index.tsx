@@ -1,19 +1,16 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-
-// All exactly 6 characters — monospace font keeps the handle segment width stable
-const HANDLES = ["calvin", "marina", "alexis", "oliver", "jordan"];
-const PLATFORMS = ["instagram", "youtube", "tiktok", "linkedin", "x", "nostr"];
+import * as React from "react";
+import { HANDLES, PLATFORMS } from "./constants";
 
 export const RedirectHubUrlPreview: React.FC = () => {
-  const [handleIdx, setHandleIdx] = useState(0);
-  const [platformIdx, setPlatformIdx] = useState(0);
-  const [hidden, setHidden] = useState<null | "handle" | "platform">(null);
-  const turn = useRef<"handle" | "platform">("platform");
+  const [handleIdx, setHandleIdx] = React.useState(0);
+  const [platformIdx, setPlatformIdx] = React.useState(0);
+  const [hidden, setHidden] = React.useState<null | "handle" | "platform">(null);
+  const turn = React.useRef<"handle" | "platform">("platform");
 
-  useEffect(() => {
+  React.useEffect(() => {
     const id = setInterval(() => {
       const next = turn.current;
       setHidden(next);

@@ -3,6 +3,7 @@
 import { SiteLogo } from "@/components/marketing/site-logo";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 export type DashboardErrorPageProps = {
@@ -12,7 +13,7 @@ export type DashboardErrorPageProps = {
 
 const DashboardErrorPage: React.FC<DashboardErrorPageProps> = (props) => {
   const { reset } = props;
-  const [t] = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-24" data-marketing-theme="dark">

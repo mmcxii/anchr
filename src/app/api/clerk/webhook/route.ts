@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     case "user.deleted": {
       const { id } = event.data;
 
-      if (id) {
+      if (id != null) {
         await db.delete(usersTable).where(eq(usersTable.id, id));
       }
 

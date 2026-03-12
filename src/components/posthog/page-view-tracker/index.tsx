@@ -11,7 +11,7 @@ export const PageViewTracker: React.FC = () => {
 
   //* Effects
   React.useEffect(() => {
-    if (pathname && posthogClient) {
+    if (pathname != null && posthogClient) {
       let url = window.origin + pathname;
       if (searchParams.toString()) {
         url = url + "?" + searchParams.toString();

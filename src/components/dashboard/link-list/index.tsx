@@ -1,9 +1,34 @@
 "use client";
 
-import { deleteLink } from "@/app/(dashboard)/dashboard/actions";
+import { deleteLink, reorderLinks } from "@/app/(dashboard)/dashboard/actions";
 import { LinkForm } from "@/components/dashboard/link-form";
+import { SortableLinkCard } from "@/components/dashboard/sortable-link-card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { linksTable } from "@/lib/db/schema/link";
-import { ExternalLink, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Link2, Loader2, Plus } from "lucide-react";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -18,47 +43,90 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
 
   //* State
   const { t } = useTranslation();
-  const [showAddForm, setShowAddForm] = React.useState(false);
-  const [editingId, setEditingId] = React.useState<null | string>(null);
-  const [deletingId, setDeletingId] = React.useState<null | string>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const [dialogMode, setDialogMode] = React.useState<null | "add" | "edit">(null);
+  const [dialogKey, setDialogKey] = React.useState(0);
+  const [editingLink, setEditingLink] = React.useState<null | LinkItem>(null);
+  const [deletingLink, setDeletingLink] = React.useState<null | LinkItem>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [orderedLinks, setOrderedLinks] = React.useState<LinkItem[]>(links);
 
   //* Handlers
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
-    await deleteLink(id);
-    setDeletingId(null);
+  const handleOpenAdd = () => {
+    setEditingLink(null);
+    setDialogKey((k) => k + 1);
+    setDialogMode("add");
   };
 
-  const handleAddSuccess = () => {
-    setShowAddForm(false);
+  const handleOpenEdit = (link: LinkItem) => {
+    setEditingLink(link);
+    setDialogKey((k) => k + 1);
+    setDialogMode("edit");
   };
 
-  const handleEditSuccess = () => {
-    setEditingId(null);
+  const handleDialogSuccess = () => {
+    setDialogMode(null);
+    setEditingLink(null);
   };
+
+  const handleDialogCancel = () => {
+    setDialogMode(null);
+    setEditingLink(null);
+  };
+
+  const handleOpenDelete = (link: LinkItem) => {
+    setDeletingLink(link);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingLink == null) {
+      return;
+    }
+
+    setIsDeleting(true);
+    await deleteLink(deletingLink.id);
+    setIsDeleting(false);
+    setDeletingLink(null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = orderedLinks.findIndex((l) => l.id === active.id);
+    const newIndex = orderedLinks.findIndex((l) => l.id === over.id);
+    const reordered = arrayMove(orderedLinks, oldIndex, newIndex);
+
+    // Optimistic update
+    setOrderedLinks(reordered);
+
+    const items = reordered.map((link, index) => ({ id: link.id, position: index }));
+    await reorderLinks(items);
+  };
+
+  //* Effects
+  React.useEffect(() => {
+    setOrderedLinks(links);
+  }, [links]);
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-foreground text-lg font-semibold">{t("links")}</h1>
-        {!showAddForm && (
-          <button
-            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-            onClick={() => setShowAddForm(true)}
-            type="button"
-          >
-            <Plus className="size-4" />
-            {t("addLink")}
-          </button>
-        )}
+        <Button onClick={handleOpenAdd} size="sm" type="button" variant="primary">
+          <Plus className="size-4" />
+          {t("addLink")}
+        </Button>
       </div>
 
-      {/* Add form */}
-      {showAddForm && <LinkForm onCancel={() => setShowAddForm(false)} onSuccess={handleAddSuccess} />}
-
       {/* Empty state */}
-      {links.length === 0 && !showAddForm && (
+      {orderedLinks.length === 0 && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 py-24">
           <div className="bg-muted flex size-14 items-center justify-center rounded-full">
             <Link2 className="text-muted-foreground size-6" />
@@ -71,60 +139,66 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
       )}
 
       {/* Link list */}
-      {links.length > 0 && (
-        <ul className="flex flex-col gap-2">
-          {links.map((link) => {
-            if (editingId === link.id) {
-              return (
-                <li key={link.id}>
-                  <LinkForm
-                    defaultValues={{ id: link.id, title: link.title, url: link.url }}
-                    onCancel={() => setEditingId(null)}
-                    onSuccess={handleEditSuccess}
-                  />
-                </li>
-              );
-            }
-
-            return (
-              <li className="bg-card border-border flex items-center gap-4 rounded-lg border px-4 py-3" key={link.id}>
-                <div className="min-w-0 flex-1">
-                  <p className="text-card-foreground truncate text-sm font-medium">{link.title}</p>
-                  <a
-                    className="text-muted-foreground flex items-center gap-1 truncate text-xs hover:underline"
-                    href={link.url}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <ExternalLink className="size-3 shrink-0" />
-                    {link.url}
-                  </a>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    aria-label={t("editLink")}
-                    className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-2 transition-colors"
-                    onClick={() => setEditingId(link.id)}
-                    type="button"
-                  >
-                    <Pencil className="size-4" />
-                  </button>
-                  <button
-                    aria-label={t("deleteLink")}
-                    className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-md p-2 transition-colors disabled:opacity-50"
-                    disabled={deletingId === link.id}
-                    onClick={() => handleDelete(link.id)}
-                    type="button"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+      {orderedLinks.length > 0 && (
+        <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
+          <SortableContext items={orderedLinks.map((l) => l.id)} strategy={verticalListSortingStrategy}>
+            <ul className="flex flex-col gap-2">
+              {orderedLinks.map((link) => (
+                <SortableLinkCard key={link.id} link={link} onDelete={handleOpenDelete} onEdit={handleOpenEdit} />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
       )}
+
+      {/* Add / Edit Dialog */}
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) {
+            handleDialogCancel();
+          }
+        }}
+        open={dialogMode !== null}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogMode === "edit" ? t("editLink") : t("addLink")}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {dialogMode === "edit" ? t("editLink") : t("addLink")}
+            </DialogDescription>
+          </DialogHeader>
+          <LinkForm
+            defaultValues={
+              editingLink != null ? { id: editingLink.id, title: editingLink.title, url: editingLink.url } : undefined
+            }
+            key={dialogKey}
+            onSuccess={handleDialogSuccess}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingLink(null);
+          }
+        }}
+        open={deletingLink !== null}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("deleteLink")}</DialogTitle>
+            <DialogDescription>{t("areYouSureYouWantToDeleteThisLinkThisActionCannotBeUndone")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button disabled={isDeleting} onClick={handleConfirmDelete} variant="tertiary">
+              {isDeleting != null && <Loader2 className="size-3.5 animate-spin" />}
+              {t("delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

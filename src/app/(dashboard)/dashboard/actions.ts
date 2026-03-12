@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { linksTable } from "@/lib/db/schema/link";
 import { linkSchema } from "@/lib/schemas/link";
 import { auth } from "@clerk/nextjs/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export type ActionResult = {
@@ -15,7 +15,7 @@ export type ActionResult = {
 export async function createLink(title: string, url: string): Promise<ActionResult> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
@@ -45,7 +45,7 @@ export async function createLink(title: string, url: string): Promise<ActionResu
 export async function updateLink(id: string, title: string, url: string): Promise<ActionResult> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
@@ -69,10 +69,52 @@ export async function updateLink(id: string, title: string, url: string): Promis
   return { success: true };
 }
 
+export async function reorderLinks(items: { id: string; position: number }[]): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (items.length === 0) {
+    return { success: true };
+  }
+
+  const ids = items.map((item) => item.id);
+
+  // Verify ownership of all links
+  const owned = await db
+    .select({ id: linksTable.id })
+    .from(linksTable)
+    .where(and(inArray(linksTable.id, ids), eq(linksTable.userId, userId)));
+
+  if (owned.length !== ids.length) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  // Build CASE WHEN for atomic position update
+  const sqlChunks = [sql`CASE`];
+  for (const item of items) {
+    sqlChunks.push(sql`WHEN ${linksTable.id} = ${item.id} THEN ${item.position}`);
+  }
+  sqlChunks.push(sql`ELSE ${linksTable.position} END`);
+
+  const caseStatement = sql.join(sqlChunks, sql` `);
+
+  await db
+    .update(linksTable)
+    .set({ position: caseStatement })
+    .where(and(inArray(linksTable.id, ids), eq(linksTable.userId, userId)));
+
+  revalidatePath("/dashboard");
+
+  return { success: true };
+}
+
 export async function deleteLink(id: string): Promise<ActionResult> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 

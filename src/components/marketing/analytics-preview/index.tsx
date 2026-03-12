@@ -1,69 +1,23 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-// ─── Analytics preview ────────────────────────────────────────────────────────
-
-const TOP_LINKS = [
-  { clicks: 847, label: "Master Video Editing" },
-  { clicks: 612, label: "YouTube Channel" },
-  { clicks: 341, label: "Book a Call" },
-];
-
-// Catmull-Rom → cubic bezier (α=1/6). Every data point sits exactly on the curve.
-const CHART_LINE = [
-  "M 0 29.76",
-  "C 7.78 28.40, 31.11 24.32, 46.67 21.6",
-  "C 62.23 18.88, 77.77 13.84, 93.33 13.44",
-  "C 108.89 13.04, 124.44 21.44, 140 19.2",
-  "C 155.56 16.96, 171.11 1.92, 186.67 0",
-  "C 202.23 0, 217.77 3.36, 233.33 7.68",
-  "C 248.89 12.0, 272.22 22.88, 280 25.92",
-].join(" ");
-
-const CHART_AREA = `${CHART_LINE} L 280 48 L 0 48 Z`;
-const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
-const PEAK_IDX = 4;
-
-type ProgressBarProps = {
-  clicks: number;
-  index: number;
-  maxClicks: number;
-  triggered: boolean;
-};
-
-const ProgressBar: React.FC<ProgressBarProps> = ({ clicks, index, maxClicks, triggered }) => {
-  const barRef = useCallback(
-    (el: null | HTMLDivElement) => {
-      if (!el) {
-        return;
-      }
-      const opacity = 0.65 - index * 0.18;
-      el.style.setProperty("background", `rgb(var(--m-accent) / ${opacity})`);
-      el.style.setProperty("transition", "width 0.7s ease");
-      el.style.setProperty("transition-delay", triggered ? `${400 + index * 150}ms` : "0ms");
-      el.style.setProperty("width", triggered ? `${(clicks / maxClicks) * 100}%` : "0%");
-    },
-    [clicks, index, maxClicks, triggered],
-  );
-
-  return <div className="h-full rounded-full" ref={barRef} />;
-};
+import * as React from "react";
+import { CHART_AREA, CHART_LINE, DAYS, PEAK_IDX, TOP_LINKS } from "./constants";
+import { ProgressBar } from "./progress-bar";
 
 export const AnalyticsPreview: React.FC = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [triggered, setTriggered] = useState(false);
-  const [count, setCount] = useState(0);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [triggered, setTriggered] = React.useState(false);
+  const [count, setCount] = React.useState(0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const el = ref.current;
-    if (!el) {
+    if (el == null) {
       return;
     }
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting != null) {
           setTriggered(true);
           observer.disconnect();
         }
@@ -74,7 +28,7 @@ export const AnalyticsPreview: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!triggered) {
       return;
     }

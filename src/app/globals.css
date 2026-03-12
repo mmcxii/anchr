@@ -170,6 +170,11 @@
   --m-wave-stroke: rgba(146, 176, 190, 0.18);
   --m-grain-opacity: 0.022;
   --m-shadow: 0 0 0;
+  /* Semantic overrides so shared UI components (Button, etc.) match the marketing theme */
+  --primary: var(--brand-gold);
+  --primary-foreground: var(--brand-deep-navy);
+  --muted-foreground: var(--brand-steel);
+  --ring: var(--brand-steel);
 }
 
 [data-marketing-theme="light"] {
@@ -181,6 +186,11 @@
   --m-card-bg: rgba(255, 252, 245, 0.7);
   --m-embed-bg: rgba(236, 224, 192, 0.4);
   --m-embed-bg-subtle: rgba(236, 224, 192, 0.25);
+  /* Semantic overrides so shared UI components (Button, etc.) match the marketing theme */
+  --primary: var(--brand-deep-navy);
+  --primary-foreground: var(--brand-cream);
+  --muted-foreground: var(--brand-umber);
+  --ring: var(--brand-brass);
   --m-accent-gradient: linear-gradient(to right, transparent, rgba(10, 23, 41, 0.18), transparent);
   --m-wave-stroke: rgba(168, 142, 88, 0.12);
   --m-grain-opacity: 0.018;

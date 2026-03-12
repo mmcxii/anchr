@@ -8,7 +8,8 @@ const vitestConfig = defineConfig({
     },
   },
   test: {
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "eslint/**/*.test.ts"],
+    testTimeout: 15000,
   },
 });
 

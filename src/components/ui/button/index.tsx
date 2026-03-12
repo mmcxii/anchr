@@ -4,7 +4,7 @@ import { Slot } from "radix-ui";
 import * as React from "react";
 
 export const buttonVariants = cva(
-  "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-[3px] focus-visible:ring-[rgb(var(--m-accent)/0.3)]",
+  "inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30",
   {
     defaultVariants: { size: "md", variant: "primary" },
     variants: {
@@ -14,11 +14,11 @@ export const buttonVariants = cva(
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
       },
       variant: {
-        primary: "bg-[rgb(var(--m-accent))] text-[var(--m-page-bg)] hover:opacity-90",
+        primary: "bg-primary text-primary-foreground hover:opacity-90",
         secondary:
-          "border border-[rgb(var(--m-accent)/0.4)] text-[rgb(var(--m-accent))] bg-transparent hover:bg-[rgb(var(--m-accent))] hover:text-[var(--m-page-bg)] hover:border-[rgb(var(--m-accent))]",
+          "border border-primary/40 text-primary bg-transparent hover:bg-primary hover:text-primary-foreground hover:border-primary",
         tertiary:
-          "bg-[rgb(var(--m-muted)/0.10)] text-[rgb(var(--m-muted)/0.7)] hover:bg-[rgb(var(--m-muted)/0.18)] hover:text-[rgb(var(--m-muted)/0.85)]",
+          "bg-muted-foreground/10 text-muted-foreground/70 hover:bg-muted-foreground/18 hover:text-muted-foreground/85",
       },
     },
   },
@@ -33,7 +33,7 @@ export const Button: React.FC<ButtonProps> = (props) => {
   const { asChild = false, className, size = "md", variant = "primary", ...rest } = props;
 
   //* Variables
-  const Comp = asChild ? Slot.Root : "button";
+  const Comp = asChild != null ? Slot.Root : "button";
 
   return (
     <Comp
