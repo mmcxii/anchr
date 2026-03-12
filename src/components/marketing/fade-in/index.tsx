@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useRef, useState } from "react";
+import * as React from "react";
 
 type FadeInProps = {
   children: React.ReactNode;
@@ -9,18 +9,20 @@ type FadeInProps = {
   delay?: number; // ms animation delay
 };
 
-export const FadeIn: React.FC<FadeInProps> = ({ children, className, delay = 0 }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+export const FadeIn: React.FC<FadeInProps> = (props) => {
+  const { children, className, delay = 0 } = props;
 
-  useEffect(() => {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
     const el = ref.current;
-    if (!el) {
+    if (el == null) {
       return;
     }
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting != null) {
           setVisible(true);
           observer.disconnect();
         }
@@ -31,9 +33,9 @@ export const FadeIn: React.FC<FadeInProps> = ({ children, className, delay = 0 }
     return () => observer.disconnect();
   }, []);
 
-  const delayRef = useCallback(
+  const delayRef = React.useCallback(
     (el: null | HTMLDivElement) => {
-      if (!el) {
+      if (el == null) {
         return;
       }
       ref.current = el;

@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { Anchor } from "lucide-react";
-import { useCallback } from "react";
+import * as React from "react";
+import { SIZE_MAP } from "./constants";
 
 export type SiteLogoProps = {
   /** RGB triplet override, e.g. "212 184 150". Falls back to --m-accent. */
@@ -10,23 +11,17 @@ export type SiteLogoProps = {
   /** CSS color override for the background. Falls back to --m-card-bg. */
   cardBg?: string;
   className?: string;
-  size?: "4xl" | "lg" | "md" | "sm" | "xl";
+  size?: "4xl" | "lg" | "md" | "sm" | "xl" | "xs";
 };
 
-const sizeMap = {
-  "4xl": { icon: "size-40", inner: "inset-[16px]", outer: "size-80", strokeWidth: 0.75 },
-  lg: { icon: "size-11", inner: "inset-[6px]", outer: "size-28", strokeWidth: 1.25 },
-  md: { icon: "size-9", inner: "inset-[5px]", outer: "size-20", strokeWidth: 1.5 },
-  sm: { icon: "size-6", inner: "inset-[4px]", outer: "size-14", strokeWidth: 1.5 },
-  xl: { icon: "size-16", inner: "inset-[8px]", outer: "size-40", strokeWidth: 1 },
-};
+export const SiteLogo: React.FC<SiteLogoProps> = (props) => {
+  const { accent, cardBg, className, size = "md" } = props;
 
-export const SiteLogo: React.FC<SiteLogoProps> = ({ accent, cardBg, className, size = "md" }) => {
-  const s = sizeMap[size];
+  const s = SIZE_MAP[size];
 
-  const outerRef = useCallback(
+  const outerRef = React.useCallback(
     (el: null | HTMLDivElement) => {
-      if (!el) {
+      if (el == null) {
         return;
       }
       el.style.setProperty("--_logo-a", accent ?? "var(--m-accent)");

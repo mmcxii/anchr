@@ -1,6 +1,6 @@
 "use client";
 
-import { joinWaitlist, type WaitlistState } from "@/app/(marketing)/actions";
+import { joinWaitlist } from "@/app/(marketing)/actions";
 import { SiteLogo } from "@/components/marketing/site-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,15 +13,14 @@ import { usePostHog } from "posthog-js/react";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-
-const initialState: WaitlistState = { success: false };
+import { INITIAL_STATE } from "./constants";
 
 export const WaitlistForm: React.FC = () => {
   //* State
   const { t } = useTranslation();
   const router = useRouter();
   const posthog = usePostHog();
-  const [serverState, setServerState] = React.useState(initialState);
+  const [serverState, setServerState] = React.useState(INITIAL_STATE);
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -30,27 +29,27 @@ export const WaitlistForm: React.FC = () => {
   } = useForm<WaitlistValues>({ resolver: standardSchemaResolver(waitlistSchema) });
 
   //* Variables
-  const showOverlay = isSubmitting || serverState.success;
+  const showOverlay = isSubmitting ?? serverState.success;
 
   //* Handlers
   const onSubmit = async (data: WaitlistValues) => {
     const formData = new FormData();
     formData.set("email", data.email);
 
-    const result = await joinWaitlist(initialState, formData);
+    const result = await joinWaitlist(INITIAL_STATE, formData);
     setServerState(result);
 
-    if (result.success) {
+    if (result.success != null) {
       posthog.capture("waitlist_signup");
       router.push("/welcome");
-    } else if (result.error) {
+    } else if (result.error != null) {
       setError("email", { message: t(result.error) });
     }
   };
 
   return (
     <>
-      {showOverlay && (
+      {showOverlay != null && (
         <div
           aria-label={t("joiningWaitlist")}
           className="m-waitlist-overlay fixed inset-0 z-50 flex items-center justify-center"
@@ -81,9 +80,9 @@ export const WaitlistForm: React.FC = () => {
           {...register("email")}
         />
         <Button className="shrink-0 font-semibold tracking-wide" disabled={isSubmitting} type="submit">
-          {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : t("joinTheWaitlist")}
+          {isSubmitting != null ? <Loader2 className="size-4 animate-spin" /> : t("joinTheWaitlist")}
         </Button>
-        {errors.email && (
+        {errors.email != null && (
           <p className="m-accent-color text-xs sm:absolute sm:top-full sm:mt-2">{errors.email.message}</p>
         )}
       </form>

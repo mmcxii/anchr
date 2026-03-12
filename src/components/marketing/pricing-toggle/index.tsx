@@ -1,37 +1,16 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
-import { useState } from "react";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { CARD_BASE, CARD_CLASSES, FREE_FEATURES, PRO_FEATURES } from "./constants";
+import { FeatureItem } from "./feature-item";
 
 type Interval = "annual" | "monthly";
 
-const cardBase =
-  "relative overflow-hidden rounded-2xl backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg";
-const cardClasses = "m-card-bg-bg m-card-border";
-const accentBar = <div className="m-accent-gradient-bg absolute inset-x-0 top-0 h-px" />;
-
-const FREE_FEATURES = ["upTo5Links", "anchrToUsernameUrl", "basicAnalytics", "fourThemes"] as const;
-
-const PRO_FEATURES = [
-  "unlimitedLinks",
-  "advancedAnalytics",
-  "customDomains",
-  "fullThemeCustomization",
-  "prioritySupport",
-] as const;
-
-const FeatureItem: React.FC<{ label: string }> = ({ label }) => (
-  <li className="flex items-center gap-3">
-    <Check className="m-accent-color size-4 shrink-0" />
-    <span className="m-muted-70">{label}</span>
-  </li>
-);
-
 export const PricingCards: React.FC = () => {
   const { t } = useTranslation();
-  const [interval, setInterval] = useState<Interval>("monthly");
+  const [interval, setInterval] = React.useState<Interval>("monthly");
 
   const pill = (value: Interval, label: string) => {
     const active = interval === value;
@@ -68,8 +47,8 @@ export const PricingCards: React.FC = () => {
 
       <div className="mx-auto grid max-w-3xl gap-6 sm:grid-cols-2">
         {/* Free card */}
-        <div className={cn(cardBase, cardClasses, "p-8")}>
-          {accentBar}
+        <div className={cn(CARD_BASE, CARD_CLASSES, "p-8")}>
+          <div className="m-accent-gradient-bg absolute inset-x-0 top-0 h-px" />
           <h3 className="mb-4 text-xl font-bold">{t("free")}</h3>
           <p className="m-muted-50 mb-6 text-sm">{t("youAreJustTestingTheWaters")}</p>
           <div className="mb-2 text-4xl font-bold">$0</div>
@@ -82,8 +61,8 @@ export const PricingCards: React.FC = () => {
         </div>
 
         {/* Pro card */}
-        <div className={cn(cardBase, "m-card-bg-bg m-card-border-2 p-8")}>
-          {accentBar}
+        <div className={cn(CARD_BASE, "m-card-bg-bg m-card-border-2 p-8")}>
+          <div className="m-accent-gradient-bg absolute inset-x-0 top-0 h-px" />
           <div className="mb-4 flex items-center gap-3">
             <h3 className="text-xl font-bold">{t("pro")}</h3>
             <span className="m-accent-12-bg m-accent-color rounded-full px-3 py-1 text-xs font-semibold">

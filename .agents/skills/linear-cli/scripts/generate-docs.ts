@@ -58,15 +58,15 @@ function parseCommands(helpText: string): string[] {
       inCommands = true;
       continue;
     }
-    if (inCommands) {
+    if (inCommands != null) {
       // Command lines look like: "  command, alias  - Description"
       // or: "  command  <arg>  - Description"
       // Capture command name (stopping at comma or whitespace)
       const match = line.match(/^\s{2}([a-z][-a-z]*)(?:,|\s)/);
-      if (match) {
+      if (match != null) {
         commands.push(match[1]);
         foundAnyCommand = true;
-      } else if (foundAnyCommand && line.trim() === "") {
+      } else if (foundAnyCommand != null && line.trim() === "") {
         // Empty line after we've found commands means end of section
         break;
       }
@@ -80,7 +80,7 @@ function parseCommands(helpText: string): string[] {
 async function getCommandHelp(cmdPath: string[]): Promise<string> {
   const result = await run(["linear", ...cmdPath, "--help"]);
   if (!result.success) {
-    return result.stderr || "Command help not available";
+    return result.stderr ?? "Command help not available";
   }
   return stripAnsi(result.stdout);
 }
@@ -91,7 +91,7 @@ async function discoverCommand(cmdPath: string[]): Promise<CommandInfo> {
 
   // Extract description from help text
   const descMatch = help.match(/Description:\s*\n\s*(.+)/);
-  const description = descMatch ? descMatch[1].trim() : "";
+  const description = descMatch != null ? descMatch[1].trim() : "";
 
   // Find subcommands
   const subcommandNames = parseCommands(help);
@@ -149,7 +149,7 @@ function generateCommandDoc(cmd: CommandInfo): string {
       lines.push("");
       lines.push(`### ${subName}`);
       lines.push("");
-      if (sub.description) {
+      if (sub.description != null) {
         lines.push(`> ${sub.description}`);
         lines.push("");
       }
@@ -180,10 +180,12 @@ function generateCommandDoc(cmd: CommandInfo): string {
 
 async function getLinearVersion(): Promise<string> {
   const result = await run(["linear", "--version"]);
-  if (!result.success) return "unknown";
+  if (!result.success) {
+    return "unknown";
+  }
   // Parse "1.7.0" from version output
   const match = stripAnsi(result.stdout).match(/(\d+\.\d+\.\d+)/);
-  return match ? match[1] : "unknown";
+  return match != null ? match[1] : "unknown";
 }
 
 async function main() {

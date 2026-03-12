@@ -91,7 +91,7 @@ export const SignUpForm: React.FC = () => {
     }
   };
 
-  if (verifying) {
+  if (verifying != null) {
     return (
       <Card className="h-full w-full items-center gap-0 rounded-none pt-8 pb-8" variant="featured">
         <div className="flex flex-col items-center">
@@ -117,17 +117,17 @@ export const SignUpForm: React.FC = () => {
                 type="text"
                 {...verifyForm.register("code")}
               />
-              {verifyForm.formState.errors.code && (
+              {verifyForm.formState.errors.code != null && (
                 <p className="text-xs text-[rgb(var(--m-accent))]">{verifyForm.formState.errors.code.message}</p>
               )}
             </div>
-            {verifyForm.formState.errors.root && (
+            {verifyForm.formState.errors.root != null && (
               <p className="text-center text-xs text-[rgb(var(--m-accent))]">
                 {verifyForm.formState.errors.root.message}
               </p>
             )}
             <Button className="w-full" disabled={verifyForm.formState.isSubmitting} type="submit">
-              {verifyForm.formState.isSubmitting ? <Loader2 className="size-4 animate-spin" /> : t("verify")}
+              {verifyForm.formState.isSubmitting != null ? <Loader2 className="size-4 animate-spin" /> : t("verify")}
             </Button>
           </form>
           <Button
@@ -169,7 +169,7 @@ export const SignUpForm: React.FC = () => {
               type="email"
               {...signUpForm.register("email")}
             />
-            {signUpForm.formState.errors.email && (
+            {signUpForm.formState.errors.email != null && (
               <p className="text-xs text-[rgb(var(--m-accent))]">{signUpForm.formState.errors.email.message}</p>
             )}
           </div>
@@ -185,17 +185,17 @@ export const SignUpForm: React.FC = () => {
               type="password"
               {...signUpForm.register("password")}
             />
-            {signUpForm.formState.errors.password && (
+            {signUpForm.formState.errors.password != null && (
               <p className="text-xs text-[rgb(var(--m-accent))]">{signUpForm.formState.errors.password.message}</p>
             )}
           </div>
-          {signUpForm.formState.errors.root && (
+          {signUpForm.formState.errors.root != null && (
             <p className="text-center text-xs text-[rgb(var(--m-accent))]">
               {signUpForm.formState.errors.root.message}
             </p>
           )}
           <Button className="w-full" disabled={!isLoaded || signUpForm.formState.isSubmitting} type="submit">
-            {signUpForm.formState.isSubmitting ? <Loader2 className="size-4 animate-spin" /> : t("continue")}
+            {signUpForm.formState.isSubmitting != null ? <Loader2 className="size-4 animate-spin" /> : t("continue")}
           </Button>
           <div className="-mt-4" id="clerk-captcha" />
         </form>

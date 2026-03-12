@@ -103,7 +103,7 @@ export const SignInForm: React.FC = () => {
               type="email"
               {...register("email")}
             />
-            {errors.email && <p className="text-xs text-[rgb(var(--m-accent))]">{errors.email.message}</p>}
+            {errors.email != null && <p className="text-xs text-[rgb(var(--m-accent))]">{errors.email.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-[rgb(var(--m-text))]" htmlFor="password">
@@ -117,11 +117,15 @@ export const SignInForm: React.FC = () => {
               type="password"
               {...register("password")}
             />
-            {errors.password && <p className="text-xs text-[rgb(var(--m-accent))]">{errors.password.message}</p>}
+            {errors.password != null && (
+              <p className="text-xs text-[rgb(var(--m-accent))]">{errors.password.message}</p>
+            )}
           </div>
-          {errors.root && <p className="text-center text-xs text-[rgb(var(--m-accent))]">{errors.root.message}</p>}
+          {errors.root != null && (
+            <p className="text-center text-xs text-[rgb(var(--m-accent))]">{errors.root.message}</p>
+          )}
           <Button className="w-full" disabled={!isLoaded || isSubmitting} type="submit">
-            {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : t("continue")}
+            {isSubmitting != null ? <Loader2 className="size-4 animate-spin" /> : t("continue")}
           </Button>
         </form>
       </CardContent>

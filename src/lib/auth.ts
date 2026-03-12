@@ -9,7 +9,7 @@ export type SessionUser = typeof usersTable.$inferSelect;
 export async function getCurrentUser(): Promise<null | SessionUser> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return null;
   }
 
@@ -21,7 +21,7 @@ export async function getCurrentUser(): Promise<null | SessionUser> {
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
 
-  if (!user) {
+  if (user == null) {
     redirect("/sign-in");
   }
 

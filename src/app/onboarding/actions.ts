@@ -15,7 +15,7 @@ export type CheckUsernameResult = {
 export async function checkUsernameAvailability(username: string): Promise<CheckUsernameResult> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { available: false };
   }
 
@@ -44,7 +44,7 @@ export type UpdateUsernameResult = {
 export async function updateUsername(username: string): Promise<UpdateUsernameResult> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
@@ -83,7 +83,7 @@ export type AddLinkResult = {
 export async function addFirstLink(title: string, url: string): Promise<AddLinkResult> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
@@ -118,7 +118,7 @@ export type UpdateThemeResult = {
 export async function updateTheme(theme: string): Promise<UpdateThemeResult> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
@@ -134,7 +134,7 @@ export async function updateTheme(theme: string): Promise<UpdateThemeResult> {
 export async function completeOnboarding(): Promise<{ success: boolean }> {
   const { userId } = await auth();
 
-  if (!userId) {
+  if (userId == null) {
     return { success: false };
   }
 

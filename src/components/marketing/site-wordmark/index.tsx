@@ -1,16 +1,17 @@
 import { cn } from "@/lib/utils";
+import { SIZE_MAP } from "./constants";
 
 export type SiteWordmarkProps = {
-  size?: "lg" | "md" | "sm" | "xl";
+  className?: string;
+  size?: "lg" | "md" | "sm" | "xl" | "xs";
 };
 
-const sizeMap = {
-  lg: "text-3xl tracking-[0.55em]",
-  md: "text-xl tracking-[0.55em]",
-  sm: "text-lg tracking-[0.45em]",
-  xl: "text-4xl tracking-[0.55em]",
-};
+export const SiteWordmark: React.FC<SiteWordmarkProps> = (props) => {
+  const { className, size = "md" } = props;
 
-export const SiteWordmark: React.FC<SiteWordmarkProps> = ({ size = "md" }) => {
-  return <span className={cn("m-accent-color font-bold uppercase", sizeMap[size])}>Anchr</span>;
+  return (
+    <span className={cn("font-bold uppercase", { "m-accent-color": !className }, className, SIZE_MAP[size])}>
+      Anchr
+    </span>
+  );
 };

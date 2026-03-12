@@ -1,9 +1,13 @@
+import { type ESLint } from "eslint";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import pluginImport from "eslint-plugin-import";
 import { defineConfig, globalIgnores } from "eslint/config";
 import { noInlineStyle } from "./eslint/no-inline-style.js";
 import { noJsxWhitespaceLiteral } from "./eslint/no-jsx-whitespace-literal.js";
+import { preferNullishCheck } from "./eslint/prefer-nullish-check.js";
+import { reactStyleGuide } from "./eslint/react-style-guide.js";
+import { singleComponentPerFile } from "./eslint/single-component-per-file.js";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -23,13 +27,17 @@ const eslintConfig = defineConfig([
         rules: {
           "no-inline-style": noInlineStyle,
           "no-jsx-whitespace-literal": noJsxWhitespaceLiteral,
+          "prefer-nullish-check": preferNullishCheck,
+          "react-style-guide": reactStyleGuide,
+          "single-component-per-file": singleComponentPerFile,
         },
-      },
+      } as unknown as ESLint.Plugin,
       import: pluginImport,
     },
     rules: {
       "anchr/no-inline-style": "error",
       "anchr/no-jsx-whitespace-literal": "error",
+      "anchr/react-style-guide": "error",
       curly: ["error", "all"],
       "import/no-default-export": "error",
       "import/order": [
@@ -62,6 +70,31 @@ const eslintConfig = defineConfig([
           selector: "JSXAttribute[name.name='className'] > JSXExpressionContainer > TemplateLiteral",
         },
       ],
+    },
+  },
+
+  // Type-aware rules (requires TypeScript type checker)
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    ignores: [".agents/**"],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      "anchr/prefer-nullish-check": "error",
+    },
+  },
+
+  // Enforce one component per file (excluding UI primitives)
+  {
+    files: ["src/components/**/*.tsx", "src/hooks/**/*.{ts,tsx}"],
+    ignores: ["src/components/ui/**"],
+    rules: {
+      "anchr/single-component-per-file": "error",
     },
   },
 

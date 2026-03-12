@@ -1,40 +1,26 @@
 "use client";
 
 import { posthogClient } from "@/lib/posthog";
-import { useCallback, useSyncExternalStore } from "react";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
-
-const STORAGE_KEY = "cookie-consent";
-
-function getSnapshot(): null | string {
-  return localStorage.getItem(STORAGE_KEY);
-}
-
-function getServerSnapshot(): null | string {
-  return "pending";
-}
-
-function subscribe(callback: () => void): () => void {
-  window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
-}
+import { STORAGE_KEY, getServerSnapshot, getSnapshot, subscribe } from "./utils";
 
 export const CookieBanner: React.FC = () => {
   const { t } = useTranslation();
-  const consent = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const consent = React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  const accept = useCallback(() => {
+  const accept = React.useCallback(() => {
     localStorage.setItem(STORAGE_KEY, "accepted");
     window.dispatchEvent(new StorageEvent("storage"));
   }, []);
 
-  const reject = useCallback(() => {
+  const reject = React.useCallback(() => {
     localStorage.setItem(STORAGE_KEY, "rejected");
     posthogClient?.opt_out_capturing();
     window.dispatchEvent(new StorageEvent("storage"));
   }, []);
 
-  if (consent) {
+  if (consent != null) {
     return null;
   }
 

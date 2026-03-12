@@ -2,7 +2,7 @@
 
 import { posthogClient } from "@/lib/posthog";
 import { PostHogProvider as PostHogProviderBase } from "posthog-js/react";
-import { Suspense } from "react";
+import * as React from "react";
 import { PageViewTracker } from "./page-view-tracker";
 
 export type PosthogProviderProps = React.PropsWithChildren;
@@ -16,9 +16,9 @@ export const PosthogProvider: React.FC<PosthogProviderProps> = (props) => {
 
   return (
     <PostHogProviderBase client={posthogClient}>
-      <Suspense fallback={null}>
+      <React.Suspense fallback={null}>
         <PageViewTracker />
-      </Suspense>
+      </React.Suspense>
       {children}
     </PostHogProviderBase>
   );
