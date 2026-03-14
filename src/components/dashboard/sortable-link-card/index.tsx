@@ -1,6 +1,7 @@
 "use client";
 
 import type { LinkItem } from "@/components/dashboard/link-list";
+import { Checkbox } from "@/components/ui/checkbox";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 import { useSortable } from "@dnd-kit/sortable";
@@ -11,13 +12,15 @@ import { useTranslation } from "react-i18next";
 
 export type SortableLinkCardProps = {
   link: LinkItem;
+  selected: boolean;
   onDelete: (link: LinkItem) => void;
   onEdit: (link: LinkItem) => void;
+  onSelect: (linkId: string) => void;
   onToggleVisibility: (link: LinkItem) => void;
 };
 
 export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
-  const { link, onDelete, onEdit, onToggleVisibility } = props;
+  const { link, onDelete, onEdit, onSelect, onToggleVisibility, selected } = props;
 
   //* State
   const { t } = useTranslation();
@@ -39,6 +42,13 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
       // eslint-disable-next-line anchr/no-inline-style -- dnd-kit requires dynamic transform/transition via inline style
       style={style}
     >
+      <Checkbox
+        aria-label={t("selectLink")}
+        checked={selected}
+        className="ml-1"
+        onCheckedChange={() => onSelect(link.id)}
+      />
+
       <button
         aria-label={t("reorder")}
         className="text-muted-foreground hover:text-foreground shrink-0 cursor-grab touch-none p-1 active:cursor-grabbing"

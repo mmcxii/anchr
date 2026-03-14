@@ -26,6 +26,7 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
+    reset,
     setError,
   } = useForm<LinkValues>({
     defaultValues: defaultValues != null ? { title: defaultValues.title, url: defaultValues.url } : undefined,
@@ -51,6 +52,22 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
     }
 
     onSuccess();
+  };
+
+  const handleSaveAndAddAnother = () => {
+    handleSubmit(async (data: LinkValues) => {
+      const url = ensureProtocol(data.url);
+
+      const result = await createLink(data.title, url);
+
+      if (!result.success) {
+        setError("root", { message: t(result.error ?? "somethingWentWrongPleaseTryAgain") });
+        return;
+      }
+
+      reset();
+      titleRef.current?.focus();
+    })();
   };
 
   //* Effects
@@ -80,11 +97,16 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
         {errors.url != null && <p className="text-destructive text-xs">{errors.url.message}</p>}
       </div>
       {errors.root != null && <p className="text-destructive text-center text-xs">{errors.root.message}</p>}
-      <div className="flex flex-col sm:flex-row sm:justify-start">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-start">
         <Button disabled={isSubmitting} type="submit" variant="primary">
           {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
           {t("save")}
         </Button>
+        {!isEditing && (
+          <Button disabled={isSubmitting} onClick={handleSaveAndAddAnother} type="button" variant="secondary">
+            {t("saveAndAddAnother")}
+          </Button>
+        )}
       </div>
     </form>
   );

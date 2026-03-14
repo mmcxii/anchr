@@ -132,6 +132,53 @@ export async function toggleLinkVisibility(id: string): Promise<ActionResult> {
   return { success: true };
 }
 
+export async function bulkDeleteLinks(ids: string[]): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (ids.length === 0) {
+    return { success: true };
+  }
+
+  const deleted = await db.delete(linksTable).where(and(inArray(linksTable.id, ids), eq(linksTable.userId, userId)));
+
+  if (deleted.rowCount !== ids.length) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  revalidatePath("/dashboard");
+
+  return { success: true };
+}
+
+export async function bulkUpdateVisibility(ids: string[], visible: boolean): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (ids.length === 0) {
+    return { success: true };
+  }
+
+  const updated = await db
+    .update(linksTable)
+    .set({ visible })
+    .where(and(inArray(linksTable.id, ids), eq(linksTable.userId, userId)));
+
+  if (updated.rowCount !== ids.length) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  revalidatePath("/dashboard");
+
+  return { success: true };
+}
+
 export async function deleteLink(id: string): Promise<ActionResult> {
   const { userId } = await auth();
 
