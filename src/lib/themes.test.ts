@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_THEME_ID, THEMES, THEME_IDS, getTheme, isValidThemeId } from "./themes";
+import {
+  DARK_THEME_IDS,
+  DARK_THEME_ID_LIST,
+  DEFAULT_THEME_ID,
+  LIGHT_THEME_ID_LIST,
+  THEMES,
+  THEME_IDS,
+  getTheme,
+  isDarkTheme,
+  isValidThemeId,
+} from "./themes";
 
 describe("getTheme", () => {
   it("returns the correct theme for a known ID", () => {
@@ -44,6 +54,59 @@ describe("isValidThemeId", () => {
   });
 });
 
+describe("isDarkTheme", () => {
+  it("returns true for dark theme IDs", () => {
+    //* Act
+    const results = DARK_THEME_ID_LIST.map((id) => isDarkTheme(id));
+
+    //* Assert
+    for (const result of results) {
+      expect(result).toBe(true);
+    }
+  });
+
+  it("returns false for light theme IDs", () => {
+    //* Act
+    const results = LIGHT_THEME_ID_LIST.map((id) => isDarkTheme(id));
+
+    //* Assert
+    for (const result of results) {
+      expect(result).toBe(false);
+    }
+  });
+});
+
+describe("theme lists", () => {
+  it("DARK_THEME_ID_LIST and LIGHT_THEME_ID_LIST are exhaustive", () => {
+    //* Act
+    const combined = [...DARK_THEME_ID_LIST, ...LIGHT_THEME_ID_LIST].sort();
+    const allIds = [...THEME_IDS].sort();
+
+    //* Assert
+    expect(combined).toEqual(allIds);
+  });
+
+  it("DARK_THEME_ID_LIST and LIGHT_THEME_ID_LIST are disjoint", () => {
+    //* Act
+    const overlap = DARK_THEME_ID_LIST.filter((id) => LIGHT_THEME_ID_LIST.includes(id));
+
+    //* Assert
+    expect(overlap).toEqual([]);
+  });
+
+  it("DARK_THEME_ID_LIST matches DARK_THEME_IDS set", () => {
+    //* Act
+    const listSize = DARK_THEME_ID_LIST.length;
+    const setSize = DARK_THEME_IDS.size;
+
+    //* Assert
+    expect(listSize).toBe(setSize);
+    for (const id of DARK_THEME_ID_LIST) {
+      expect(DARK_THEME_IDS.has(id)).toBe(true);
+    }
+  });
+});
+
 describe("theme completeness", () => {
   it("every theme has all required properties", () => {
     //* Arrange
@@ -54,7 +117,7 @@ describe("theme completeness", () => {
       "name",
       "nameColor",
       "ogBackground",
-      "preview",
+      "swatch",
     ];
 
     //* Act

@@ -24,7 +24,7 @@ export default async function UserOpenGraphImage(props: { params: Promise<Params
     return new Response(null, { status: 404 });
   }
 
-  const theme = getTheme(user.theme);
+  const theme = getTheme(user.pageDarkTheme);
   const bg = theme.ogBackground;
   const displayName = user.displayName ?? user.username;
 

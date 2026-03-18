@@ -10,7 +10,8 @@ const usersTable = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   displayName: text("display_name"),
   id: text("id").primaryKey(),
-  theme: text("theme").default("dark-depths").notNull(),
+  pageDarkTheme: text("page_dark_theme").default("dark-depths").notNull(),
+  pageLightTheme: text("page_light_theme").default("stateroom").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   username: text("username").unique().notNull(),
 });

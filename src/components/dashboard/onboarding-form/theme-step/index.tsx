@@ -1,11 +1,14 @@
-import { updateTheme } from "@/app/(dashboard)/dashboard/settings/actions";
+"use client";
+
+import { updatePageDarkTheme, updatePageLightTheme } from "@/app/(dashboard)/dashboard/settings/actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
+import { ThemeSwatch } from "@/components/dashboard/theme-swatch";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Check, Loader2, Palette } from "lucide-react";
+import { DARK_THEME_ID_LIST, LIGHT_THEME_ID_LIST, THEMES, type ThemeId } from "@/lib/themes";
+import { Loader2, Palette } from "lucide-react";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { ONBOARDING_THEMES } from "../utils";
+import { toast } from "sonner";
 
 export type ThemeStepProps = {
   onComplete: () => void;
@@ -15,25 +18,41 @@ export type ThemeStepProps = {
 export const ThemeStep: React.FC<ThemeStepProps> = (props) => {
   const { onComplete, onSkip } = props;
 
-  //* State
   const { t } = useTranslation();
   const [submitting, setSubmitting] = React.useState(false);
-  const [selectedTheme, setSelectedTheme] = React.useState("dark-depths");
+  const [selectedDark, setSelectedDark] = React.useState<ThemeId>("dark-depths");
+  const [selectedLight, setSelectedLight] = React.useState<ThemeId>("stateroom");
 
-  //* Handlers
   const handleSubmit = async () => {
     setSubmitting(true);
-    await updateTheme(selectedTheme);
-    await completeOnboarding();
-    setSubmitting(false);
-    onComplete();
+    try {
+      const [darkResult, lightResult] = await Promise.all([
+        updatePageDarkTheme(selectedDark),
+        updatePageLightTheme(selectedLight),
+      ]);
+      if (!darkResult.success || !lightResult.success) {
+        toast.error(t("somethingWentWrongPleaseTryAgain"));
+        return;
+      }
+      await completeOnboarding();
+      onComplete();
+    } catch {
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSkip = async () => {
     setSubmitting(true);
-    await completeOnboarding();
-    setSubmitting(false);
-    onSkip();
+    try {
+      await completeOnboarding();
+      onSkip();
+    } catch {
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -44,26 +63,35 @@ export const ThemeStep: React.FC<ThemeStepProps> = (props) => {
         <p className="text-muted-foreground text-sm">{t("youCanAlwaysChangeThisLater")}</p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {ONBOARDING_THEMES.map((theme) => (
-          <button
-            className={cn("flex items-center gap-4 rounded-lg border-2 p-4 text-left transition-colors", {
-              "border-border hover:border-muted-foreground/40": selectedTheme !== theme.id,
-              "border-primary": selectedTheme === theme.id,
-            })}
-            key={theme.id}
-            onClick={() => setSelectedTheme(theme.id)}
-            type="button"
-          >
-            <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-md border", theme.boxClass)}>
-              <span className={cn("text-xs font-bold", theme.letterClass)}>A</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{theme.label}</span>
-            </div>
-            {selectedTheme === theme.id && <Check className="text-primary ml-auto size-4" />}
-          </button>
-        ))}
+      <div className="space-y-4">
+        <div>
+          <p className="text-muted-foreground mb-2 text-sm font-medium">{t("darkTheme")}</p>
+          <div className="grid grid-cols-2 gap-3">
+            {DARK_THEME_ID_LIST.map((id) => (
+              <ThemeSwatch
+                isSelected={selectedDark === id}
+                key={id}
+                name={THEMES[id].name}
+                onClick={() => setSelectedDark(id)}
+                swatch={THEMES[id].swatch}
+              />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-muted-foreground mb-2 text-sm font-medium">{t("lightTheme")}</p>
+          <div className="grid grid-cols-2 gap-3">
+            {LIGHT_THEME_ID_LIST.map((id) => (
+              <ThemeSwatch
+                isSelected={selectedLight === id}
+                key={id}
+                name={THEMES[id].name}
+                onClick={() => setSelectedLight(id)}
+                swatch={THEMES[id].swatch}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2">

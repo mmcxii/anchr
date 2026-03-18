@@ -91,7 +91,7 @@
   --anc-tracking-wordmark-sm: 0.45em;
 }
 
-/* ── Theme: Stateroom (default) ─────────────────────────────────────────── */
+/* ── Theme: Stateroom (root default — fallback when inline script has not yet run) */
 
 :root,
 [data-theme="light"],
@@ -162,7 +162,7 @@
   --anc-theme-name-color: #18120a;
 }
 
-/* ── Theme: Dark Depths ─────────────────────────────────────────────────── */
+/* ── Theme: Dark Depths ────────────────────────────────────────────────── */
 
 [data-theme="dark"],
 [data-theme="dark-depths"] {
@@ -939,6 +939,7 @@
   box-shadow: 0 0 40px rgb(var(--_logo-a) / 0.08);
 }
 
+[data-theme="dark"] .site-logo,
 [data-theme="dark-depths"] .site-logo,
 [data-theme="obsidian"] .site-logo {
   --_logo-a: var(--m-accent, 212 184 150);
@@ -996,6 +997,28 @@
 @keyframes sway {
   0%, 100% { transform: rotate(-2deg); }
   50% { transform: rotate(2deg); }
+}
+
+/* ── Checkout celebration ─────────────────────────────────────────────── */
+
+@keyframes anchor-drop {
+  0% { transform: translateY(-40px) scale(0.6); opacity: 0; }
+  50% { transform: translateY(6px) scale(1.05); opacity: 1; }
+  70% { transform: translateY(-3px) scale(0.98); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes celebration-ring {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.anc-anchor-drop {
+  animation: anchor-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.anc-celebration-ring {
+  animation: celebration-ring 2.4s ease-out infinite;
 }
 
 @layer base {

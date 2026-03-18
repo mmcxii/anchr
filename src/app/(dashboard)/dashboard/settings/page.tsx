@@ -9,15 +9,29 @@ export const metadata: Metadata = {
   title: "Settings",
 };
 
-const SettingsPage: React.FC = async () => {
+type SettingsPageProps = {
+  searchParams: Promise<{ checkout?: string }>;
+};
+
+const SettingsPage: React.FC<SettingsPageProps> = async (props) => {
+  const { searchParams } = props;
+  const params = await searchParams;
+  const checkoutSuccess = params.checkout === "success";
+
   const user = await requireUser();
   const { t } = await initTranslations();
-  const themeId: ThemeId = isValidThemeId(user.theme) ? user.theme : "dark-depths";
+  const pageDarkThemeId: ThemeId = isValidThemeId(user.pageDarkTheme) ? user.pageDarkTheme : "dark-depths";
+  const pageLightThemeId: ThemeId = isValidThemeId(user.pageLightTheme) ? user.pageLightTheme : "stateroom";
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">{t("settings")}</h1>
-      <SettingsContent currentThemeId={themeId} user={user} />
+      <SettingsContent
+        checkoutSuccess={checkoutSuccess}
+        pageDarkThemeId={pageDarkThemeId}
+        pageLightThemeId={pageLightThemeId}
+        user={user}
+      />
     </div>
   );
 };

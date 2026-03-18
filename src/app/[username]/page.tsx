@@ -2,11 +2,12 @@ import { Footer } from "@/components/link-page/footer";
 import { LinkList } from "@/components/link-page/link-list";
 import { ProfileHeader } from "@/components/link-page/profile-header";
 import { ThemeProvider } from "@/components/link-page/theme-provider";
+import { LinkPageThemeToggle } from "@/components/link-page/theme-toggle";
 import { Container } from "@/components/ui/container";
 import { db } from "@/lib/db/client";
 import { linksTable } from "@/lib/db/schema/link";
 import { usersTable } from "@/lib/db/schema/user";
-import { type ThemeId, DEFAULT_THEME_ID, isValidThemeId } from "@/lib/themes";
+import { type ThemeId, isValidThemeId } from "@/lib/themes";
 import { and, asc, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -79,10 +80,11 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
   }
 
   const { links, user } = data;
-  const themeId: ThemeId = isValidThemeId(user.theme) ? user.theme : DEFAULT_THEME_ID;
+  const darkThemeId: ThemeId = isValidThemeId(user.pageDarkTheme) ? user.pageDarkTheme : "dark-depths";
+  const lightThemeId: ThemeId = isValidThemeId(user.pageLightTheme) ? user.pageLightTheme : "stateroom";
 
   return (
-    <ThemeProvider themeId={themeId}>
+    <ThemeProvider darkThemeId={darkThemeId} lightThemeId={lightThemeId}>
       {/* Hairline accent */}
       <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,color-mix(in_srgb,var(--anc-theme-hairline)_60%,transparent),transparent)]" />
 
@@ -114,7 +116,7 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
         <LinkList links={links} username={user.username} />
       </div>
       <Container className="relative pb-8">
-        <Footer />
+        <Footer themeToggle={<LinkPageThemeToggle />} />
       </Container>
     </ThemeProvider>
   );

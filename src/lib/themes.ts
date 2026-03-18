@@ -1,6 +1,7 @@
-export type ThemePreview = {
-  boxClass: string;
-  letterClass: string;
+export type ThemeSwatch = {
+  accent: string;
+  bg: string;
+  card: string;
 };
 
 export type Theme = {
@@ -15,8 +16,8 @@ export type Theme = {
   nameColor: string;
   /** OG image: card background fill */
   ogBackground: string;
-  /** Swatch classes for theme picker / onboarding */
-  preview: ThemePreview;
+  /** Hex values for theme picker swatches */
+  swatch: ThemeSwatch;
 };
 
 export const THEME_IDS = ["dark-depths", "stateroom", "obsidian", "seafoam"] as const;
@@ -24,6 +25,12 @@ export type ThemeId = (typeof THEME_IDS)[number];
 export const DEFAULT_THEME_ID: ThemeId = "dark-depths";
 /** Keep in sync with @custom-variant dark in globals.css */
 export const DARK_THEME_IDS: ReadonlySet<ThemeId> = new Set(["dark-depths", "obsidian"]);
+export const DARK_THEME_ID_LIST = THEME_IDS.filter((id) => DARK_THEME_IDS.has(id));
+export const LIGHT_THEME_ID_LIST = THEME_IDS.filter((id) => !DARK_THEME_IDS.has(id));
+
+export function isDarkTheme(id: ThemeId): boolean {
+  return DARK_THEME_IDS.has(id);
+}
 
 export const THEMES: Record<ThemeId, Theme> = {
   "dark-depths": {
@@ -33,10 +40,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     name: "Dark Depths",
     nameColor: "#ffffff",
     ogBackground: "#0a1729",
-    preview: {
-      boxClass: "border-anc-gold bg-anc-deep-navy",
-      letterClass: "text-anc-gold",
-    },
+    swatch: { accent: "#d4b896", bg: "#0a1729", card: "#1e2d42" },
   },
   obsidian: {
     anchorColor: "#c49480",
@@ -45,10 +49,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     name: "Obsidian",
     nameColor: "#ffffff",
     ogBackground: "#0c0909",
-    preview: {
-      boxClass: "border-anc-obsidian-accent bg-anc-obsidian-surface",
-      letterClass: "text-anc-obsidian-accent",
-    },
+    swatch: { accent: "#c49480", bg: "#080606", card: "#18120e" },
   },
   seafoam: {
     anchorColor: "#1a7050",
@@ -57,10 +58,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     name: "Seafoam",
     nameColor: "#061a10",
     ogBackground: "#c2e8d8",
-    preview: {
-      boxClass: "border-anc-seafoam-accent bg-anc-seafoam-surface",
-      letterClass: "text-anc-seafoam-accent",
-    },
+    swatch: { accent: "#1a7050", bg: "#dff5ec", card: "#c2e8d8" },
   },
   stateroom: {
     anchorColor: "#0a1729",
@@ -69,10 +67,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     name: "Stateroom",
     nameColor: "#18120a",
     ogBackground: "#f5edda",
-    preview: {
-      boxClass: "border-anc-deep-navy bg-anc-cream",
-      letterClass: "text-anc-deep-navy",
-    },
+    swatch: { accent: "#0a1729", bg: "#fdfaf2", card: "#f5edda" },
   },
 };
 
