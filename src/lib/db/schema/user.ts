@@ -7,7 +7,11 @@ export const usersTable = pgTable("users", {
   displayName: text("display_name"),
   id: text("id").primaryKey(),
   onboardingComplete: boolean("onboarding_complete").default(false).notNull(),
-  theme: text("theme").default("dark-depths").notNull(),
+  pageDarkTheme: text("page_dark_theme").default("dark-depths").notNull(),
+  pageLightTheme: text("page_light_theme").default("stateroom").notNull(),
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  tier: text("tier").default("free").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   username: text("username").unique().notNull(),
 });

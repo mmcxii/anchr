@@ -11,9 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { type SessionUser } from "@/lib/auth";
+import { isProUser } from "@/lib/tier";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@clerk/nextjs";
-import { Menu, X } from "lucide-react";
+import { Anchor, Menu, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -34,9 +35,27 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = (props) => {
 
   //* Variables
   const initials = (user.displayName ?? user.username).slice(0, 2).toUpperCase();
+  const isPro = isProUser(user);
 
   //* Handlers
   const closeMobile = () => setMobileOpen(false);
+
+  //* Effects
+  React.useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
 
   return (
     <>
@@ -61,19 +80,13 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = (props) => {
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          className="bg-anc-deep-navy/50 fixed inset-0 z-40 lg:hidden"
-          onClick={closeMobile}
-          onKeyDown={(e) => e.key === "Escape" && closeMobile()}
-          role="button"
-          tabIndex={-1}
-        />
+        <div aria-hidden="true" className="bg-anc-deep-navy/50 fixed inset-0 z-40 lg:hidden" onClick={closeMobile} />
       )}
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "bg-sidebar border-sidebar-border text-sidebar-foreground fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r transition-transform duration-200 lg:static lg:translate-x-0",
+          "bg-sidebar border-sidebar-border text-sidebar-foreground fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r transition-transform duration-200 lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 lg:overflow-y-auto",
           { "-translate-x-full": !mobileOpen, "translate-x-0": mobileOpen },
         )}
       >
@@ -117,6 +130,23 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = (props) => {
           </ul>
         </nav>
 
+        {/* Upgrade CTA (free users only) */}
+        {!isPro && (
+          <div className="px-3 pb-3">
+            <Link
+              className="bg-primary/8 hover:bg-primary/14 border-primary/15 flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors"
+              href="/dashboard/settings"
+              onClick={closeMobile}
+            >
+              <Sparkles className="text-primary size-4 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-sidebar-foreground text-sm font-medium">{t("upgradeToPro")}</span>
+                <span className="text-sidebar-foreground/50 text-xs">{t("unlimitedLinks")}</span>
+              </div>
+            </Link>
+          </div>
+        )}
+
         {/* User menu */}
         <div className="border-sidebar-border border-t p-3">
           <div className="flex items-center gap-1">
@@ -129,8 +159,14 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = (props) => {
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col items-start text-left">
-                  <span className="text-sidebar-foreground text-sm font-medium">
+                  <span className="text-sidebar-foreground flex items-center gap-1.5 text-sm font-medium">
                     {user.displayName ?? user.username}
+                    {isPro && (
+                      <span className="bg-primary/15 text-primary inline-flex items-center gap-1 rounded px-1 py-px text-[10px] font-semibold tracking-wide uppercase">
+                        <Anchor className="size-2.5" />
+                        {t("pro")}
+                      </span>
+                    )}
                   </span>
                   <span className="text-sidebar-foreground/50 text-xs">@{user.username}</span>
                 </div>

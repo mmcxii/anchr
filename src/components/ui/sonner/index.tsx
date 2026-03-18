@@ -1,11 +1,11 @@
 "use client";
 
+import { useDashboardTheme } from "@/components/dashboard/theme-provider/context";
 import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 export const Toaster: React.FC<ToasterProps> = (props) => {
-  const { theme = "system" } = useTheme();
+  const { isDark } = useDashboardTheme();
 
   return (
     <Sonner
@@ -17,7 +17,7 @@ export const Toaster: React.FC<ToasterProps> = (props) => {
         success: <CircleCheckIcon className="size-4" />,
         warning: <TriangleAlertIcon className="size-4" />,
       }}
-      theme={theme as ToasterProps["theme"]}
+      theme={isDark ? "dark" : "light"}
       {...props}
     />
   );

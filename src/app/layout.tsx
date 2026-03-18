@@ -8,6 +8,7 @@ import { PosthogProvider } from "@/components/posthog";
 import { Toaster } from "@/components/ui/sonner";
 import { initTranslations } from "@/lib/i18n/server";
 import { TranslationsProvider } from "@/lib/i18n/translations-provider";
+import { THEME_SCRIPT } from "@/lib/theme-script";
 import { cn } from "@/lib/utils";
 
 const geistSans = Geist({
@@ -50,8 +51,9 @@ const RootLayout: React.FC<RootLayoutProps> = async (props) => {
     <ClerkProvider>
       <TranslationsProvider locale="en" resources={resources}>
         <PosthogProvider>
-          <html className="[color-scheme:dark]" data-theme="dark-depths" lang="en" suppressHydrationWarning>
+          <html lang="en" suppressHydrationWarning>
             <body className={cn(geistSans.variable, geistMono.variable, "antialiased")}>
+              <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} suppressHydrationWarning />
               <DashboardThemeProvider>
                 {children}
                 <Toaster />

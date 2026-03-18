@@ -19,7 +19,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = async (props) => {
   return (
     <div className="bg-background text-foreground flex min-h-dvh flex-col lg:flex-row">
       <DashboardSidebar user={user} />
-      <Container as="main" className="flex-1 overflow-y-auto py-6">
+      <Container as="main" className="flex-1 py-6">
         {children}
       </Container>
     </div>

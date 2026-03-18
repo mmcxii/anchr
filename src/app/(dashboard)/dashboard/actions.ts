@@ -5,8 +5,9 @@ import { db } from "@/lib/db/client";
 import { generateUniqueSlug } from "@/lib/db/queries/link";
 import { linksTable } from "@/lib/db/schema/link";
 import { linkSchema } from "@/lib/schemas/link";
+import { FREE_LINK_LIMIT } from "@/lib/tier";
 import { ensureProtocol, generateSlug, urlResolves } from "@/lib/utils/url";
-import { and, eq, inArray, not, sql } from "drizzle-orm";
+import { and, count, eq, inArray, not, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 function revalidatePages(username: string): void {
@@ -29,6 +30,17 @@ export async function createLink(
 
   if (user == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (user.tier !== "pro") {
+    const [{ count: linkCount }] = await db
+      .select({ count: count() })
+      .from(linksTable)
+      .where(eq(linksTable.userId, user.id));
+
+    if (linkCount >= FREE_LINK_LIMIT) {
+      return { error: "youveReachedTheFreeLimit", success: false };
+    }
   }
 
   const result = linkSchema.safeParse({ title, url });

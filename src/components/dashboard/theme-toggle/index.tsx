@@ -1,5 +1,7 @@
 "use client";
 
+import type { UiMode } from "@/components/dashboard/theme-provider/context";
+import { useDashboardTheme } from "@/components/dashboard/theme-provider/context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,24 +9,16 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DARK_THEME_IDS, THEME_IDS, THEMES, type ThemeId } from "@/lib/themes";
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
+import { MODE_OPTIONS } from "./utils";
 
 export const DashboardThemeToggle: React.FC = () => {
-  const { resolvedTheme, setTheme, theme } = useTheme();
+  const { isDark, mode, setMode } = useDashboardTheme();
   const { t } = useTranslation();
-  const [mounted, setMounted] = React.useState(false);
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const isSystem = mounted && theme === "system";
-  const isDark = mounted && DARK_THEME_IDS.has(resolvedTheme as ThemeId);
-  const TriggerIcon = isSystem ? Monitor : isDark ? Moon : Sun;
+  const TriggerIcon = mode === "system" ? Monitor : isDark ? Moon : Sun;
 
   return (
     <DropdownMenu>
@@ -38,21 +32,13 @@ export const DashboardThemeToggle: React.FC = () => {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="top">
-        <DropdownMenuRadioGroup onValueChange={setTheme} value={theme}>
-          <DropdownMenuRadioItem value="system">
-            <Monitor className="size-4 shrink-0" />
-            {t("system")}
-          </DropdownMenuRadioItem>
-          {THEME_IDS.map((id) => {
-            const Icon = DARK_THEME_IDS.has(id) ? Moon : Sun;
-
-            return (
-              <DropdownMenuRadioItem key={id} value={id}>
-                <Icon className="size-4 shrink-0" />
-                {THEMES[id].name}
-              </DropdownMenuRadioItem>
-            );
-          })}
+        <DropdownMenuRadioGroup onValueChange={(v) => setMode(v as UiMode)} value={mode}>
+          {MODE_OPTIONS.map(({ icon: Icon, label, value }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <Icon className="size-4 shrink-0" />
+              {t(label)}
+            </DropdownMenuRadioItem>
+          ))}
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
