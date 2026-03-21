@@ -20,6 +20,11 @@ export const PreviewToggle: React.FC<PreviewToggleProps> = (props) => {
   const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
 
+  //* Handlers
+  const handleButtonOnClick = () => setOpen(true);
+
+  const handleDialogContentOnOpenAutoFocus = (e) => e.preventDefault();
+
   //* Effects
   React.useEffect(() => {
     const mql = window.matchMedia("(min-width: 1280px)");
@@ -37,13 +42,13 @@ export const PreviewToggle: React.FC<PreviewToggleProps> = (props) => {
 
   return (
     <>
-      <Button className="xl:hidden" onClick={() => setOpen(true)} size="sm" type="button" variant="secondary">
+      <Button className="xl:hidden" onClick={handleButtonOnClick} size="sm" type="button" variant="secondary">
         <Eye className="size-4" />
         {t("preview")}
       </Button>
 
       <Dialog onOpenChange={setOpen} open={open}>
-        <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent onOpenAutoFocus={handleDialogContentOnOpenAutoFocus}>
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle>{t("preview")}</DialogTitle>

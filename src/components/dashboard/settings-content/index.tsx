@@ -50,6 +50,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
     }
   }, [checkoutSuccess]);
 
+  //* Handlers
   const handlePageThemeChange = React.useCallback((themeId: ThemeId) => {
     setPreviewThemes((prev) => (isDarkTheme(themeId) ? { ...prev, dark: themeId } : { ...prev, light: themeId }));
   }, []);
@@ -104,6 +105,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
     }
   };
 
+  const handleDarkThemeSwatchOnClick = React.useCallback(
+    (id: ThemeId) => () => setPreferredDark(id),
+    [setPreferredDark],
+  );
+
+  const handleLightThemeSwatchOnClick = React.useCallback(
+    (id: ThemeId) => () => setPreferredLight(id),
+    [setPreferredLight],
+  );
+
   return (
     <div className="flex gap-8">
       <div className="min-w-0 flex-1 space-y-6">
@@ -124,7 +135,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     isSelected={preferredDark === id}
                     key={id}
                     name={THEMES[id].name}
-                    onClick={() => setPreferredDark(id)}
+                    onClick={handleDarkThemeSwatchOnClick(id)}
                     swatch={THEMES[id].swatch}
                     variant="dashboard"
                   />
@@ -139,7 +150,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     isSelected={preferredLight === id}
                     key={id}
                     name={THEMES[id].name}
-                    onClick={() => setPreferredLight(id)}
+                    onClick={handleLightThemeSwatchOnClick(id)}
                     swatch={THEMES[id].swatch}
                     variant="dashboard"
                   />

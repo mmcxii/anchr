@@ -41,6 +41,10 @@ export const DeleteGroupDialog: React.FC<DeleteGroupDialogProps> = (props) => {
     onOpenChange(false);
   };
 
+  const handleButtonOnClick = () => handleDelete(false);
+  const handleDeleteLinksButtonOnClick = () => handleDelete(true);
+  const handleDeleteGroupButtonOnClick = () => handleDelete(false);
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent>
@@ -54,17 +58,17 @@ export const DeleteGroupDialog: React.FC<DeleteGroupDialogProps> = (props) => {
         <DialogFooter className="sm:gap-2">
           {linkCount > 0 ? (
             <>
-              <Button disabled={isDeleting} onClick={() => handleDelete(false)} variant="secondary">
+              <Button disabled={isDeleting} onClick={handleButtonOnClick} variant="secondary">
                 {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
                 {t("ungroupLinks")}
               </Button>
-              <Button disabled={isDeleting} onClick={() => handleDelete(true)} variant="tertiary">
+              <Button disabled={isDeleting} onClick={handleDeleteLinksButtonOnClick} variant="tertiary">
                 {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
                 {t("deleteLinksInGroup")}
               </Button>
             </>
           ) : (
-            <Button disabled={isDeleting} onClick={() => handleDelete(false)} variant="tertiary">
+            <Button disabled={isDeleting} onClick={handleDeleteGroupButtonOnClick} variant="tertiary">
               {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
               {t("delete")}
             </Button>

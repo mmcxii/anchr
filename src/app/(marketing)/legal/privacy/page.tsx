@@ -49,10 +49,13 @@ const PrivacyPage: React.FC = async () => {
       <Container as="main" className="max-w-2xl flex-1 py-16 xl:max-w-2xl">
         {/* Header */}
         <div className="mb-16">
+          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- legal page, static content */}
           <p className="tracking-anc-caps text-anc-steel/50 mb-3 text-xs font-medium uppercase">
             Last updated February 22, 2026
           </p>
+          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- legal page, static content */}
           <h1 className="text-anc-cream mb-6 text-4xl font-bold tracking-tight">Privacy Policy</h1>
+          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- legal page, static content */}
           <p className="text-anc-steel/70 text-lg leading-relaxed">
             We built Anchr to help people own their presence online. That extends to how we handle your data — with
             care, honesty, and respect.

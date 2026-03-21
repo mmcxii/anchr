@@ -1,4 +1,4 @@
-/* eslint-disable anchr/no-inline-style */
+/* eslint-disable anchr/no-inline-style, anchr/no-raw-string-jsx */
 import { ImageResponse } from "next/og";
 
 export const alt = "Anchr — Your Harbor for Every Connection";
@@ -43,7 +43,7 @@ export default async function OpenGraphImage() {
             <path
               d={`M-70,${y + 10} C-35,${y + 2} 35,${y + 18} 70,${y + 10} C105,${y + 2} 175,${y + 18} 210,${y + 10} C245,${y + 2} 315,${y + 18} 350,${y + 10} C385,${y + 2} 455,${y + 18} 490,${y + 10} C525,${y + 2} 595,${y + 18} 630,${y + 10} C665,${y + 2} 735,${y + 18} 770,${y + 10} C805,${y + 2} 875,${y + 18} 910,${y + 10} C945,${y + 2} 1015,${y + 18} 1050,${y + 10} C1085,${y + 2} 1155,${y + 18} 1190,${y + 10} C1225,${y + 2} 1295,${y + 18} 1330,${y + 10}`}
               fill="none"
-              key={i}
+              key={y}
               stroke="url(#waveFade)"
               strokeWidth="0.8"
             />

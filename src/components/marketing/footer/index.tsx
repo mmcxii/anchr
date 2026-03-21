@@ -29,6 +29,7 @@ export const Footer: React.FC<FooterProps> = (props) => {
         <Link className="m-muted-40 text-xs transition-colors" href="/legal/terms">
           {t("termsOfService")}
         </Link>
+        {/* eslint-disable-next-line anchr/no-raw-string-jsx -- copyright punctuation around translated values */}
         <p className="m-muted-40 text-xs">
           &copy; {new Date().getFullYear()} {t("anchr")}. {t("allRightsReserved")}
         </p>

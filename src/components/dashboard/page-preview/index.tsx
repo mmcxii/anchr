@@ -27,6 +27,9 @@ export const PagePreview: React.FC<PagePreviewProps> = (props) => {
   //* Variables
   const src = previewKey != null ? `/${user.username}?v=${encodeURIComponent(previewKey)}` : `/${user.username}`;
 
+  //* Handlers
+  const handleIframeOnLoad = () => setLoaded(true);
+
   //* Effects
   React.useEffect(() => {
     const el = containerRef.current;
@@ -81,7 +84,7 @@ export const PagePreview: React.FC<PagePreviewProps> = (props) => {
               "opacity-0": !loaded,
             })}
             height={IFRAME_HEIGHT}
-            onLoad={() => setLoaded(true)}
+            onLoad={handleIframeOnLoad}
             src={src}
             // eslint-disable-next-line anchr/no-inline-style -- dynamic runtime value
             style={{ transform: `scale(${scale})` }}

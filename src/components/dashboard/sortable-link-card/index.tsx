@@ -60,6 +60,8 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
   };
 
   //* Handlers
+  const handleCheckboxOnCheckedChange = () => onSelect(link.id);
+
   const handleCopyRedirectUrl = async () => {
     await navigator.clipboard.writeText(`https://${redirectUrl}`);
     setCopied(true);
@@ -69,6 +71,14 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
     }
     copiedTimerRef.current = setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleDeleteDropdownMenuItemOnClick = () => onDelete(link);
+
+  const handleEditDropdownMenuItemOnClick = () => onEdit(link);
+
+  const handleQrCodeDropdownMenuItemOnClick = () => onQrCode(link);
+
+  const handleVisibilityDropdownMenuItemOnClick = () => onToggleVisibility(link);
 
   //* Effects
   React.useEffect(() => {
@@ -92,7 +102,7 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
         aria-label={t("selectLink")}
         checked={selected}
         className="ml-1"
-        onCheckedChange={() => onSelect(link.id)}
+        onCheckedChange={handleCheckboxOnCheckedChange}
       />
 
       <button
@@ -145,20 +155,20 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {onQrCode != null && (
-            <DropdownMenuItem onClick={() => onQrCode(link)}>
+            <DropdownMenuItem onClick={handleQrCodeDropdownMenuItemOnClick}>
               <QrCode />
               {t("qrCode")}
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => onToggleVisibility(link)}>
+          <DropdownMenuItem onClick={handleVisibilityDropdownMenuItemOnClick}>
             <VisibilityIcon />
             {link.visible ? t("hideLink") : t("showLink")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onEdit(link)}>
+          <DropdownMenuItem onClick={handleEditDropdownMenuItemOnClick}>
             <Pencil />
             {t("editLink")}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onDelete(link)} variant="destructive">
+          <DropdownMenuItem onClick={handleDeleteDropdownMenuItemOnClick} variant="destructive">
             <Trash2 />
             {t("deleteLink")}
           </DropdownMenuItem>

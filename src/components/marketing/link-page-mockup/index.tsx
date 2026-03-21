@@ -89,24 +89,37 @@ export const LinkPageMockup: React.FC = () => {
     [rotation],
   );
 
+  const handleDivOnMouseEnter = () => {
+    hoveredRef.current = true;
+  };
+
+  const handleDivOnMouseLeave = () => {
+    hoveredRef.current = false;
+  };
+
+  const handleButtonOnClick = () => navigate(-1);
+
+  const handleDivRef = React.useCallback(
+    (el: null | HTMLDivElement) => {
+      cardRef(el);
+      flipRef(el);
+    },
+    [cardRef, flipRef],
+  );
+
+  const handleNextButtonOnClick = () => navigate(1);
+
   return (
     <div
       className="flex flex-col items-center gap-4 select-none"
-      onMouseEnter={() => {
-        hoveredRef.current = true;
-      }}
-      onMouseLeave={() => {
-        hoveredRef.current = false;
-      }}
+      onMouseEnter={handleDivOnMouseEnter}
+      onMouseLeave={handleDivOnMouseLeave}
     >
       {/* Card */}
       <div className="m-mockup-shadow relative h-[460px] w-[280px] [perspective:700px]">
         <div
           className="m-preserve-3d m-mockup-card relative h-full w-full transition-[transform] duration-[1.6s] ease-in-out"
-          ref={(el) => {
-            cardRef(el);
-            flipRef(el);
-          }}
+          ref={handleDivRef}
         >
           {/* FRONT */}
           <div className="mc-front absolute inset-0 overflow-hidden rounded-2xl">
@@ -178,6 +191,7 @@ export const LinkPageMockup: React.FC = () => {
                     <div className="mc-featured-icon-bg flex size-6 shrink-0 items-center justify-center rounded-lg">
                       <GraduationCap className="mc-featured-icon-color size-3.5" strokeWidth={1.75} />
                     </div>
+                    {/* eslint-disable-next-line anchr/no-raw-string-jsx -- decorative mockup content */}
                     <span className="mc-featured-text flex-1 text-center text-[11px] leading-tight font-semibold">
                       Master Video Editing — Enroll Now
                     </span>
@@ -198,6 +212,7 @@ export const LinkPageMockup: React.FC = () => {
               {/* Branding */}
               <div className="mc-branding mt-auto flex items-center justify-center gap-1.5 pt-2">
                 <Anchor className="mc-brand-color size-2.5" strokeWidth={1.5} />
+                {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand name */}
                 <span className="mc-brand-color tracking-anc-caps-wide text-[9px] font-bold uppercase">Anchr</span>
               </div>
             </div>
@@ -215,13 +230,13 @@ export const LinkPageMockup: React.FC = () => {
 
         {/* Theme dots */}
         <div className="flex items-center gap-1.5">
-          {MOCKUP_THEMES.map((_, i) => (
+          {MOCKUP_THEMES.map((t, i) => (
             <div
               className={cn("rounded-full transition-all duration-300", {
                 "m-dot-active": i === themeIndex,
                 "m-dot-inactive": i !== themeIndex,
               })}
-              key={i}
+              key={t.id}
             />
           ))}
         </div>
@@ -231,7 +246,7 @@ export const LinkPageMockup: React.FC = () => {
           <button
             aria-label="Previous theme"
             className="m-mockup-nav-btn flex size-7 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-colors"
-            onClick={() => navigate(-1)}
+            onClick={handleButtonOnClick}
           >
             <ChevronLeft className="size-3.5" strokeWidth={1.5} />
           </button>
@@ -251,7 +266,7 @@ export const LinkPageMockup: React.FC = () => {
           <button
             aria-label="Next theme"
             className="m-mockup-nav-btn flex size-7 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-colors"
-            onClick={() => navigate(1)}
+            onClick={handleNextButtonOnClick}
           >
             <ChevronRight className="size-3.5" strokeWidth={1.5} />
           </button>

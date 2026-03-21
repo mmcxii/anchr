@@ -46,6 +46,11 @@ export const QuickLinksSection: React.FC<QuickLinksSectionProps> = (props) => {
   const VisibilityIcon = group.visible ? Eye : EyeOff;
   const CollapseIcon = collapsed ? ChevronRight : ChevronDown;
 
+  //* Handlers
+  const handleButtonOnClick = () => setCollapsed((c) => !c);
+
+  const handleIconButtonOnClick = () => onToggleGroupVisibility(group);
+
   return (
     <div className="flex flex-col gap-2">
       {/* Group header */}
@@ -56,7 +61,7 @@ export const QuickLinksSection: React.FC<QuickLinksSectionProps> = (props) => {
       >
         <button
           className="text-muted-foreground hover:text-foreground shrink-0 p-1"
-          onClick={() => setCollapsed((c) => !c)}
+          onClick={handleButtonOnClick}
           type="button"
         >
           <CollapseIcon className="size-4" />
@@ -70,10 +75,7 @@ export const QuickLinksSection: React.FC<QuickLinksSectionProps> = (props) => {
           </span>
         )}
 
-        <IconButton
-          aria-label={group.visible ? t("hideLink") : t("showLink")}
-          onClick={() => onToggleGroupVisibility(group)}
-        >
+        <IconButton aria-label={group.visible ? t("hideLink") : t("showLink")} onClick={handleIconButtonOnClick}>
           <VisibilityIcon className="size-4" />
         </IconButton>
       </div>

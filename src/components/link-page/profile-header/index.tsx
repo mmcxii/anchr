@@ -47,6 +47,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
         </div>
       </div>
       <h1 className="text-anc-theme-name text-lg font-bold tracking-wide">{name}</h1>
+      {/* eslint-disable-next-line anchr/no-raw-string-jsx -- dynamic username with @ prefix */}
       <p className="tracking-anc-caps text-anc-theme-link-text mt-0.5 text-xs font-medium uppercase">@{username}</p>
 
       {quickLinks.length > 0 && (

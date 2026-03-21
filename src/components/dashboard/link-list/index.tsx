@@ -262,6 +262,42 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
     }
   };
 
+  // Bulk actions
+  const handleBulkVisibilityButtonOnClick = () => handleBulkVisibility(!allSelectedVisible);
+
+  const handleBulkDeleteButtonOnClick = () => setShowBulkDeleteDialog(true);
+
+  // Dialog open-change handlers
+  const handleLinkDialogOnOpenChange = (open: boolean) => {
+    if (!open) {
+      handleLinkDialogCancel();
+    }
+  };
+
+  const handleDeleteLinkDialogOnOpenChange = (open: boolean) => {
+    if (!open) {
+      setDeletingLink(null);
+    }
+  };
+
+  const handleBulkDeleteDialogOnOpenChange = (open: boolean) => {
+    if (!open) {
+      setShowBulkDeleteDialog(false);
+    }
+  };
+
+  const handleGroupDialogOnOpenChange = (open: boolean) => {
+    if (!open) {
+      handleGroupDialogCancel();
+    }
+  };
+
+  const handleDeleteGroupDialogOnOpenChange = (open: boolean) => {
+    if (!open) {
+      setDeletingGroup(null);
+    }
+  };
+
   // DnD
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id);
@@ -410,7 +446,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
           <div className="ml-auto flex items-center gap-1">
             <Button
               disabled={isBulkUpdating}
-              onClick={() => handleBulkVisibility(!allSelectedVisible)}
+              onClick={handleBulkVisibilityButtonOnClick}
               size="sm"
               type="button"
               variant="secondary"
@@ -426,7 +462,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
             </Button>
             <Button
               disabled={isBulkDeleting}
-              onClick={() => setShowBulkDeleteDialog(true)}
+              onClick={handleBulkDeleteButtonOnClick}
               size="sm"
               type="button"
               variant="tertiary"
@@ -555,14 +591,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
       )}
 
       {/* Add / Edit Link Dialog */}
-      <Dialog
-        onOpenChange={(open) => {
-          if (!open) {
-            handleLinkDialogCancel();
-          }
-        }}
-        open={linkDialogMode !== null}
-      >
+      <Dialog onOpenChange={handleLinkDialogOnOpenChange} open={linkDialogMode !== null}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingLink != null ? t("editLink") : t("addLink")}</DialogTitle>
@@ -594,14 +623,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
       </Dialog>
 
       {/* Delete Link Dialog */}
-      <Dialog
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeletingLink(null);
-          }
-        }}
-        open={deletingLink !== null}
-      >
+      <Dialog onOpenChange={handleDeleteLinkDialogOnOpenChange} open={deletingLink !== null}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("deleteLink")}</DialogTitle>
@@ -617,14 +639,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
       </Dialog>
 
       {/* Bulk Delete Dialog */}
-      <Dialog
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowBulkDeleteDialog(false);
-          }
-        }}
-        open={showBulkDeleteDialog}
-      >
+      <Dialog onOpenChange={handleBulkDeleteDialogOnOpenChange} open={showBulkDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("deleteSelected")}</DialogTitle>
@@ -642,14 +657,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
       </Dialog>
 
       {/* Add / Edit Group Dialog */}
-      <Dialog
-        onOpenChange={(open) => {
-          if (!open) {
-            handleGroupDialogCancel();
-          }
-        }}
-        open={groupDialogMode !== null}
-      >
+      <Dialog onOpenChange={handleGroupDialogOnOpenChange} open={groupDialogMode !== null}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingGroup != null ? t("editLinkGroup") : t("addLinkGroup")}</DialogTitle>
@@ -670,11 +678,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
         groupId={deletingGroup?.id ?? null}
         groupTitle={deletingGroup?.title ?? ""}
         linkCount={deletingGroup != null ? (groupLinkCounts[deletingGroup.id] ?? 0) : 0}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeletingGroup(null);
-          }
-        }}
+        onOpenChange={handleDeleteGroupDialogOnOpenChange}
         open={deletingGroup !== null}
       />
     </div>

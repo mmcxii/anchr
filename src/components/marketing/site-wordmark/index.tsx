@@ -10,6 +10,7 @@ export const SiteWordmark: React.FC<SiteWordmarkProps> = (props) => {
   const { className, size = "md" } = props;
 
   return (
+    // eslint-disable-next-line anchr/no-raw-string-jsx -- brand name
     <span className={cn("font-bold uppercase", { "m-accent-color": !className }, className, SIZE_MAP[size])}>
       Anchr
     </span>

@@ -103,6 +103,7 @@ export const UsernameStep: React.FC<UsernameStepProps> = (props) => {
           {availability === "available" && !hasValidationError && (
             <p className="text-xs text-emerald-500">{t("usernameIsAvailable")}</p>
           )}
+          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand URL prefix with dynamic username */}
           <p className="text-muted-foreground text-xs">anchr.to/{username ?? "username"}</p>
         </div>
 

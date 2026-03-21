@@ -16,7 +16,8 @@ export const TrendText: React.FC<TrendTextProps> = (props) => {
 
   return (
     <span className={isPositive ? "text-emerald-500" : "text-red-500"}>
-      {isPositive ? "↑" : "↓"} {Math.abs(value)}%
+      {/* eslint-disable-next-line anchr/no-raw-string-jsx -- decorative arrows and percent symbol */}
+      {isPositive ? "\u2191" : "\u2193"} {Math.abs(value)}%
     </span>
   );
 };

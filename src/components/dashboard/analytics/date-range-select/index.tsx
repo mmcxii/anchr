@@ -40,13 +40,15 @@ export const DateRangeSelect: React.FC<DateRangeSelectProps> = (props) => {
         const isActive = value === option.value;
         const isLocked = option.proOnly && !isPro;
 
+        const handleButtonOnClick = () => handleChange(option.value);
+
         return (
           <button
             className="text-muted-foreground data-[active=true]:bg-secondary data-[active=true]:text-foreground flex items-center gap-1 rounded-md px-2.5 py-1 text-sm transition-colors disabled:opacity-50"
             data-active={isActive}
             disabled={isLocked}
             key={option.value}
-            onClick={() => handleChange(option.value)}
+            onClick={handleButtonOnClick}
             title={isLocked ? t("upgradeToPro") : undefined}
             type="button"
           >
