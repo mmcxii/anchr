@@ -3,6 +3,7 @@ import { PagePreview } from "@/components/dashboard/page-preview";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { linksTable } from "@/lib/db/schema/link";
+import { linkGroupsTable } from "@/lib/db/schema/link-group";
 import { asc, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import * as React from "react";
@@ -20,13 +21,22 @@ const DashboardPage: React.FC = async () => {
     .where(eq(linksTable.userId, user.id))
     .orderBy(asc(linksTable.position));
 
-  const previewKey = links.map((l) => `${l.id}:${l.position}:${l.visible}:${l.title}:${l.url}:${l.slug}`).join();
+  const groups = await db
+    .select()
+    .from(linkGroupsTable)
+    .where(eq(linkGroupsTable.userId, user.id))
+    .orderBy(asc(linkGroupsTable.position));
+
+  const previewKey = [
+    ...links.map((l) => `${l.id}:${l.position}:${l.visible}:${l.title}:${l.url}:${l.slug}:${l.groupId}`),
+    ...groups.map((g) => `${g.id}:${g.position}:${g.visible}:${g.title}`),
+  ].join();
 
   return (
     <div className="flex gap-8">
       {/* Link management */}
       <div className="min-w-0 flex-1">
-        <DashboardContent links={links} previewKey={previewKey} user={user} />
+        <DashboardContent groups={groups} links={links} previewKey={previewKey} user={user} />
       </div>
 
       {/* Desktop preview panel */}
