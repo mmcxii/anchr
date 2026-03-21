@@ -6,9 +6,10 @@ import { LinkPageThemeToggle } from "@/components/link-page/theme-toggle";
 import { Container } from "@/components/ui/container";
 import { db } from "@/lib/db/client";
 import { linksTable } from "@/lib/db/schema/link";
+import { linkGroupsTable } from "@/lib/db/schema/link-group";
 import { usersTable } from "@/lib/db/schema/user";
 import { type ThemeId, isValidThemeId } from "@/lib/themes";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import * as React from "react";
@@ -27,7 +28,8 @@ async function getPageData(username: string) {
     return null;
   }
 
-  const links = await db
+  // Fetch ungrouped visible links
+  const ungroupedLinks = await db
     .select({
       id: linksTable.id,
       platform: linksTable.platform,
@@ -36,10 +38,40 @@ async function getPageData(username: string) {
       url: linksTable.url,
     })
     .from(linksTable)
-    .where(and(eq(linksTable.userId, user.id), eq(linksTable.visible, true)))
+    .where(and(eq(linksTable.userId, user.id), eq(linksTable.visible, true), isNull(linksTable.groupId)))
     .orderBy(asc(linksTable.position));
 
-  return { links, user };
+  // Fetch visible groups
+  const visibleGroups = await db
+    .select()
+    .from(linkGroupsTable)
+    .where(and(eq(linkGroupsTable.userId, user.id), eq(linkGroupsTable.visible, true)))
+    .orderBy(asc(linkGroupsTable.position));
+
+  // Fetch grouped visible links
+  const groupedLinks =
+    visibleGroups.length > 0
+      ? await db
+          .select({
+            groupId: linksTable.groupId,
+            id: linksTable.id,
+            platform: linksTable.platform,
+            slug: linksTable.slug,
+            title: linksTable.title,
+            url: linksTable.url,
+          })
+          .from(linksTable)
+          .where(and(eq(linksTable.userId, user.id), eq(linksTable.visible, true)))
+          .orderBy(asc(linksTable.position))
+      : [];
+
+  const groups = visibleGroups.map((group) => ({
+    id: group.id,
+    links: groupedLinks.filter((l) => l.groupId === group.id),
+    title: group.title,
+  }));
+
+  return { groups, links: ungroupedLinks, user };
 }
 
 export async function generateMetadata(props: { params: Promise<Params> }): Promise<Metadata> {
@@ -85,7 +117,7 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
     notFound();
   }
 
-  const { links, user } = data;
+  const { groups, links, user } = data;
   const darkThemeId: ThemeId = isValidThemeId(user.pageDarkTheme) ? user.pageDarkTheme : "dark-depths";
   const lightThemeId: ThemeId = isValidThemeId(user.pageLightTheme) ? user.pageLightTheme : "stateroom";
 
@@ -119,7 +151,7 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
 
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col items-center gap-6 px-5 pt-10">
         <ProfileHeader avatarUrl={user.avatarUrl} displayName={user.displayName} username={user.username} />
-        <LinkList links={links} username={user.username} />
+        <LinkList groups={groups} links={links} username={user.username} />
       </div>
       <Container className="relative pb-8">
         <Footer hideBranding={user.tier === "pro" && user.hideBranding} themeToggle={<LinkPageThemeToggle />} />

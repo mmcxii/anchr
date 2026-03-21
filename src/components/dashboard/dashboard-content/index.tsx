@@ -1,6 +1,6 @@
 "use client";
 
-import { LinkList, type LinkItem } from "@/components/dashboard/link-list";
+import { LinkList, type GroupItem, type LinkItem } from "@/components/dashboard/link-list";
 import { PreviewToggle } from "@/components/dashboard/preview-toggle";
 import { QrCodeModal } from "@/components/dashboard/qr-code-modal";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,14 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 export type DashboardContentProps = {
+  groups: GroupItem[];
   links: LinkItem[];
   previewKey: string;
   user: SessionUser;
 };
 
 export const DashboardContent: React.FC<DashboardContentProps> = (props) => {
-  const { links, previewKey, user } = props;
+  const { groups, links, previewKey, user } = props;
 
   //* State
   const { t } = useTranslation();
@@ -55,7 +56,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = (props) => {
         </div>
       </div>
 
-      <LinkList links={links} onQrCode={handleQrCode} username={user.username} />
+      <LinkList groups={groups} isPro={isPro} links={links} onQrCode={handleQrCode} username={user.username} />
 
       <QrCodeModal
         avatarUrl={user.avatarUrl}

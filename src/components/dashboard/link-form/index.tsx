@@ -1,6 +1,7 @@
 "use client";
 
 import { createLink, updateLink } from "@/app/(dashboard)/dashboard/actions";
+import type { GroupItem } from "@/components/dashboard/link-list";
 import { PlatformBadge } from "@/components/dashboard/platform-badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,14 +17,15 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 export type LinkFormProps = {
-  defaultValues?: { id: string; slug: string; title: string; url: string };
+  defaultValues?: { groupId?: string; id: string; slug: string; title: string; url: string };
   existingSlugs: string[];
+  groups?: GroupItem[];
   username: string;
   onSuccess: () => void;
 };
 
 export const LinkForm: React.FC<LinkFormProps> = (props) => {
-  const { defaultValues, existingSlugs, onSuccess, username } = props;
+  const { defaultValues, existingSlugs, groups = [], onSuccess, username } = props;
 
   //* State
   const { t } = useTranslation();
@@ -37,7 +39,12 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
   } = useForm<LinkValues>({
     defaultValues:
       defaultValues != null
-        ? { slug: defaultValues.slug, title: defaultValues.title, url: defaultValues.url }
+        ? {
+            groupId: defaultValues.groupId ?? "",
+            slug: defaultValues.slug,
+            title: defaultValues.title,
+            url: defaultValues.url,
+          }
         : undefined,
     resolver: standardSchemaResolver(linkSchema),
   });
@@ -87,10 +94,11 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
     }
 
     const url = ensureProtocol(data.url);
+    const groupId = data.groupId != null && data.groupId.length > 0 ? data.groupId : undefined;
 
     const result = isEditing
-      ? await updateLink(defaultValues.id, data.title, url, data.slug, skipUrlCheck)
-      : await createLink(data.title, url, data.slug, skipUrlCheck);
+      ? await updateLink(defaultValues.id, data.title, url, data.slug, skipUrlCheck, groupId ?? null)
+      : await createLink(data.title, url, data.slug, skipUrlCheck, groupId);
 
     if (!result.success) {
       handleActionError(result.error);
@@ -178,6 +186,24 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
         </div>
         {errors.slug?.message != null && <p className="text-destructive text-xs">{t(errors.slug.message)}</p>}
       </div>
+      {groups.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="link-group">{t("group")}</Label>
+          <select
+            className="border-input focus:border-ring focus:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs outline-none focus:ring-[3px] disabled:pointer-events-none disabled:opacity-50"
+            disabled={isSubmitting}
+            id="link-group"
+            {...register("groupId")}
+          >
+            <option value="">{t("noGroup")}</option>
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       {errors.root != null && <p className="text-destructive text-center text-xs">{errors.root.message}</p>}
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-start">
         <Button disabled={isSubmitting} type="submit" variant="primary">

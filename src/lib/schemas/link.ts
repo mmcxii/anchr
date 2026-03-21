@@ -4,6 +4,7 @@ import { z } from "zod";
 const urlValidator = z.string().url();
 
 export const linkSchema = z.object({
+  groupId: z.string().optional().or(z.literal("")),
   slug: z
     .string()
     .max(100)

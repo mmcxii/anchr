@@ -1,10 +1,12 @@
 import { boolean, integer, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { linkGroupsTable } from "./link-group";
 import { usersTable } from "./user";
 
 export const linksTable = pgTable(
   "links",
   {
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    groupId: text("group_id").references(() => linkGroupsTable.id, { onDelete: "set null" }),
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),

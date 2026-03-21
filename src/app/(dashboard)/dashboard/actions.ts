@@ -4,8 +4,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { generateUniqueSlug } from "@/lib/db/queries/link";
 import { linksTable } from "@/lib/db/schema/link";
+import { linkGroupsTable } from "@/lib/db/schema/link-group";
 import { detectPlatform } from "@/lib/platforms";
 import { linkSchema } from "@/lib/schemas/link";
+import { groupSchema } from "@/lib/schemas/link-group";
 import { FREE_LINK_LIMIT } from "@/lib/tier";
 import { ensureProtocol, generateSlug, urlResolves } from "@/lib/utils/url";
 import { and, count, eq, inArray, not, sql } from "drizzle-orm";
@@ -21,11 +23,14 @@ export type ActionResult = {
   success: boolean;
 };
 
+// ─── Link Actions ────────────────────────────────────────────────────────────
+
 export async function createLink(
   title: string,
   url: string,
   customSlug?: string,
   skipUrlCheck?: boolean,
+  groupId?: string,
 ): Promise<ActionResult> {
   const user = await getCurrentUser();
 
@@ -44,7 +49,7 @@ export async function createLink(
     }
   }
 
-  const result = linkSchema.safeParse({ title, url });
+  const result = linkSchema.safeParse({ groupId, title, url });
 
   if (!result.success) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
@@ -54,6 +59,21 @@ export async function createLink(
 
   if (!skipUrlCheck && !(await urlResolves(fullUrl))) {
     return { error: "thisUrlCouldNotBeReachedPleaseCheckItAndTryAgain", success: false };
+  }
+
+  // Validate group ownership if groupId is provided
+  const resolvedGroupId = groupId != null && groupId.length > 0 ? groupId : null;
+
+  if (resolvedGroupId != null) {
+    const group = await db
+      .select({ id: linkGroupsTable.id })
+      .from(linkGroupsTable)
+      .where(and(eq(linkGroupsTable.id, resolvedGroupId), eq(linkGroupsTable.userId, user.id)))
+      .limit(1);
+
+    if (group.length === 0) {
+      return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    }
   }
 
   const slug = customSlug != null && customSlug.length > 0 ? customSlug : await generateUniqueSlug(user.id, fullUrl);
@@ -66,6 +86,7 @@ export async function createLink(
   const platform = detectPlatform(fullUrl);
 
   await db.insert(linksTable).values({
+    groupId: resolvedGroupId,
     platform,
     position: (maxPosition[0]?.max ?? -1) + 1,
     slug,
@@ -85,6 +106,7 @@ export async function updateLink(
   url: string,
   customSlug?: string,
   skipUrlCheck?: boolean,
+  groupId?: null | string,
 ): Promise<ActionResult> {
   const user = await getCurrentUser();
 
@@ -126,12 +148,73 @@ export async function updateLink(
     slug = oldSlug !== newSlug ? await generateUniqueSlug(user.id, fullUrl) : existingLink.slug;
   }
 
+  // Validate group ownership if groupId is provided
+  const resolvedGroupId = groupId != null && groupId.length > 0 ? groupId : null;
+
+  if (resolvedGroupId != null) {
+    const group = await db
+      .select({ id: linkGroupsTable.id })
+      .from(linkGroupsTable)
+      .where(and(eq(linkGroupsTable.id, resolvedGroupId), eq(linkGroupsTable.userId, user.id)))
+      .limit(1);
+
+    if (group.length === 0) {
+      return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    }
+  }
+
   const platform = detectPlatform(fullUrl);
+
+  const updateFields: Record<string, unknown> = {
+    platform,
+    slug,
+    title: result.data.title,
+    url: fullUrl,
+  };
+
+  // Only update groupId if explicitly passed (undefined = don't change, null = ungroup, string = set group)
+  if (groupId !== undefined) {
+    updateFields.groupId = resolvedGroupId;
+  }
 
   const updated = await db
     .update(linksTable)
-    .set({ platform, slug, title: result.data.title, url: fullUrl })
+    .set(updateFields)
     .where(and(eq(linksTable.id, id), eq(linksTable.userId, user.id)));
+
+  if (updated.rowCount === 0) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  revalidatePages(user.username);
+
+  return { success: true };
+}
+
+export async function updateLinkGroup(linkId: string, groupId: null | string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  // Validate group ownership if groupId is provided
+  if (groupId != null) {
+    const group = await db
+      .select({ id: linkGroupsTable.id })
+      .from(linkGroupsTable)
+      .where(and(eq(linkGroupsTable.id, groupId), eq(linkGroupsTable.userId, user.id)))
+      .limit(1);
+
+    if (group.length === 0) {
+      return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    }
+  }
+
+  const updated = await db
+    .update(linksTable)
+    .set({ groupId })
+    .where(and(eq(linksTable.id, linkId), eq(linksTable.userId, user.id)));
 
   if (updated.rowCount === 0) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
@@ -262,6 +345,176 @@ export async function deleteLink(id: string): Promise<ActionResult> {
   const deleted = await db.delete(linksTable).where(and(eq(linksTable.id, id), eq(linksTable.userId, user.id)));
 
   if (deleted.rowCount === 0) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  revalidatePages(user.username);
+
+  return { success: true };
+}
+
+// ─── Group Actions ───────────────────────────────────────────────────────────
+
+export async function createGroup(title: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (user.tier !== "pro") {
+    return { error: "upgradeToPro", success: false };
+  }
+
+  const result = groupSchema.safeParse({ title });
+
+  if (!result.success) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const maxPosition = await db
+    .select({ max: sql<number>`coalesce(max(${linkGroupsTable.position}), -1)` })
+    .from(linkGroupsTable)
+    .where(eq(linkGroupsTable.userId, user.id));
+
+  await db.insert(linkGroupsTable).values({
+    position: (maxPosition[0]?.max ?? -1) + 1,
+    title: result.data.title,
+    userId: user.id,
+  });
+
+  revalidatePages(user.username);
+
+  return { success: true };
+}
+
+export async function updateGroupTitle(id: string, title: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (user.tier !== "pro") {
+    return { error: "upgradeToPro", success: false };
+  }
+
+  const result = groupSchema.safeParse({ title });
+
+  if (!result.success) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const updated = await db
+    .update(linkGroupsTable)
+    .set({ title: result.data.title })
+    .where(and(eq(linkGroupsTable.id, id), eq(linkGroupsTable.userId, user.id)));
+
+  if (updated.rowCount === 0) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  revalidatePages(user.username);
+
+  return { success: true };
+}
+
+export async function deleteGroup(id: string, deleteLinks: boolean): Promise<ActionResult> {
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (user.tier !== "pro") {
+    return { error: "upgradeToPro", success: false };
+  }
+
+  // Verify ownership
+  const groups = await db
+    .select({ id: linkGroupsTable.id })
+    .from(linkGroupsTable)
+    .where(and(eq(linkGroupsTable.id, id), eq(linkGroupsTable.userId, user.id)))
+    .limit(1);
+
+  if (groups.length === 0) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (deleteLinks) {
+    // Delete all links in the group
+    await db.delete(linksTable).where(and(eq(linksTable.groupId, id), eq(linksTable.userId, user.id)));
+  } else {
+    // Ungroup links: set groupId to null
+    await db
+      .update(linksTable)
+      .set({ groupId: null })
+      .where(and(eq(linksTable.groupId, id), eq(linksTable.userId, user.id)));
+  }
+
+  // Delete the group
+  await db.delete(linkGroupsTable).where(and(eq(linkGroupsTable.id, id), eq(linkGroupsTable.userId, user.id)));
+
+  revalidatePages(user.username);
+
+  return { success: true };
+}
+
+export async function reorderGroups(items: { id: string; position: number }[]): Promise<ActionResult> {
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  if (items.length === 0) {
+    return { success: true };
+  }
+
+  const ids = items.map((item) => item.id);
+
+  // Verify ownership of all groups
+  const owned = await db
+    .select({ id: linkGroupsTable.id })
+    .from(linkGroupsTable)
+    .where(and(inArray(linkGroupsTable.id, ids), eq(linkGroupsTable.userId, user.id)));
+
+  if (owned.length !== ids.length) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  // Build CASE WHEN for atomic position update
+  const sqlChunks = [sql`CASE`];
+  for (const item of items) {
+    sqlChunks.push(sql`WHEN ${linkGroupsTable.id} = ${item.id} THEN ${item.position}`);
+  }
+  sqlChunks.push(sql`ELSE ${linkGroupsTable.position} END`);
+
+  const caseStatement = sql.join(sqlChunks, sql` `);
+
+  await db
+    .update(linkGroupsTable)
+    .set({ position: caseStatement })
+    .where(and(inArray(linkGroupsTable.id, ids), eq(linkGroupsTable.userId, user.id)));
+
+  revalidatePages(user.username);
+
+  return { success: true };
+}
+
+export async function toggleGroupVisibility(id: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+
+  if (user == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const result = await db
+    .update(linkGroupsTable)
+    .set({ visible: not(linkGroupsTable.visible) })
+    .where(and(eq(linkGroupsTable.id, id), eq(linkGroupsTable.userId, user.id)));
+
+  if (result.rowCount === 0) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
