@@ -133,6 +133,8 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
     })();
   };
 
+  const handleCheckboxOnCheckedChange = (checked) => setSkipUrlCheck(checked === true);
+
   //* Effects
   React.useEffect(() => {
     titleRef.current?.focus();
@@ -171,7 +173,7 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
         {errors.url?.message != null && <p className="text-destructive text-xs">{errors.url.message}</p>}
         {showSkipUrlCheck && (
           <label className="flex items-center gap-2">
-            <Checkbox checked={skipUrlCheck} onCheckedChange={(checked) => setSkipUrlCheck(checked === true)} />
+            <Checkbox checked={skipUrlCheck} onCheckedChange={handleCheckboxOnCheckedChange} />
             <span className="text-muted-foreground text-xs">{t("saveAnyway")}</span>
           </label>
         )}
@@ -179,6 +181,7 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
       <div className="flex flex-col gap-2">
         <Label htmlFor="link-slug">{t("redirectUrl")}</Label>
         <div className="border-input focus-within:border-ring focus-within:ring-ring/50 flex h-9 items-center overflow-hidden rounded-md border shadow-xs focus-within:ring-[3px]">
+          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand URL prefix with dynamic username */}
           <span className="text-muted-foreground bg-muted flex h-full shrink-0 items-center border-r px-2.5 text-xs">
             anchr.to/{username}/
           </span>

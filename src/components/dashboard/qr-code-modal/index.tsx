@@ -152,12 +152,14 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = (props) => {
             {styleOptions.map((option) => {
               const isActive = selectedStyle === option.value;
 
+              const handleButtonOnClick = () => setSelectedStyle(option.value);
+
               return (
                 <button
                   className="text-muted-foreground data-[active=true]:bg-secondary data-[active=true]:text-foreground rounded-md px-2.5 py-1 text-sm transition-colors"
                   data-active={isActive}
                   key={option.value}
-                  onClick={() => setSelectedStyle(option.value)}
+                  onClick={handleButtonOnClick}
                   type="button"
                 >
                   {option.label}
@@ -175,13 +177,15 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = (props) => {
               const isActive = selectedLogo === option.value;
               const isLocked = option.proOnly && !isPro;
 
+              const handleButtonOnClick = () => setSelectedLogo(option.value);
+
               return (
                 <button
                   className="text-muted-foreground data-[active=true]:bg-secondary data-[active=true]:text-foreground flex items-center gap-1 rounded-md px-2.5 py-1 text-sm transition-colors disabled:opacity-50"
                   data-active={isActive}
                   disabled={isLocked}
                   key={option.value}
-                  onClick={() => setSelectedLogo(option.value)}
+                  onClick={handleButtonOnClick}
                   title={isLocked ? t("upgradeToPro") : undefined}
                   type="button"
                 >
@@ -200,15 +204,17 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = (props) => {
             {QR_SIZES.map((size) => {
               const isActive = selectedSize.px === size.px;
 
+              const handleButtonOnClick = () => setSelectedSize(size);
+
               return (
                 <button
                   className="text-muted-foreground data-[active=true]:bg-secondary data-[active=true]:text-foreground rounded-md px-2.5 py-1 text-sm transition-colors"
                   data-active={isActive}
                   key={size.label}
-                  onClick={() => setSelectedSize(size)}
+                  onClick={handleButtonOnClick}
                   type="button"
                 >
-                  {size.label} ({size.px}px)
+                  {t("{{label}}({{px}}px)", { label: size.label, px: size.px })}
                 </button>
               );
             })}

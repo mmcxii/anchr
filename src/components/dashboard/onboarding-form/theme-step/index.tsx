@@ -43,6 +43,10 @@ export const ThemeStep: React.FC<ThemeStepProps> = (props) => {
     }
   };
 
+  const handleDarkThemeSwatchOnClick = (id: ThemeId) => () => setSelectedDark(id);
+
+  const handleLightThemeSwatchOnClick = (id: ThemeId) => () => setSelectedLight(id);
+
   const handleSkip = async () => {
     setSubmitting(true);
     try {
@@ -72,7 +76,7 @@ export const ThemeStep: React.FC<ThemeStepProps> = (props) => {
                 isSelected={selectedDark === id}
                 key={id}
                 name={THEMES[id].name}
-                onClick={() => setSelectedDark(id)}
+                onClick={handleDarkThemeSwatchOnClick(id)}
                 swatch={THEMES[id].swatch}
               />
             ))}
@@ -86,7 +90,7 @@ export const ThemeStep: React.FC<ThemeStepProps> = (props) => {
                 isSelected={selectedLight === id}
                 key={id}
                 name={THEMES[id].name}
-                onClick={() => setSelectedLight(id)}
+                onClick={handleLightThemeSwatchOnClick(id)}
                 swatch={THEMES[id].swatch}
               />
             ))}

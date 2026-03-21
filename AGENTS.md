@@ -1,13 +1,3 @@
-# Anchr
-
-Next.js 16 app with React 19, TypeScript, and Tailwind CSS 4.
-
-## Tooling
-
-- **Package manager**: pnpm (monorepo with pnpm-workspace.yaml)
-- **Path alias**: `@/*` maps to `./src/*`
-- **Linting/formatting**: ESLint, Prettier (with Tailwind plugin), Sortier — all enforced via lint-staged on pre-commit
-
 ## i18n
 
 - All translation keys must be a **camelCased version of the English string** they represent. No dot notation, no abbreviations, no namespacing — the key is the value in camelCase.
@@ -39,3 +29,7 @@ ANC-95: feat(agents): add initial skills and initialize AGENTS.md
 - add brainstorming, copywriting, frontend-design, skill-creator, and vercel-react-best-practices skills.
 - add Tooling and Git Conventions sections to AGENTS.md
 ```
+
+## Corrections
+
+**Always be looking for ways to automate corrections via ESLint rules. Whenver you are corrected, changes to code style are requested, etc, consider how you could enforce that preference with an automated code quality tool. The goal is to prevent solving the same issue twice.**

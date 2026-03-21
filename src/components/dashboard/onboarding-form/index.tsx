@@ -30,17 +30,25 @@ export const OnboardingForm: React.FC<OnboardingFormProps> = (props) => {
     router.push(`/onboarding?step=${step}`);
   };
 
+  const handleUsernameStepOnComplete = () => goToStep("link");
+
+  const handleLinkStepOnComplete = () => goToStep("theme");
+
+  const handleLinkStepOnSkip = () => goToStep("theme");
+
+  const handleThemeStepOnComplete = () => goToStep("complete");
+
+  const handleThemeStepOnSkip = () => goToStep("complete");
+
   return (
     <div className="flex w-full max-w-md flex-col gap-8">
       {currentStep !== "complete" && <ProgressIndicator stepIndex={stepIndex} />}
 
       {currentStep === "username" && (
-        <UsernameStep defaultUsername={defaultUsername} onComplete={() => goToStep("link")} />
+        <UsernameStep defaultUsername={defaultUsername} onComplete={handleUsernameStepOnComplete} />
       )}
-      {currentStep === "link" && <LinkStep onComplete={() => goToStep("theme")} onSkip={() => goToStep("theme")} />}
-      {currentStep === "theme" && (
-        <ThemeStep onComplete={() => goToStep("complete")} onSkip={() => goToStep("complete")} />
-      )}
+      {currentStep === "link" && <LinkStep onComplete={handleLinkStepOnComplete} onSkip={handleLinkStepOnSkip} />}
+      {currentStep === "theme" && <ThemeStep onComplete={handleThemeStepOnComplete} onSkip={handleThemeStepOnSkip} />}
       {currentStep === "complete" && <CompleteStep />}
     </div>
   );

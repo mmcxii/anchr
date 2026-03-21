@@ -14,13 +14,15 @@ export const PricingCards: React.FC = () => {
 
   const pill = (value: Interval, label: string) => {
     const active = interval === value;
+    const handleButtonOnClick = () => setInterval(value);
+
     return (
       <button
         className={cn("rounded-full px-5 py-2 text-sm font-medium transition-colors", {
           "m-accent-bg m-page-bg-color": active,
           "m-muted-10-bg m-muted-50": !active,
         })}
-        onClick={() => setInterval(value)}
+        onClick={handleButtonOnClick}
         type="button"
       >
         {label}
@@ -51,7 +53,7 @@ export const PricingCards: React.FC = () => {
           <div className="m-accent-gradient-bg absolute inset-x-0 top-0 h-px" />
           <h3 className="mb-4 text-xl font-bold">{t("free")}</h3>
           <p className="m-muted-50 mb-6 text-sm">{t("youAreJustTestingTheWaters")}</p>
-          <div className="mb-2 text-4xl font-bold">$0</div>
+          <div className="mb-2 text-4xl font-bold">{t("$0")}</div>
           <p className="m-muted-50 mb-8 text-sm">{t("freeForever")}</p>
           <ul className="flex flex-col gap-3">
             {FREE_FEATURES.map((key) => (

@@ -59,6 +59,12 @@ export const SortableGroup: React.FC<SortableGroupProps> = (props) => {
     transition,
   };
 
+  //* Handlers
+  const handleButtonOnClick = () => setCollapsed((c) => !c);
+  const handleIconButtonOnClick = () => onToggleGroupVisibility(group);
+  const handleEditIconButtonOnClick = () => onEditGroup(group);
+  const handleDeleteIconButtonOnClick = () => onDeleteGroup(group);
+
   return (
     <div
       className={cn("flex flex-col gap-2", { "opacity-50": isDragging })}
@@ -84,7 +90,7 @@ export const SortableGroup: React.FC<SortableGroupProps> = (props) => {
 
         <button
           className="text-muted-foreground hover:text-foreground shrink-0 p-1"
-          onClick={() => setCollapsed((c) => !c)}
+          onClick={handleButtonOnClick}
           type="button"
         >
           <CollapseIcon className="size-4" />
@@ -98,18 +104,15 @@ export const SortableGroup: React.FC<SortableGroupProps> = (props) => {
           </span>
         )}
 
-        <IconButton
-          aria-label={group.visible ? t("hideLink") : t("showLink")}
-          onClick={() => onToggleGroupVisibility(group)}
-        >
+        <IconButton aria-label={group.visible ? t("hideLink") : t("showLink")} onClick={handleIconButtonOnClick}>
           <VisibilityIcon className="size-4" />
         </IconButton>
 
-        <IconButton aria-label={t("editLinkGroup")} onClick={() => onEditGroup(group)}>
+        <IconButton aria-label={t("editLinkGroup")} onClick={handleEditIconButtonOnClick}>
           <Pencil className="size-4" />
         </IconButton>
 
-        <IconButton aria-label={t("deleteLinkGroup")} onClick={() => onDeleteGroup(group)}>
+        <IconButton aria-label={t("deleteLinkGroup")} onClick={handleDeleteIconButtonOnClick}>
           <Trash2 className="size-4" />
         </IconButton>
       </div>

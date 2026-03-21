@@ -36,6 +36,8 @@ export const CheckoutCelebration: React.FC<CheckoutCelebrationProps> = (props) =
     return null;
   }
 
+  const handleButtonOnClick = () => onOpenChange(false);
+
   return (
     <div
       className="bg-anc-deep-navy/95 fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300"
@@ -89,7 +91,7 @@ export const CheckoutCelebration: React.FC<CheckoutCelebrationProps> = (props) =
           <p className="text-anc-steel max-w-xs text-sm">{t("welcomeAboardProYoureReadyToChartYourOwnCourse")}</p>
         </div>
 
-        <Button className="bg-anc-gold text-anc-deep-navy hover:bg-anc-gold/90" onClick={() => onOpenChange(false)}>
+        <Button className="bg-anc-gold text-anc-deep-navy hover:bg-anc-gold/90" onClick={handleButtonOnClick}>
           {t("continue")}
         </Button>
       </div>

@@ -26,7 +26,9 @@ export const Footer: React.FC<FooterProps> = (props) => {
           target="_blank"
         >
           <Anchor className="size-4" strokeWidth={1.5} />
+          {/* eslint-disable anchr/no-raw-string-jsx -- brand name */}
           Anchr
+          {/* eslint-enable anchr/no-raw-string-jsx */}
         </a>
       )}
       {themeToggle != null ? <div className="flex justify-end">{themeToggle}</div> : <div />}

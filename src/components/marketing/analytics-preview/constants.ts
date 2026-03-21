@@ -16,5 +16,13 @@ export const CHART_LINE = [
 ].join(" ");
 
 export const CHART_AREA = `${CHART_LINE} L 280 48 L 0 48 Z`;
-export const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
+export const DAYS = [
+  { id: "mon", label: "M" },
+  { id: "tue", label: "T" },
+  { id: "wed", label: "W" },
+  { id: "thu", label: "T" },
+  { id: "fri", label: "F" },
+  { id: "sat", label: "S" },
+  { id: "sun", label: "S" },
+];
 export const PEAK_IDX = 4;

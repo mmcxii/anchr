@@ -1,4 +1,4 @@
-/* eslint-disable anchr/no-inline-style */
+/* eslint-disable anchr/no-inline-style, anchr/no-raw-string-jsx */
 import { db } from "@/lib/db/client";
 import { usersTable } from "@/lib/db/schema/user";
 import { getTheme } from "@/lib/themes";

@@ -1,4 +1,5 @@
 {
+  "$0": "$0",
   "$5Mo": "$5/mo",
   "$60BilledAnnually": "$60 billed annually",
   "$7Mo": "$7/mo",
@@ -39,6 +40,7 @@
   "clickDataWillAppearHereOnceVisitorsStartUsingYourLinks": "Click data will appear here once visitors start using your links.",
   "clicks": "Clicks",
   "clicksOverTime": "Clicks over time",
+  "clicksThisWeek": "clicks this week",
   "closeMenu": "Close menu",
   "continue": "Continue",
   "cookieBannerMessage": "We use cookies for analytics to improve your experience.",
@@ -164,6 +166,7 @@
   "tooManyRequestsPleaseTryAgainLater": "Too many requests. Please try again later.",
   "topCountry": "Top country",
   "topLink": "Top link",
+  "topLinks": "Top links",
   "totalClicks": "Total clicks",
   "trend": "Trend",
   "tryAgain": "Try again",
@@ -204,6 +207,7 @@
   "{{count}}LinksHidden": "{{count}} links hidden.",
   "{{count}}LinksShown": "{{count}} links shown.",
   "{{count}}Selected": "{{count}} selected",
+  "{{label}}({{px}}px)": "{{label}} ({{px}}px)",
   "{{title}}IsNowHidden": "{{title}} is now hidden.",
   "{{title}}IsNowVisible": "{{title}} is now visible.",
   "{{title}}RedirectUrlCopied": "{{title}} redirect URL copied."

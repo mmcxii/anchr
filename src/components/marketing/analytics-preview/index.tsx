@@ -2,10 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { CHART_AREA, CHART_LINE, DAYS, PEAK_IDX, TOP_LINKS } from "./constants";
 import { ProgressBar } from "./progress-bar";
 
 export const AnalyticsPreview: React.FC = () => {
+  const { t } = useTranslation();
   const ref = React.useRef<HTMLDivElement>(null);
   const [triggered, setTriggered] = React.useState(false);
   const [count, setCount] = React.useState(0);
@@ -39,10 +41,10 @@ export const AnalyticsPreview: React.FC = () => {
 
     const tick = (now: number) => {
       const elapsed = now - startTime;
-      const t = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.round(eased * target));
-      if (t < 1) {
+      if (progress < 1) {
         requestAnimationFrame(tick);
       }
     };
@@ -57,9 +59,10 @@ export const AnalyticsPreview: React.FC = () => {
           <span className="text-[28px] leading-none font-bold tracking-tight tabular-nums">
             {count.toLocaleString()}
           </span>
+          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- decorative mockup data */}
           <span className="m-accent-color text-[11px] font-semibold">↑ 12%</span>
         </div>
-        <p className="m-muted-40 tracking-anc-tight mt-1 text-[10px]">clicks this week</p>
+        <p className="m-muted-40 tracking-anc-tight mt-1 text-[10px]">{t("clicksThisWeek")}</p>
       </div>
 
       <div>
@@ -111,15 +114,15 @@ export const AnalyticsPreview: React.FC = () => {
         </div>
 
         <div className="mt-1.5 flex justify-between">
-          {DAYS.map((day, i) => (
+          {DAYS.map(({ id, label }, i) => (
             <span
               className={cn("text-[9px] font-semibold", {
                 "m-accent-color": i === PEAK_IDX,
                 "m-muted-25": i !== PEAK_IDX,
               })}
-              key={i}
+              key={id}
             >
-              {day}
+              {label}
             </span>
           ))}
         </div>
@@ -128,7 +131,7 @@ export const AnalyticsPreview: React.FC = () => {
       <div className="m-divider-bg h-px" />
 
       <div className="space-y-2.5">
-        <p className="m-muted-28 text-[9px] font-semibold tracking-[0.18em] uppercase">Top links</p>
+        <p className="m-muted-28 text-[9px] font-semibold tracking-[0.18em] uppercase">{t("topLinks")}</p>
         {TOP_LINKS.map(({ clicks, label }, i) => (
           <div key={label}>
             <div className="mb-1.5 flex items-center justify-between">

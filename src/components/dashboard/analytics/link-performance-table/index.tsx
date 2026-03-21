@@ -38,6 +38,7 @@ export const LinkPerformanceTable: React.FC<LinkPerformanceTableProps> = (props)
           <table className="w-full text-sm">
             <thead>
               <tr className="text-muted-foreground border-b text-left">
+                {/* eslint-disable-next-line anchr/no-raw-string-jsx -- table column number symbol */}
                 <th className="pr-3 pb-2 font-medium">#</th>
                 <th className="pr-3 pb-2 font-medium">{t("title")}</th>
                 <th className="pr-3 pb-2 font-medium" />

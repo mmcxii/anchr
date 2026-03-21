@@ -45,6 +45,10 @@ export const LinkStep: React.FC<LinkStepProps> = (props) => {
     }
   };
 
+  const handleInputOnChange = (e) => setLinkTitle(e.target.value);
+
+  const handleUrlInputOnChange = (e) => setLinkUrl(e.target.value);
+
   return (
     <>
       <div className="flex flex-col items-center gap-2 text-center">
@@ -61,7 +65,7 @@ export const LinkStep: React.FC<LinkStepProps> = (props) => {
               autoFocus
               disabled={submitting}
               id="linkTitle"
-              onChange={(e) => setLinkTitle(e.target.value)}
+              onChange={handleInputOnChange}
               placeholder="My Website"
               value={linkTitle}
             />
@@ -71,7 +75,7 @@ export const LinkStep: React.FC<LinkStepProps> = (props) => {
             <Input
               disabled={submitting}
               id="linkUrl"
-              onChange={(e) => setLinkUrl(e.target.value)}
+              onChange={handleUrlInputOnChange}
               placeholder="https://"
               value={linkUrl}
             />

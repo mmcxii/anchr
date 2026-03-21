@@ -17,6 +17,17 @@ export const ClicksChart: React.FC<ClicksChartProps> = (props) => {
   //* State
   const { t } = useTranslation();
 
+  //* Handlers
+  const handleXAxisTickFormatter = (v: string) => {
+    const d = new Date(v + "T00:00:00");
+    return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+  };
+
+  const handleTooltipLabelFormatter = (v) => {
+    const d = new Date(String(v) + "T00:00:00");
+    return d.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -39,10 +50,7 @@ export const ClicksChart: React.FC<ClicksChartProps> = (props) => {
               axisLine={false}
               dataKey="date"
               fontSize={12}
-              tickFormatter={(v: string) => {
-                const d = new Date(v + "T00:00:00");
-                return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
-              }}
+              tickFormatter={handleXAxisTickFormatter}
               tickLine={false}
             />
             <YAxis allowDecimals={false} axisLine={false} fontSize={12} tickLine={false} width={30} />
@@ -53,10 +61,7 @@ export const ClicksChart: React.FC<ClicksChartProps> = (props) => {
                 borderRadius: "8px",
                 color: "var(--color-popover-foreground)",
               }}
-              labelFormatter={(v) => {
-                const d = new Date(String(v) + "T00:00:00");
-                return d.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
-              }}
+              labelFormatter={handleTooltipLabelFormatter}
             />
             <Area
               dataKey="clicks"

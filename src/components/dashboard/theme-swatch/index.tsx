@@ -47,8 +47,8 @@ export const ThemeSwatch: React.FC<ThemeSwatchProps> = (props) => {
 
           {/* Link bars */}
           <div className="mx-3 mt-2 space-y-1.5 pb-3">
-            {LINK_BARS.map((op, i) => (
-              <div className="h-1.5 rounded-sm" key={i} style={{ backgroundColor: swatch.accent, opacity: op }} />
+            {LINK_BARS.map((op) => (
+              <div className="h-1.5 rounded-sm" key={op} style={{ backgroundColor: swatch.accent, opacity: op }} />
             ))}
           </div>
         </div>
@@ -66,8 +66,8 @@ export const ThemeSwatch: React.FC<ThemeSwatchProps> = (props) => {
           {/* Main content area */}
           <div className="flex-1 px-2.5 py-3">
             <div className="space-y-2">
-              {DASHBOARD_BARS.map((op, i) => (
-                <div className="h-1.5 rounded-sm" key={i} style={{ backgroundColor: swatch.accent, opacity: op }} />
+              {DASHBOARD_BARS.map((op) => (
+                <div className="h-1.5 rounded-sm" key={op} style={{ backgroundColor: swatch.accent, opacity: op }} />
               ))}
             </div>
           </div>

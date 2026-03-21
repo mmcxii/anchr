@@ -15,8 +15,8 @@ export const ThemeSwatch: React.FC<ThemeSwatchProps> = (props) => {
       <div className="h-px w-full" ref={hairRef} />
       <div className="mx-auto mt-1.5 size-3 rounded-full" ref={dotRef} />
       <div className="mx-1.5 mt-1.5 space-y-1">
-        {[0.4, 0.25, 0.15].map((op, j) => (
-          <ThemeBar accent={accent} key={j} opacity={op} />
+        {[0.4, 0.25, 0.15].map((op) => (
+          <ThemeBar accent={accent} key={op} opacity={op} />
         ))}
       </div>
     </div>

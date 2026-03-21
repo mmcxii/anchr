@@ -23,7 +23,8 @@ export const ThemePicker: React.FC<ThemePickerProps> = (props) => {
   const [pendingTheme, setPendingTheme] = React.useState<null | ThemeId>(null);
   const [isPending, startTransition] = React.useTransition();
 
-  const handleSelect = (themeId: ThemeId) => {
+  //* Handlers
+  const handleThemeSwatchOnClick = (themeId: ThemeId) => () => {
     if (themeId === selectedTheme || isPending) {
       return;
     }
@@ -54,7 +55,7 @@ export const ThemePicker: React.FC<ThemePickerProps> = (props) => {
           isSelected={selectedTheme === id}
           key={id}
           name={THEMES[id].name}
-          onClick={() => handleSelect(id)}
+          onClick={handleThemeSwatchOnClick(id)}
           swatch={THEMES[id].swatch}
           variant={variant}
         />

@@ -82,11 +82,13 @@ export const Features: React.FC = () => {
               {/* Domain mapping visual */}
               <div className="mt-4 flex items-center gap-2.5">
                 <div className="m-embed-bg-bg m-muted-12-border rounded-lg px-3 py-1.5">
+                  {/* eslint-disable-next-line anchr/no-raw-string-jsx -- domain name in mockup */}
                   <span className="m-muted-bg-55-color text-[11px] font-medium">marina.studio</span>
                 </div>
                 <ChevronRight className="m-muted-25 size-3.5 shrink-0" strokeWidth={1.5} />
                 <div className="m-accent-05-bg m-accent-18-border flex items-center gap-1.5 rounded-lg px-3 py-1.5">
                   <Anchor className="m-accent-55-color size-3" strokeWidth={1.5} />
+                  {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand name in mockup */}
                   <span className="m-accent-60-color text-[11px] font-medium">anchr</span>
                 </div>
               </div>
