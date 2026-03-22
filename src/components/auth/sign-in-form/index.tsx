@@ -49,7 +49,7 @@ export const SignInForm: React.FC = () => {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         window.location.replace("/dashboard");
-      } else if (result.status === "needs_second_factor" || result.status === "needs_client_trust") {
+      } else if (result.status === "needs_second_factor" || (result.status as string) === "needs_client_trust") {
         const emailFactor = result.supportedSecondFactors?.find((f) => f.strategy === "email_code");
 
         if (emailFactor != null) {
