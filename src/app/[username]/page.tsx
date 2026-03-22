@@ -11,6 +11,7 @@ import { usersTable } from "@/lib/db/schema/user";
 import { type ThemeId, isValidThemeId } from "@/lib/themes";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import * as React from "react";
 
@@ -133,6 +134,10 @@ export async function generateMetadata(props: { params: Promise<Params> }): Prom
 
   const { user } = data;
   const name = user.displayName ?? user.username;
+  const pageUrl =
+    user.customDomain != null && user.customDomainVerified
+      ? `https://${user.customDomain}`
+      : `https://anchr.to/${user.username}`;
 
   return {
     description: user.bio ?? `Check out ${name}'s links on Anchr.`,
@@ -140,7 +145,7 @@ export async function generateMetadata(props: { params: Promise<Params> }): Prom
       description: user.bio ?? `Check out ${name}'s links on Anchr.`,
       title: `${name} (@${user.username})`,
       type: "profile",
-      url: `https://anchr.to/${user.username}`,
+      url: pageUrl,
     },
     title: `${name} (@${user.username})`,
     twitter: {
@@ -169,6 +174,10 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
   const { groups, links, quickLinks, user } = data;
   const darkThemeId: ThemeId = isValidThemeId(user.pageDarkTheme) ? user.pageDarkTheme : "dark-depths";
   const lightThemeId: ThemeId = isValidThemeId(user.pageLightTheme) ? user.pageLightTheme : "stateroom";
+
+  const headerList = await headers();
+  const customDomain = headerList.get("x-custom-domain");
+  const basePath = customDomain != null ? "" : `/${user.username}`;
 
   return (
     <ThemeProvider darkThemeId={darkThemeId} lightThemeId={lightThemeId}>
@@ -201,11 +210,12 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col items-center gap-6 px-5 pt-10">
         <ProfileHeader
           avatarUrl={user.avatarUrl}
+          basePath={basePath}
           displayName={user.displayName}
           quickLinks={quickLinks}
           username={user.username}
         />
-        <LinkList groups={groups} links={links} username={user.username} />
+        <LinkList basePath={basePath} groups={groups} links={links} username={user.username} />
       </div>
       <Container className="relative pb-8">
         <Footer hideBranding={user.tier === "pro" && user.hideBranding} themeToggle={<LinkPageThemeToggle />} />

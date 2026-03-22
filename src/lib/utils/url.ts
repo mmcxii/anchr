@@ -1,3 +1,17 @@
+const VALID_DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+const BLOCKED_DOMAIN_REGEX = /(?:^|\.)anchr\.to$/i;
+
+export function isValidDomain(domain: string): boolean {
+  const normalized = domain.trim().toLowerCase();
+  if (!VALID_DOMAIN_REGEX.test(normalized)) {
+    return false;
+  }
+  if (BLOCKED_DOMAIN_REGEX.test(normalized)) {
+    return false;
+  }
+  return true;
+}
+
 export function ensureProtocol(url: string): string {
   const trimmed = url.trim();
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {

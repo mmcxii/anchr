@@ -15,13 +15,16 @@ type QuickLinkData = {
 
 export type ProfileHeaderProps = {
   avatarUrl: null | string;
+  basePath?: string;
   displayName: null | string;
   quickLinks?: QuickLinkData[];
   username: string;
 };
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
-  const { avatarUrl, displayName, quickLinks = [], username } = props;
+  const { avatarUrl, basePath, displayName, quickLinks = [], username } = props;
+
+  const linkBasePath = basePath ?? `/${username}`;
 
   //* Variables
   const name = displayName ?? username;
@@ -55,7 +58,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
           {quickLinks.map((link) => (
             <a
               className="border-anc-theme-link-border bg-anc-theme-link-bg flex size-10 items-center justify-center rounded-full border transition-transform hover:scale-110 active:scale-95"
-              href={`/${username}/${link.slug}`}
+              href={`${linkBasePath}/${link.slug}`}
               key={link.id}
               rel="noopener noreferrer"
               target="_blank"

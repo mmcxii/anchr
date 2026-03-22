@@ -56,6 +56,7 @@ export type GroupItem = typeof linkGroupsTable.$inferSelect;
 export type LinkItem = typeof linksTable.$inferSelect;
 
 export type LinkListProps = {
+  customDomain?: null | string;
   groups: GroupItem[];
   isPro: boolean;
   links: LinkItem[];
@@ -64,7 +65,7 @@ export type LinkListProps = {
 };
 
 export const LinkList: React.FC<LinkListProps> = (props) => {
-  const { groups: initialGroups, isPro, links, onQrCode, username } = props;
+  const { customDomain, groups: initialGroups, isPro, links, onQrCode, username } = props;
 
   //* State
   const { t } = useTranslation();
@@ -500,6 +501,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
             {/* Quick Links section */}
             {quickLinksGroup != null && (
               <QuickLinksSection
+                customDomain={customDomain}
                 group={quickLinksGroup}
                 links={orderedLinks
                   .filter((l) => l.groupId === quickLinksGroup.id)
@@ -522,6 +524,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
                   <ul className="flex flex-col gap-2">
                     {ungroupedLinks.map((link) => (
                       <SortableLinkCard
+                        customDomain={customDomain}
                         key={link.id}
                         link={link}
                         onDelete={handleOpenDeleteLink}
@@ -547,6 +550,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
 
                 return (
                   <SortableGroup
+                    customDomain={customDomain}
                     group={group}
                     key={group.id}
                     links={groupLinks}
@@ -575,6 +579,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
                 }
                 return (
                   <SortableLinkCard
+                    customDomain={customDomain}
                     link={draggedLink}
                     onDelete={handleOpenDeleteLink}
                     onEdit={handleOpenEditLink}
@@ -600,6 +605,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
             </DialogDescription>
           </DialogHeader>
           <LinkForm
+            customDomain={customDomain}
             defaultValues={
               editingLink != null
                 ? {

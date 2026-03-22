@@ -34,6 +34,9 @@ export const envSchema = createEnv({
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    VERCEL_API_TOKEN: process.env.VERCEL_API_TOKEN,
+    VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
+    VERCEL_TEAM_ID: process.env.VERCEL_TEAM_ID,
   },
   server: {
     CLERK_SECRET_KEY: z.string(),
@@ -46,5 +49,8 @@ export const envSchema = createEnv({
     UPLOADTHING_TOKEN: z.string(),
     UPSTASH_REDIS_REST_TOKEN: z.string(),
     UPSTASH_REDIS_REST_URL: z.string(),
+    VERCEL_API_TOKEN: z.string(),
+    VERCEL_PROJECT_ID: z.string(),
+    VERCEL_TEAM_ID: z.string().optional(),
   },
 });

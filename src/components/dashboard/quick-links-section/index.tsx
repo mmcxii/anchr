@@ -11,6 +11,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 export type QuickLinksSectionProps = {
+  customDomain?: null | string;
   group: GroupItem;
   links: LinkItem[];
   selectedIds: Set<string>;
@@ -25,6 +26,7 @@ export type QuickLinksSectionProps = {
 
 export const QuickLinksSection: React.FC<QuickLinksSectionProps> = (props) => {
   const {
+    customDomain,
     group,
     links,
     onDeleteLink,
@@ -88,6 +90,7 @@ export const QuickLinksSection: React.FC<QuickLinksSectionProps> = (props) => {
               <ul className="flex flex-col gap-2">
                 {links.map((link) => (
                   <SortableLinkCard
+                    customDomain={customDomain}
                     key={link.id}
                     link={link}
                     onDelete={onDeleteLink}

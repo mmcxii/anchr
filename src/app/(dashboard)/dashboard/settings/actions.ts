@@ -5,8 +5,10 @@ import { usersTable } from "@/lib/db/schema/user";
 import { envSchema } from "@/lib/env";
 import { stripe } from "@/lib/stripe";
 import { isDarkTheme, isValidThemeId } from "@/lib/themes";
+import { isValidDomain } from "@/lib/utils/url";
+import { addDomain, getDomainConfig, removeDomain, verifyDomain } from "@/lib/vercel";
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export type ActionResult = { error: string; success: false } | { success: true; url?: string };
@@ -131,4 +133,128 @@ export async function createPortalSession(): Promise<ActionResult> {
     console.error("[createPortalSession]", error);
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
+}
+
+// ─── Custom Domain Actions ───────────────────────────────────────────────────
+
+export type VerifyDomainResult =
+  | { error: string; status: "error"; success: false }
+  | { status: "connected" | "dns_pending" | "ssl_pending"; success: true };
+
+export async function addCustomDomain(domain: string): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+  if (user == null || user.tier !== "pro") {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const normalized = domain.trim().toLowerCase();
+
+  if (!isValidDomain(normalized)) {
+    return { error: "pleaseEnterAValidUrl", success: false };
+  }
+
+  // Check if domain is already used by another user
+  const [existing] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(eq(usersTable.customDomain, normalized), ne(usersTable.id, userId)))
+    .limit(1);
+
+  if (existing != null) {
+    return { error: "thisDomainIsAlreadyInUse", success: false };
+  }
+
+  // If user already has a different domain, remove it from Vercel first
+  if (user.customDomain != null && user.customDomain !== normalized) {
+    await removeDomain(user.customDomain);
+  }
+
+  const result = await addDomain(normalized);
+
+  if (!result.ok) {
+    console.error("[addCustomDomain]", result.error);
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  await db
+    .update(usersTable)
+    .set({ customDomain: normalized, customDomainVerified: false, updatedAt: new Date() })
+    .where(eq(usersTable.id, userId));
+
+  revalidatePath("/dashboard/settings");
+
+  return { success: true };
+}
+
+export async function verifyCustomDomain(): Promise<VerifyDomainResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", status: "error", success: false };
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+  if (user == null || user.customDomain == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", status: "error", success: false };
+  }
+
+  const configResult = await getDomainConfig(user.customDomain);
+
+  if (!configResult.ok || configResult.data.misconfigured) {
+    return { error: "dnsNotConfiguredYetPleaseAddTheCnameRecordAndTryAgain", status: "error", success: false };
+  }
+
+  const verifyResult = await verifyDomain(user.customDomain);
+
+  if (!verifyResult.ok || !verifyResult.data.verified) {
+    return { error: "sslIsBeingProvisionedPleaseWaitAFewMinutesAndTryAgain", status: "error", success: false };
+  }
+
+  await db
+    .update(usersTable)
+    .set({ customDomainVerified: true, updatedAt: new Date() })
+    .where(eq(usersTable.id, userId));
+
+  revalidatePath("/dashboard/settings");
+  if (user.username) {
+    revalidatePath(`/${user.username}`);
+  }
+
+  return { status: "connected", success: true };
+}
+
+export async function removeCustomDomain(): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+  if (user == null || user.customDomain == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  await removeDomain(user.customDomain);
+
+  await db
+    .update(usersTable)
+    .set({ customDomain: null, customDomainVerified: false, updatedAt: new Date() })
+    .where(eq(usersTable.id, userId));
+
+  revalidatePath("/dashboard/settings");
+  if (user.username) {
+    revalidatePath(`/${user.username}`);
+  }
+
+  return { success: true };
 }
