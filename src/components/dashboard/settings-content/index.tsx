@@ -2,6 +2,7 @@
 
 import {
   addCustomDomain,
+  checkUsernameAvailability,
   createPortalSession,
   getOrCreateUserReferralCode,
   redeemReferralCode,
@@ -11,6 +12,7 @@ import {
   updatePageDarkTheme,
   updatePageLightTheme,
   updateProfile,
+  updateUsername,
   verifyCustomDomain,
 } from "@/app/(dashboard)/dashboard/settings/actions";
 import { CheckoutCelebration } from "@/components/dashboard/checkout-celebration";
@@ -25,10 +27,14 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { SessionUser } from "@/lib/auth";
+import { usernameSchema } from "@/lib/schemas/username";
 import { DARK_THEME_ID_LIST, LIGHT_THEME_ID_LIST, THEMES, isDarkTheme, type ThemeId } from "@/lib/themes";
 import { isProUser } from "@/lib/tier";
 import { useUploadThing } from "@/lib/uploadthing";
-import { Anchor, Camera, Check, CheckCircle2, Copy, Loader2, Lock } from "lucide-react";
+import { useReverification, useSession, useUser } from "@clerk/nextjs";
+import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
+import type { SessionVerificationResource } from "@clerk/shared/types";
+import { Anchor, Camera, Check, CheckCircle2, Copy, Loader2, Lock, X } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -36,6 +42,7 @@ import { toast } from "sonner";
 
 export type SettingsContentProps = {
   checkoutSuccess?: boolean;
+  email: string;
   hideBranding: boolean;
   pageDarkThemeId: ThemeId;
   pageLightThemeId: ThemeId;
@@ -43,9 +50,11 @@ export type SettingsContentProps = {
 };
 
 export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
-  const { checkoutSuccess, hideBranding, pageDarkThemeId, pageLightThemeId, user } = props;
+  const { checkoutSuccess, email, hideBranding, pageDarkThemeId, pageLightThemeId, user } = props;
 
   const { t } = useTranslation();
+  const { user: clerkUser } = useUser();
+  const { session } = useSession();
   const { preferredDark, preferredLight, setPreferredDark, setPreferredLight } = useDashboardTheme();
   const [previewThemes, setPreviewThemes] = React.useState({ dark: pageDarkThemeId, light: pageLightThemeId });
   const [brandingHidden, setBrandingHidden] = React.useState(hideBranding);
@@ -68,6 +77,48 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
   const isPro = isProUser(user);
   const previewKey = `${previewThemes.dark}|${previewThemes.light}|${brandingHidden}|${profileVersion}|${avatarUrl}`;
 
+  // Username state
+  const [usernameInput, setUsernameInput] = React.useState(user.username);
+  const [usernameAvailability, setUsernameAvailability] = React.useState<"available" | "checking" | "idle" | "taken">(
+    "idle",
+  );
+  const usernameDebounceRef = React.useRef<null | ReturnType<typeof setTimeout>>(null);
+  const usernameHasValidationError = !usernameSchema.shape.username.safeParse(usernameInput).success;
+  const usernameUnchanged = usernameInput === user.username;
+
+  // Email state
+  const [emailInput, setEmailInput] = React.useState("");
+  const [emailStep, setEmailStep] = React.useState<"edit" | "reverify" | "verify">("edit");
+  const [emailPending, setEmailPending] = React.useState(false);
+  const [verificationCode, setVerificationCode] = React.useState("");
+  const [currentEmail, setCurrentEmail] = React.useState(email);
+  const emailAddressIdRef = React.useRef<null | string>(null);
+
+  // Reverification state
+  const [reverifyPassword, setReverifyPassword] = React.useState("");
+  const [reverifyComplete, setReverifyComplete] = React.useState<null | (() => void)>(null);
+  const [reverifyCancel, setReverifyCancel] = React.useState<null | (() => void)>(null);
+  const reverificationRef = React.useRef<undefined | SessionVerificationResource>(undefined);
+
+  const createEmailAddress = useReverification(
+    async (emailValue: string) => clerkUser?.createEmailAddress({ email: emailValue }),
+    {
+      onNeedsReverification: ({ cancel, complete, level }) => {
+        // Use function wrappers to prevent React from invoking these as state initializers
+        setReverifyComplete(() => complete);
+        setReverifyCancel(() => cancel);
+        setEmailPending(false);
+        setEmailStep("reverify");
+
+        // Start the verification session
+        session?.startVerification({ level: level ?? "first_factor" }).then(async (response) => {
+          reverificationRef.current = response;
+          await prepareReverification(response);
+        });
+      },
+    },
+  );
+
   React.useEffect(() => {
     if (checkoutSuccess) {
       window.history.replaceState(null, "", "/dashboard/settings");
@@ -81,6 +132,31 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
       }
     });
   }, []);
+
+  // Username availability check
+  React.useEffect(() => {
+    if (usernameDebounceRef.current != null) {
+      clearTimeout(usernameDebounceRef.current);
+    }
+
+    if (usernameHasValidationError || usernameUnchanged || usernameInput.length < 1) {
+      setUsernameAvailability("idle");
+      return;
+    }
+
+    setUsernameAvailability("checking");
+
+    usernameDebounceRef.current = setTimeout(async () => {
+      const result = await checkUsernameAvailability(usernameInput);
+      setUsernameAvailability(result.available ? "available" : "taken");
+    }, 400);
+
+    return () => {
+      if (usernameDebounceRef.current != null) {
+        clearTimeout(usernameDebounceRef.current);
+      }
+    };
+  }, [usernameInput, usernameHasValidationError, usernameUnchanged]);
 
   //* Handlers
   const handlePageThemeChange = React.useCallback((themeId: ThemeId) => {
@@ -136,6 +212,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
 
   const handleProfileSave = () => {
     startProfileTransition(async () => {
+      // Save username if changed
+      if (!usernameUnchanged && usernameAvailability === "available" && !usernameHasValidationError) {
+        const usernameResult = await updateUsername(usernameInput);
+
+        if (!usernameResult.success) {
+          toast.error(t(usernameResult.error));
+          return;
+        }
+      }
+
       const result = await updateProfile(displayNameInput, bioInput);
 
       if (!result.success) {
@@ -144,12 +230,177 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
       }
 
       setProfileVersion((v) => v + 1);
+
+      // Start email change flow if email changed — must run after profile save
+      // so the verification UI isn't masked by the "profile updated" toast
+      if (emailInput.trim().length > 0) {
+        await handleEmailUpdate();
+        return;
+      }
+
       toast.success(t("profileUpdated"));
     });
   };
 
   const handleDisplayNameOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setDisplayNameInput(e.target.value);
   const handleBioOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setBioInput(e.target.value);
+
+  const handleUsernameOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setUsernameInput(e.target.value);
+
+  const handleEmailInputOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmailInput(e.target.value);
+  const handleVerificationCodeOnChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setVerificationCode(e.target.value);
+
+  const handleEmailUpdate = async () => {
+    if (clerkUser == null) {
+      return;
+    }
+
+    setEmailPending(true);
+
+    try {
+      const emailAddress = await createEmailAddress(emailInput);
+
+      if (emailAddress == null) {
+        return;
+      }
+
+      emailAddressIdRef.current = emailAddress.id;
+
+      // Reload user so the new email address appears in clerkUser.emailAddresses
+      await clerkUser.reload();
+
+      // Find the newly created email address and send verification code
+      const newEmail = clerkUser.emailAddresses.find((e) => e.id === emailAddress.id);
+      await newEmail?.prepareVerification({ strategy: "email_code" });
+
+      setEmailStep("verify");
+      toast.success(t("checkYourEmail"));
+    } catch (error) {
+      if (isClerkAPIResponseError(error)) {
+        toast.error(error.errors[0]?.longMessage ?? t("somethingWentWrongPleaseTryAgain"));
+      } else {
+        toast.error(t("somethingWentWrongPleaseTryAgain"));
+      }
+    } finally {
+      setEmailPending(false);
+    }
+  };
+
+  const handleEmailVerify = async () => {
+    if (clerkUser == null || emailAddressIdRef.current == null) {
+      return;
+    }
+
+    setEmailPending(true);
+
+    try {
+      const emailAddress = clerkUser.emailAddresses.find((e) => e.id === emailAddressIdRef.current);
+
+      if (emailAddress == null) {
+        toast.error(t("somethingWentWrongPleaseTryAgain"));
+        return;
+      }
+
+      const result = await emailAddress.attemptVerification({ code: verificationCode });
+
+      if (result.verification.status !== "verified") {
+        toast.error(t("somethingWentWrongPleaseTryAgain"));
+        return;
+      }
+
+      await clerkUser.update({ primaryEmailAddressId: result.id });
+
+      // Remove the old email address
+      const oldEmail = clerkUser.emailAddresses.find((e) => e.id !== result.id);
+      if (oldEmail != null) {
+        await oldEmail.destroy();
+      }
+
+      setCurrentEmail(emailInput);
+      setEmailInput("");
+      setVerificationCode("");
+      setEmailStep("edit");
+      emailAddressIdRef.current = null;
+      toast.success(t("emailUpdated"));
+    } catch (error) {
+      if (isClerkAPIResponseError(error)) {
+        toast.error(error.errors[0]?.longMessage ?? t("somethingWentWrongPleaseTryAgain"));
+      } else {
+        toast.error(t("somethingWentWrongPleaseTryAgain"));
+      }
+    } finally {
+      setEmailPending(false);
+    }
+  };
+
+  const handleEmailCancel = () => {
+    if (emailStep === "reverify") {
+      reverifyCancel?.();
+      setReverifyComplete(null);
+      setReverifyCancel(null);
+      setReverifyPassword("");
+      reverificationRef.current = undefined;
+    }
+
+    setEmailStep("edit");
+    setEmailInput("");
+    setVerificationCode("");
+    emailAddressIdRef.current = null;
+  };
+
+  const prepareReverification = async (verification: SessionVerificationResource) => {
+    if (verification.status !== "needs_first_factor") {
+      return;
+    }
+
+    const passwordFactor = verification.supportedFirstFactors?.find((f) => f.strategy === "password");
+    const emailCodeFactor = verification.supportedFirstFactors?.find((f) => f.strategy === "email_code");
+
+    if (passwordFactor != null) {
+      // Password-based reverification — just show the password input, no prep needed
+      return;
+    }
+
+    if (emailCodeFactor != null && "emailAddressId" in emailCodeFactor) {
+      await session?.prepareFirstFactorVerification({
+        emailAddressId: emailCodeFactor.emailAddressId,
+        strategy: "email_code",
+      });
+    }
+  };
+
+  const handleReverifyPasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setReverifyPassword(e.target.value);
+
+  const handleReverifySubmit = async () => {
+    setEmailPending(true);
+
+    try {
+      const verification = reverificationRef.current;
+      const hasPassword = verification?.supportedFirstFactors?.some((f) => f.strategy === "password");
+
+      if (hasPassword) {
+        await session?.attemptFirstFactorVerification({ password: reverifyPassword, strategy: "password" });
+      } else {
+        await session?.attemptFirstFactorVerification({ code: reverifyPassword, strategy: "email_code" });
+      }
+
+      reverifyComplete?.();
+      setReverifyComplete(null);
+      setReverifyCancel(null);
+      setReverifyPassword("");
+      reverificationRef.current = undefined;
+    } catch (error) {
+      if (isClerkAPIResponseError(error)) {
+        toast.error(error.errors[0]?.longMessage ?? t("somethingWentWrongPleaseTryAgain"));
+      } else {
+        toast.error(t("somethingWentWrongPleaseTryAgain"));
+      }
+    } finally {
+      setEmailPending(false);
+    }
+  };
 
   // TODO: ANC-107 — restore handleUpgrade once Stripe product is created
 
@@ -247,9 +498,100 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t("profile")}</CardTitle>
+            <CardTitle>{t("account")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <p className="text-muted-foreground mb-2 text-sm font-medium">{t("username")}</p>
+              <div className="relative">
+                <Input
+                  disabled={profilePending}
+                  onChange={handleUsernameOnChange}
+                  placeholder="your_username"
+                  value={usernameInput}
+                />
+                <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                  {usernameAvailability === "checking" && (
+                    <Loader2 className="text-muted-foreground size-4 animate-spin" />
+                  )}
+                  {usernameAvailability === "available" && <Check className="size-4 text-emerald-500" />}
+                  {usernameAvailability === "taken" && <X className="size-4 text-red-500" />}
+                </div>
+              </div>
+              {usernameAvailability === "taken" && !usernameHasValidationError && (
+                <p className="text-destructive mt-1 text-xs">{t("thisUsernameIsAlreadyTaken")}</p>
+              )}
+              {usernameAvailability === "available" && !usernameHasValidationError && (
+                <p className="mt-1 text-xs text-emerald-500">{t("usernameIsAvailable")}</p>
+              )}
+              {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand URL prefix with dynamic username */}
+              <p className="text-muted-foreground mt-1 text-xs">anchr.to/{usernameInput}</p>
+            </div>
+
+            <div>
+              <p className="text-muted-foreground mb-2 text-sm font-medium">{t("email")}</p>
+              {emailStep === "edit" && (
+                <Input
+                  disabled={profilePending || emailPending}
+                  onChange={handleEmailInputOnChange}
+                  placeholder={currentEmail}
+                  type="email"
+                  value={emailInput}
+                />
+              )}
+              {emailStep === "reverify" && (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs">{t("confirmYourPasswordToContinue")}</p>
+                  <div className="flex gap-2">
+                    <Input
+                      disabled={emailPending}
+                      onChange={handleReverifyPasswordOnChange}
+                      placeholder={t("password")}
+                      type="password"
+                      value={reverifyPassword}
+                    />
+                    <Button
+                      disabled={emailPending || reverifyPassword.length === 0}
+                      onClick={handleReverifySubmit}
+                      variant="secondary"
+                    >
+                      {emailPending && <Loader2 className="size-3.5 animate-spin" />}
+                      {t("continue")}
+                    </Button>
+                    <Button disabled={emailPending} onClick={handleEmailCancel} variant="tertiary">
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {emailStep === "verify" && (
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs">{t("enterTheCodeWeSentToYourEmail")}</p>
+                  <div className="flex gap-2">
+                    <Input
+                      disabled={emailPending}
+                      onChange={handleVerificationCodeOnChange}
+                      placeholder={t("verificationCode")}
+                      value={verificationCode}
+                    />
+                    <Button
+                      disabled={emailPending || verificationCode.trim().length === 0}
+                      onClick={handleEmailVerify}
+                      variant="secondary"
+                    >
+                      {emailPending && <Loader2 className="size-3.5 animate-spin" />}
+                      {t("verify")}
+                    </Button>
+                    <Button disabled={emailPending} onClick={handleEmailCancel} variant="tertiary">
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <hr className="border-border" />
+
             <div>
               <p className="text-muted-foreground mb-2 text-sm font-medium">{t("avatar")}</p>
               <div className="flex items-center gap-4">
@@ -306,10 +648,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
               <p className="text-muted-foreground mb-2 text-sm font-medium">{t("bio")}</p>
               <Textarea disabled={profilePending} onChange={handleBioOnChange} value={bioInput} />
             </div>
-            <Button disabled={profilePending} onClick={handleProfileSave} variant="secondary">
-              {profilePending && <Loader2 className="size-3.5 animate-spin" />}
-              {t("save")}
-            </Button>
+            {emailStep === "edit" && (
+              <Button
+                disabled={profilePending || (!usernameUnchanged && usernameAvailability !== "available")}
+                onClick={handleProfileSave}
+                variant="secondary"
+              >
+                {profilePending && <Loader2 className="size-3.5 animate-spin" />}
+                {t("save")}
+              </Button>
+            )}
           </CardContent>
         </Card>
 

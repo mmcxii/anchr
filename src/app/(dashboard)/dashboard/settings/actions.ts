@@ -6,6 +6,7 @@ import { referralCodesTable } from "@/lib/db/schema/referral-code";
 import { referralRedemptionsTable } from "@/lib/db/schema/referral-redemption";
 import { usersTable } from "@/lib/db/schema/user";
 import { envSchema } from "@/lib/env";
+import { usernameSchema } from "@/lib/schemas/username";
 import { stripe } from "@/lib/stripe";
 import { isDarkTheme, isValidThemeId } from "@/lib/themes";
 import { isProUser } from "@/lib/tier";
@@ -18,6 +19,79 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export type ActionResult = { error: string; success: false } | { success: true; url?: string };
+
+// ─── Username Actions ───────────────────────────────────────────────────────
+
+export type CheckUsernameResult = {
+  available: boolean;
+};
+
+export async function checkUsernameAvailability(username: string): Promise<CheckUsernameResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { available: false };
+  }
+
+  const result = usernameSchema.shape.username.safeParse(username);
+
+  if (!result.success) {
+    return { available: false };
+  }
+
+  const existing = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(eq(usersTable.username, result.data), ne(usersTable.id, userId)))
+    .limit(1);
+
+  return { available: existing.length === 0 };
+}
+
+export async function updateUsername(username: string): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const result = usernameSchema.shape.username.safeParse(username);
+
+  if (!result.success) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const existing = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(eq(usersTable.username, result.data), ne(usersTable.id, userId)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    return { error: "thisUsernameIsAlreadyTaken", success: false };
+  }
+
+  const [currentUser] = await db
+    .select({ username: usersTable.username })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+
+  const oldUsername = currentUser?.username;
+
+  await db.update(usersTable).set({ updatedAt: new Date(), username: result.data }).where(eq(usersTable.id, userId));
+
+  if (oldUsername != null) {
+    revalidatePath(`/${oldUsername}`);
+  }
+
+  revalidatePath(`/${result.data}`);
+  revalidatePath("/dashboard/settings");
+
+  return { success: true };
+}
+
+// ─── Theme Actions ──────────────────────────────────────────────────────────
 
 async function updatePageTheme(field: "pageDarkTheme" | "pageLightTheme", theme: string): Promise<ActionResult> {
   const { userId } = await auth();

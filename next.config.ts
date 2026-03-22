@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   env: envSchema,
   images: {
-    remotePatterns: [{ hostname: "img.clerk.com" }, { hostname: "utfs.io" }],
+    remotePatterns: [{ hostname: "img.clerk.com" }, { hostname: "utfs.io" }, { hostname: "*.ufs.sh" }],
   },
   reactCompiler: true,
 };
