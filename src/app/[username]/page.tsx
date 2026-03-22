@@ -245,6 +245,7 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
         <ProfileHeader
           avatarUrl={user.avatarUrl}
           basePath={basePath}
+          bio={user.bio}
           displayName={user.displayName}
           quickLinks={quickLinks}
           username={user.username}

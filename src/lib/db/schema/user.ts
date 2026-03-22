@@ -4,6 +4,7 @@ export const usersTable = pgTable("users", {
   avatarUrl: text("avatar_url"),
   bio: text("bio"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  customAvatar: boolean("custom_avatar").default(false).notNull(),
   customDomain: text("custom_domain").unique(),
   customDomainVerified: boolean("custom_domain_verified").default(false).notNull(),
   displayName: text("display_name"),

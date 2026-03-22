@@ -16,13 +16,14 @@ type QuickLinkData = {
 export type ProfileHeaderProps = {
   avatarUrl: null | string;
   basePath?: string;
+  bio?: null | string;
   displayName: null | string;
   quickLinks?: QuickLinkData[];
   username: string;
 };
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
-  const { avatarUrl, basePath, displayName, quickLinks = [], username } = props;
+  const { avatarUrl, basePath, bio, displayName, quickLinks = [], username } = props;
 
   const linkBasePath = basePath ?? `/${username}`;
 
@@ -50,8 +51,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
         </div>
       </div>
       <h1 className="text-anc-theme-name text-lg font-bold tracking-wide">{name}</h1>
-      {/* eslint-disable-next-line anchr/no-raw-string-jsx -- dynamic username with @ prefix */}
-      <p className="tracking-anc-caps text-anc-theme-link-text mt-0.5 text-xs font-medium uppercase">@{username}</p>
+      {bio != null && bio.length > 0 && (
+        <p className="text-anc-theme-link-text mt-1 max-w-xs text-center text-sm">{bio}</p>
+      )}
 
       {quickLinks.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">

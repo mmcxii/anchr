@@ -4,10 +4,12 @@ import {
   addCustomDomain,
   createCheckoutSession,
   createPortalSession,
+  removeAvatar,
   removeCustomDomain,
   updateHideBranding,
   updatePageDarkTheme,
   updatePageLightTheme,
+  updateProfile,
   verifyCustomDomain,
 } from "@/app/(dashboard)/dashboard/settings/actions";
 import { CheckoutCelebration } from "@/components/dashboard/checkout-celebration";
@@ -19,10 +21,13 @@ import { ThemeSwatch } from "@/components/dashboard/theme-swatch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { SessionUser } from "@/lib/auth";
 import { DARK_THEME_ID_LIST, LIGHT_THEME_ID_LIST, THEMES, isDarkTheme, type ThemeId } from "@/lib/themes";
 import { isProUser } from "@/lib/tier";
-import { Check, CheckCircle2, Loader2, Lock } from "lucide-react";
+import { useUploadThing } from "@/lib/uploadthing";
+import { Anchor, Camera, Check, CheckCircle2, Loader2, Lock } from "lucide-react";
+import Image from "next/image";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -45,10 +50,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
   const [brandingPending, startBrandingTransition] = React.useTransition();
   const [billingLoading, setBillingLoading] = React.useState(false);
   const [celebrationOpen, setCelebrationOpen] = React.useState(checkoutSuccess === true);
+  const [displayNameInput, setDisplayNameInput] = React.useState(user.displayName ?? "");
+  const [bioInput, setBioInput] = React.useState(user.bio ?? "");
+  const [profilePending, startProfileTransition] = React.useTransition();
+  const [profileVersion, setProfileVersion] = React.useState(0);
+  const [avatarUrl, setAvatarUrl] = React.useState(user.avatarUrl);
+  const [avatarPending, startAvatarTransition] = React.useTransition();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { isUploading, startUpload } = useUploadThing("avatarUploader");
   const [domainInput, setDomainInput] = React.useState("");
   const [domainPending, startDomainTransition] = React.useTransition();
   const isPro = isProUser(user);
-  const previewKey = `${previewThemes.dark}|${previewThemes.light}|${brandingHidden}`;
+  const previewKey = `${previewThemes.dark}|${previewThemes.light}|${brandingHidden}|${profileVersion}|${avatarUrl}`;
 
   React.useEffect(() => {
     if (checkoutSuccess) {
@@ -74,6 +87,56 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
       }
     });
   };
+
+  const handleAvatarClick = () => fileInputRef.current?.click();
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file == null) {
+      return;
+    }
+
+    const result = await startUpload([file]);
+    if (result?.[0]?.serverData?.avatarUrl != null) {
+      setAvatarUrl(result[0].serverData.avatarUrl);
+      setProfileVersion((v) => v + 1);
+      toast.success(t("avatarUpdated"));
+    }
+
+    // Reset input so re-selecting the same file works
+    e.target.value = "";
+  };
+
+  const handleRemoveAvatar = () => {
+    startAvatarTransition(async () => {
+      const result = await removeAvatar();
+
+      if (!result.success) {
+        toast.error(t(result.error));
+        return;
+      }
+
+      setAvatarUrl(null);
+      setProfileVersion((v) => v + 1);
+    });
+  };
+
+  const handleProfileSave = () => {
+    startProfileTransition(async () => {
+      const result = await updateProfile(displayNameInput, bioInput);
+
+      if (!result.success) {
+        toast.error(t(result.error));
+        return;
+      }
+
+      setProfileVersion((v) => v + 1);
+      toast.success(t("profileUpdated"));
+    });
+  };
+
+  const handleDisplayNameOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setDisplayNameInput(e.target.value);
+  const handleBioOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setBioInput(e.target.value);
 
   const handleUpgrade = async () => {
     setBillingLoading(true);
@@ -162,6 +225,74 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
         <div className="mb-4 flex justify-end xl:hidden">
           <PreviewToggle previewKey={previewKey} user={user} />
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("profile")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-muted-foreground mb-2 text-sm font-medium">{t("avatar")}</p>
+              <div className="flex items-center gap-4">
+                <button
+                  className="border-border bg-muted group relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border"
+                  disabled={isUploading}
+                  onClick={handleAvatarClick}
+                  title={t("clickToUpload")}
+                  type="button"
+                >
+                  {avatarUrl != null ? (
+                    <Image
+                      alt={user.displayName ?? user.username}
+                      className="size-16 rounded-full object-cover"
+                      height={64}
+                      src={avatarUrl}
+                      width={64}
+                    />
+                  ) : (
+                    <Anchor className="text-muted-foreground size-7" strokeWidth={1.25} />
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                    {isUploading ? (
+                      <Loader2 className="size-5 animate-spin text-white" />
+                    ) : (
+                      <Camera className="size-5 text-white" />
+                    )}
+                  </div>
+                </button>
+                <input
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                  ref={fileInputRef}
+                  type="file"
+                />
+                {avatarUrl != null && (
+                  <Button disabled={avatarPending} onClick={handleRemoveAvatar} variant="tertiary">
+                    {t("removeAvatar")}
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2 text-sm font-medium">{t("displayName")}</p>
+              <Input
+                disabled={profilePending}
+                onChange={handleDisplayNameOnChange}
+                placeholder={user.username}
+                value={displayNameInput}
+              />
+            </div>
+            <div>
+              <p className="text-muted-foreground mb-2 text-sm font-medium">{t("bio")}</p>
+              <Textarea disabled={profilePending} onChange={handleBioOnChange} value={bioInput} />
+            </div>
+            <Button disabled={profilePending} onClick={handleProfileSave} variant="secondary">
+              {profilePending && <Loader2 className="size-3.5 animate-spin" />}
+              {t("save")}
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

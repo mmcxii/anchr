@@ -135,6 +135,55 @@ export async function createPortalSession(): Promise<ActionResult> {
   }
 }
 
+export async function updateProfile(displayName: string, bio: string): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const trimmedDisplayName = displayName.trim();
+  const trimmedBio = bio.trim();
+
+  const [user] = await db
+    .update(usersTable)
+    .set({
+      bio: trimmedBio.length > 0 ? trimmedBio : null,
+      displayName: trimmedDisplayName.length > 0 ? trimmedDisplayName : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(usersTable.id, userId))
+    .returning({ username: usersTable.username });
+
+  revalidatePath("/dashboard/settings");
+  if (user?.username) {
+    revalidatePath(`/${user.username}`);
+  }
+
+  return { success: true };
+}
+
+export async function removeAvatar(): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const [user] = await db
+    .update(usersTable)
+    .set({ avatarUrl: null, customAvatar: false, updatedAt: new Date() })
+    .where(eq(usersTable.id, userId))
+    .returning({ username: usersTable.username });
+
+  revalidatePath("/dashboard/settings");
+  if (user?.username) {
+    revalidatePath(`/${user.username}`);
+  }
+
+  return { success: true };
+}
+
 // ─── Custom Domain Actions ───────────────────────────────────────────────────
 
 export type VerifyDomainResult =
