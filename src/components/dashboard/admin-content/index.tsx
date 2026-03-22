@@ -1,6 +1,11 @@
 "use client";
 
-import { createAdminCode, deactivateAdminCode, reactivateAdminCode } from "@/app/(dashboard)/dashboard/admin/actions";
+import {
+  createAdminCode,
+  deactivateAdminCode,
+  deleteAdminCodesExcept,
+  reactivateAdminCode,
+} from "@/app/(dashboard)/dashboard/admin/actions";
 import { StatusBadge } from "@/components/dashboard/admin-content/status-badge";
 import { getCodeStatus } from "@/components/dashboard/admin-content/utils";
 import { Button } from "@/components/ui/button";
@@ -46,8 +51,31 @@ export const AdminContent: React.FC<AdminContentProps> = (props) => {
   const [createPending, startCreateTransition] = React.useTransition();
   const [actionPendingId, setActionPendingId] = React.useState<null | string>(null);
   const [expandedId, setExpandedId] = React.useState<null | string>(null);
+  const [deleteExcludeInput, setDeleteExcludeInput] = React.useState("");
+  const [deletePending, startDeleteTransition] = React.useTransition();
 
   //* Handlers
+  const handleDeleteAllExcept = () => {
+    if (deleteExcludeInput.trim() === "") {
+      return;
+    }
+
+    startDeleteTransition(async () => {
+      const result = await deleteAdminCodesExcept(deleteExcludeInput.trim());
+
+      if (!result.success) {
+        toast.error(t(result.error));
+        return;
+      }
+
+      setDeleteExcludeInput("");
+      toast.success(t("referralCodesDeleted"));
+    });
+  };
+
+  const handleDeleteExcludeInputOnChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setDeleteExcludeInput(e.target.value);
+
   const handleCreate = () => {
     startCreateTransition(async () => {
       const result = await createAdminCode({
@@ -161,6 +189,29 @@ export const AdminContent: React.FC<AdminContentProps> = (props) => {
           <Button disabled={createPending} onClick={handleCreate}>
             {createPending && <Loader2 className="size-3.5 animate-spin" />}
             {t("createReferralCode")}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Bulk Delete */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("deleteAllExcept")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Input
+            disabled={deletePending}
+            onChange={handleDeleteExcludeInputOnChange}
+            placeholder="ANCHR-XXXXXX"
+            value={deleteExcludeInput}
+          />
+          <Button
+            disabled={deletePending || deleteExcludeInput.trim() === ""}
+            onClick={handleDeleteAllExcept}
+            variant="primary"
+          >
+            {deletePending && <Loader2 className="size-3.5 animate-spin" />}
+            {t("delete")}
           </Button>
         </CardContent>
       </Card>

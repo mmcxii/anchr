@@ -1,7 +1,8 @@
-import { ensureProtocol, isSafeUrl } from "@/lib/utils/url";
+import { ensureProtocol } from "@/lib/utils/url";
 import { z } from "zod";
 
 const urlValidator = z.string().url();
+const BLOCKED_PROTOCOLS = /^(javascript|data|vbscript):/i;
 
 export const linkSchema = z.object({
   groupId: z.string().optional().or(z.literal("")),
@@ -16,7 +17,7 @@ export const linkSchema = z.object({
     .string()
     .min(1)
     .refine((val) => urlValidator.safeParse(ensureProtocol(val)).success, { message: "pleaseEnterAValidUrl" })
-    .refine((val) => isSafeUrl(val), { message: "thisUrlIsNotAllowed" }),
+    .refine((val) => !BLOCKED_PROTOCOLS.test(val.trim()), { message: "thisUrlIsNotAllowed" }),
 });
 
 export type LinkValues = z.infer<typeof linkSchema>;

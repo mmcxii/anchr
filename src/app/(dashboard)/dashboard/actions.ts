@@ -1,6 +1,6 @@
 "use server";
 
-import { type SessionUser, getCurrentUser } from "@/lib/auth";
+import { type SessionUser, getCurrentUser, isAdmin } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { generateUniqueSlug } from "@/lib/db/queries/link";
 import { linksTable } from "@/lib/db/schema/link";
@@ -9,7 +9,7 @@ import { detectPlatform } from "@/lib/platforms";
 import { linkSchema } from "@/lib/schemas/link";
 import { groupSchema } from "@/lib/schemas/link-group";
 import { FREE_LINK_LIMIT, isProUser } from "@/lib/tier";
-import { ensureProtocol, generateSlug, urlResolves } from "@/lib/utils/url";
+import { ensureProtocol, generateSlug, isSafeUrl, urlResolves } from "@/lib/utils/url";
 import { and, count, eq, inArray, not, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -69,6 +69,10 @@ export async function createLink(
   }
 
   const fullUrl = ensureProtocol(result.data.url);
+
+  if (!isSafeUrl(fullUrl, { allowInternalHosts: isAdmin(user.id) })) {
+    return { error: "thisUrlIsNotAllowed", success: false };
+  }
 
   if (isRedirectLoop(user, fullUrl)) {
     return { error: "thisUrlIsNotAllowed", success: false };
@@ -140,6 +144,10 @@ export async function updateLink(
   }
 
   const fullUrl = ensureProtocol(result.data.url);
+
+  if (!isSafeUrl(fullUrl, { allowInternalHosts: isAdmin(user.id) })) {
+    return { error: "thisUrlIsNotAllowed", success: false };
+  }
 
   if (isRedirectLoop(user, fullUrl)) {
     return { error: "thisUrlIsNotAllowed", success: false };
