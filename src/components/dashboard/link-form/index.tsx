@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 export type LinkFormProps = {
+  customDomain?: null | string;
   defaultValues?: { groupId?: string; icon?: null | string; id: string; slug: string; title: string; url: string };
   existingSlugs: string[];
   groups?: GroupItem[];
@@ -27,7 +28,7 @@ export type LinkFormProps = {
 };
 
 export const LinkForm: React.FC<LinkFormProps> = (props) => {
-  const { defaultValues, existingSlugs, groups = [], isPro = false, onSuccess, username } = props;
+  const { customDomain, defaultValues, existingSlugs, groups = [], isPro = false, onSuccess, username } = props;
 
   //* State
   const { t } = useTranslation();
@@ -64,6 +65,7 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
   const detectedPlatform = urlValue != null && urlValue.length > 0 ? detectPlatform(urlValue) : null;
   const slugPlaceholder = urlValue != null && urlValue.length > 0 ? generateSlug(ensureProtocol(urlValue)) : "";
   const { ref: titleRegisterRef, ...titleRegisterRest } = register("title");
+  const slugPrefix = customDomain != null ? `${customDomain}/` : `anchr.to/${username}/`;
   const URL_UNREACHABLE_KEY = "thisUrlCouldNotBeReachedPleaseCheckItAndTryAgain";
 
   //* Handlers
@@ -181,9 +183,8 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
       <div className="flex flex-col gap-2">
         <Label htmlFor="link-slug">{t("redirectUrl")}</Label>
         <div className="border-input focus-within:border-ring focus-within:ring-ring/50 flex h-9 items-center overflow-hidden rounded-md border shadow-xs focus-within:ring-[3px]">
-          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand URL prefix with dynamic username */}
           <span className="text-muted-foreground bg-muted flex h-full shrink-0 items-center border-r px-2.5 text-xs">
-            anchr.to/{username}/
+            {slugPrefix}
           </span>
           <input
             className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent px-2.5 text-sm outline-none disabled:pointer-events-none disabled:opacity-50"

@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/lib/auth";
+import { type SessionUser, getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { generateUniqueSlug } from "@/lib/db/queries/link";
 import { linksTable } from "@/lib/db/schema/link";
@@ -12,6 +12,18 @@ import { FREE_LINK_LIMIT } from "@/lib/tier";
 import { ensureProtocol, generateSlug, urlResolves } from "@/lib/utils/url";
 import { and, count, eq, inArray, not, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
+function isRedirectLoop(user: SessionUser, url: string): boolean {
+  if (!user.customDomainVerified || user.customDomain == null) {
+    return false;
+  }
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return hostname === user.customDomain;
+  } catch {
+    return false;
+  }
+}
 
 function revalidatePages(username: string): void {
   revalidatePath("/dashboard");
@@ -57,6 +69,10 @@ export async function createLink(
   }
 
   const fullUrl = ensureProtocol(result.data.url);
+
+  if (isRedirectLoop(user, fullUrl)) {
+    return { error: "thisUrlIsNotAllowed", success: false };
+  }
 
   if (!skipUrlCheck && !(await urlResolves(fullUrl))) {
     return { error: "thisUrlCouldNotBeReachedPleaseCheckItAndTryAgain", success: false };
@@ -124,6 +140,10 @@ export async function updateLink(
   }
 
   const fullUrl = ensureProtocol(result.data.url);
+
+  if (isRedirectLoop(user, fullUrl)) {
+    return { error: "thisUrlIsNotAllowed", success: false };
+  }
 
   if (!skipUrlCheck && !(await urlResolves(fullUrl))) {
     return { error: "thisUrlCouldNotBeReachedPleaseCheckItAndTryAgain", success: false };

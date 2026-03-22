@@ -4,6 +4,8 @@ export const usersTable = pgTable("users", {
   avatarUrl: text("avatar_url"),
   bio: text("bio"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  customDomain: text("custom_domain").unique(),
+  customDomainVerified: boolean("custom_domain_verified").default(false).notNull(),
   displayName: text("display_name"),
   hideBranding: boolean("hide_branding").default(false).notNull(),
   id: text("id").primaryKey(),

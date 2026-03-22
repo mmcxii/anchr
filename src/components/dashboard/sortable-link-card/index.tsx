@@ -30,6 +30,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 export type SortableLinkCardProps = {
+  customDomain?: null | string;
   link: LinkItem;
   selected: boolean;
   username: string;
@@ -41,7 +42,7 @@ export type SortableLinkCardProps = {
 };
 
 export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
-  const { link, onDelete, onEdit, onQrCode, onSelect, onToggleVisibility, selected, username } = props;
+  const { customDomain, link, onDelete, onEdit, onQrCode, onSelect, onToggleVisibility, selected, username } = props;
 
   //* State
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
 
   //* Variables
   const VisibilityIcon = link.visible ? Eye : EyeOff;
-  const redirectUrl = `anchr.to/${username}/${link.slug}`;
+  const redirectUrl = customDomain != null ? `${customDomain}/${link.slug}` : `anchr.to/${username}/${link.slug}`;
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,

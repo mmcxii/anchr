@@ -2,8 +2,36 @@ import { db } from "@/lib/db/client";
 import { ensureQuickLinksGroup } from "@/lib/db/queries/quick-links";
 import { usersTable } from "@/lib/db/schema/user";
 import { stripe } from "@/lib/stripe";
+import { removeDomain } from "@/lib/vercel";
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
+
+async function handleDowngrade(customerId: string): Promise<void> {
+  const [user] = await db
+    .select({ customDomain: usersTable.customDomain, id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.stripeCustomerId, customerId))
+    .limit(1);
+
+  if (user?.customDomain != null) {
+    try {
+      await removeDomain(user.customDomain);
+    } catch (error) {
+      console.error("[stripe webhook] failed to remove domain from Vercel:", error);
+    }
+  }
+
+  await db
+    .update(usersTable)
+    .set({
+      customDomain: null,
+      customDomainVerified: false,
+      stripeSubscriptionId: null,
+      tier: "free",
+      updatedAt: new Date(),
+    })
+    .where(eq(usersTable.stripeCustomerId, customerId));
+}
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -61,10 +89,7 @@ export async function POST(req: Request) {
           await ensureQuickLinksGroup(updatedUser.id);
         }
       } else if (["canceled", "past_due", "unpaid"].includes(subscription.status)) {
-        await db
-          .update(usersTable)
-          .set({ stripeSubscriptionId: null, tier: "free", updatedAt: new Date() })
-          .where(eq(usersTable.stripeCustomerId, customerId));
+        await handleDowngrade(customerId);
       }
 
       break;
@@ -74,10 +99,7 @@ export async function POST(req: Request) {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = subscription.customer as string;
 
-      await db
-        .update(usersTable)
-        .set({ stripeSubscriptionId: null, tier: "free", updatedAt: new Date() })
-        .where(eq(usersTable.stripeCustomerId, customerId));
+      await handleDowngrade(customerId);
 
       break;
     }

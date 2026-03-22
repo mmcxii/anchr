@@ -13,13 +13,16 @@ export type LinkGroup = {
 };
 
 export type LinkListProps = {
+  basePath?: string;
   groups?: LinkGroup[];
   links: LinkData[];
   username: string;
 };
 
 export const LinkList: React.FC<LinkListProps> = (props) => {
-  const { groups = [], links, username } = props;
+  const { basePath, groups = [], links, username } = props;
+
+  const linkBasePath = basePath ?? `/${username}`;
 
   //* Variables
   const hasContent = links.length > 0 || groups.some((g) => g.links.length > 0);
@@ -31,7 +34,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
     return (
       <a
         className="border-anc-theme-link-border bg-anc-theme-link-bg flex min-h-[52px] items-center gap-3 rounded-xl border px-4 py-3 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-        href={`/${username}/${link.slug}`}
+        href={`${linkBasePath}/${link.slug}`}
         key={link.id}
         rel="noopener noreferrer"
         // eslint-disable-next-line anchr/no-inline-style -- dynamic CSS custom properties for platform accent

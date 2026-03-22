@@ -27,16 +27,18 @@ export const DashboardContent: React.FC<DashboardContentProps> = (props) => {
 
   //* Variables
   const isPro = user.tier === "pro";
+  const customDomain = user.customDomainVerified && user.customDomain != null ? user.customDomain : null;
+  const baseUrl = customDomain != null ? `https://${customDomain}` : `https://anchr.to/${user.username}`;
 
   //* Handlers
   const handleShareProfile = () => {
-    setQrUrl(`https://anchr.to/${user.username}`);
-    setQrLabel(user.username);
+    setQrUrl(baseUrl);
+    setQrLabel(customDomain ?? user.username);
     setQrOpen(true);
   };
 
   const handleQrCode = (link: LinkItem) => {
-    setQrUrl(`https://anchr.to/${user.username}/${link.slug}`);
+    setQrUrl(`${baseUrl}/${link.slug}`);
     setQrLabel(link.title);
     setQrOpen(true);
   };
@@ -56,7 +58,14 @@ export const DashboardContent: React.FC<DashboardContentProps> = (props) => {
         </div>
       </div>
 
-      <LinkList groups={groups} isPro={isPro} links={links} onQrCode={handleQrCode} username={user.username} />
+      <LinkList
+        customDomain={customDomain}
+        groups={groups}
+        isPro={isPro}
+        links={links}
+        onQrCode={handleQrCode}
+        username={user.username}
+      />
 
       <QrCodeModal
         avatarUrl={user.avatarUrl}
