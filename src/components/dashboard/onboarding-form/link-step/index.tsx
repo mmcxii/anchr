@@ -45,9 +45,9 @@ export const LinkStep: React.FC<LinkStepProps> = (props) => {
     }
   };
 
-  const handleInputOnChange = (e) => setLinkTitle(e.target.value);
+  const handleInputOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setLinkTitle(e.target.value);
 
-  const handleUrlInputOnChange = (e) => setLinkUrl(e.target.value);
+  const handleUrlInputOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setLinkUrl(e.target.value);
 
   return (
     <>

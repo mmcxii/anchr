@@ -92,7 +92,7 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
 
   const handleEditDropdownMenuItemOnClick = () => onEdit(link);
 
-  const handleQrCodeDropdownMenuItemOnClick = () => onQrCode(link);
+  const handleQrCodeDropdownMenuItemOnClick = () => onQrCode?.(link);
 
   const handleVisibilityDropdownMenuItemOnClick = () => onToggleVisibility(link);
 

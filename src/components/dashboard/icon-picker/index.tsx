@@ -46,7 +46,7 @@ export const IconPicker: React.FC<IconPickerProps> = (props) => {
   }, [results, suggestedIconId]);
 
   //* Handlers
-  const handleInputOnChange = (e) => setQuery(e.target.value);
+  const handleInputOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value);
 
   const handleClearSearchButtonOnClick = () => setQuery("");
 
