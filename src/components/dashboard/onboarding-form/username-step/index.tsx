@@ -50,7 +50,7 @@ export const UsernameStep: React.FC<UsernameStepProps> = (props) => {
       clearTimeout(debounceRef.current);
     }
 
-    if (hasValidationError ?? username.length < 3) {
+    if (hasValidationError ?? username.length < 1) {
       setAvailability("idle");
       return;
     }
