@@ -54,14 +54,23 @@ export async function POST(req: Request) {
       const { first_name, id, image_url, last_name } = event.data;
       const displayName = [first_name, last_name].filter(Boolean).join(" ") || null;
 
-      await db
-        .update(usersTable)
-        .set({
-          avatarUrl: image_url ?? null,
-          displayName,
-          updatedAt: new Date(),
-        })
-        .where(eq(usersTable.id, id));
+      const [existing] = await db.select().from(usersTable).where(eq(usersTable.id, id)).limit(1);
+
+      if (existing == null) {
+        break;
+      }
+
+      const updates: Partial<typeof usersTable.$inferInsert> = { updatedAt: new Date() };
+
+      if (!existing.customAvatar) {
+        updates.avatarUrl = image_url ?? null;
+      }
+
+      if (existing.displayName == null) {
+        updates.displayName = displayName;
+      }
+
+      await db.update(usersTable).set(updates).where(eq(usersTable.id, id));
 
       break;
     }
