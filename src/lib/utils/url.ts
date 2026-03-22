@@ -23,7 +23,7 @@ export function ensureProtocol(url: string): string {
 const BLOCKED_PROTOCOLS = /^(javascript|data|vbscript):/i;
 const INTERNAL_HOSTS = /^(www\.)?anchr\.to$/i;
 
-export function isSafeUrl(url: string): boolean {
+export function isSafeUrl(url: string, options?: { allowInternalHosts?: boolean }): boolean {
   if (BLOCKED_PROTOCOLS.test(url.trim())) {
     return false;
   }
@@ -31,7 +31,7 @@ export function isSafeUrl(url: string): boolean {
   try {
     const parsed = new URL(ensureProtocol(url));
 
-    if (INTERNAL_HOSTS.test(parsed.hostname)) {
+    if (!options?.allowInternalHosts && INTERNAL_HOSTS.test(parsed.hostname)) {
       return false;
     }
   } catch {

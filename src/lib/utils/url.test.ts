@@ -169,6 +169,22 @@ describe("isSafeUrl", () => {
     //* Assert
     expect(result).toBe(false);
   });
+
+  it("allows anchr.to when allowInternalHosts is true", () => {
+    //* Act
+    const result = isSafeUrl("https://anchr.to/someone", { allowInternalHosts: true });
+
+    //* Assert
+    expect(result).toBe(true);
+  });
+
+  it("still blocks javascript: when allowInternalHosts is true", () => {
+    //* Act
+    const result = isSafeUrl("javascript:alert(1)", { allowInternalHosts: true });
+
+    //* Assert
+    expect(result).toBe(false);
+  });
 });
 
 describe("generateSlug", () => {
