@@ -26,7 +26,7 @@ export const RESERVED_USERNAMES = [
 export const usernameSchema = z.object({
   username: z
     .string()
-    .min(3)
+    .min(1)
     .max(30)
     .regex(/^[a-z0-9][a-z0-9_]*$/)
     .refine((val) => !RESERVED_USERNAMES.includes(val as (typeof RESERVED_USERNAMES)[number]), {
