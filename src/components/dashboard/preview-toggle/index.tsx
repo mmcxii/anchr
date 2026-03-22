@@ -23,7 +23,7 @@ export const PreviewToggle: React.FC<PreviewToggleProps> = (props) => {
   //* Handlers
   const handleButtonOnClick = () => setOpen(true);
 
-  const handleDialogContentOnOpenAutoFocus = (e) => e.preventDefault();
+  const handleDialogContentOnOpenAutoFocus = (e: Event) => e.preventDefault();
 
   //* Effects
   React.useEffect(() => {

@@ -135,7 +135,7 @@ export const LinkForm: React.FC<LinkFormProps> = (props) => {
     })();
   };
 
-  const handleCheckboxOnCheckedChange = (checked) => setSkipUrlCheck(checked === true);
+  const handleCheckboxOnCheckedChange = (checked: boolean | "indeterminate") => setSkipUrlCheck(checked === true);
 
   //* Effects
   React.useEffect(() => {

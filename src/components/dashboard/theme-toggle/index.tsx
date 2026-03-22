@@ -20,7 +20,7 @@ export const DashboardThemeToggle: React.FC = () => {
 
   const TriggerIcon = mode === "system" ? Monitor : isDark ? Moon : Sun;
 
-  const handleDropdownMenuRadioGroupOnValueChange = (v) => setMode(v as UiMode);
+  const handleDropdownMenuRadioGroupOnValueChange = (v: string) => setMode(v as UiMode);
 
   return (
     <DropdownMenu>
