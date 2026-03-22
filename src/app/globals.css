@@ -731,12 +731,6 @@
   transform: translateY(0);
 }
 
-/* ── Waitlist overlay ─────────────────────────────────────────────────── */
-
-.m-waitlist-overlay {
-  background: rgb(var(--m-glow) / 0.85);
-}
-
 .m-sonar-ring {
   border: 2px solid rgb(var(--m-accent) / 0.4);
 }

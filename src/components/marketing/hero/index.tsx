@@ -1,9 +1,9 @@
 import { LinkPageMockup } from "@/components/marketing/link-page-mockup";
 import { SiteLogo } from "@/components/marketing/site-logo";
 import { SiteWordmark } from "@/components/marketing/site-wordmark";
-import { WaitlistForm } from "@/components/marketing/waitlist-form";
 import { Container } from "@/components/ui/container";
 import type { TFunction } from "i18next";
+import Link from "next/link";
 
 export type HeroProps = {
   t: TFunction;
@@ -41,14 +41,24 @@ export const Hero: React.FC<HeroProps> = (props) => {
             <LinkPageMockup />
           </div>
 
-          {/* Subtext + form — row 3 on mobile, col 1 row 2 on desktop */}
+          {/* Subtext + auth links — row 3 on mobile, col 1 row 2 on desktop */}
           <div className="flex flex-col items-center gap-10 lg:col-start-1 lg:row-start-2 lg:items-start">
             <p className="m-muted-80 mx-auto max-w-lg text-lg leading-relaxed sm:text-xl lg:mx-0">
               {t("everythingThatMattersToYouAllInOnePlace")}
             </p>
-            <div className="relative flex flex-col items-center gap-3 lg:items-start">
-              <WaitlistForm />
-              <p className="m-muted-40 text-xs">{t("wellReachOutWhenWereReadyNoSpamEver")}</p>
+            <div className="flex items-center gap-4">
+              <Link
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center rounded-md px-6 text-sm font-medium transition-colors"
+                href="/sign-up"
+              >
+                {t("getStarted")}
+              </Link>
+              <Link
+                className="border-primary/40 text-primary hover:border-primary hover:bg-primary hover:text-primary-foreground inline-flex h-10 items-center rounded-md border bg-transparent px-6 text-sm font-medium transition-colors"
+                href="/sign-in"
+              >
+                {t("signIn")}
+              </Link>
             </div>
           </div>
         </div>

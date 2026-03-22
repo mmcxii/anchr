@@ -2,11 +2,11 @@ import { FadeIn } from "@/components/marketing/fade-in";
 import { Footer } from "@/components/marketing/footer";
 import { PricingCards } from "@/components/marketing/pricing-toggle";
 import { SiteHeader } from "@/components/marketing/site-header";
-import { WaitlistForm } from "@/components/marketing/waitlist-form";
 import { Container } from "@/components/ui/container";
 import { initTranslations } from "@/lib/i18n/server";
 import { ChevronDown } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   description: "Simple, transparent pricing for Anchr. Free forever or upgrade to Pro for $7/mo.",
@@ -47,12 +47,17 @@ const PricingPage: React.FC = async () => {
           <PricingCards />
         </FadeIn>
 
-        {/* Waitlist CTA */}
+        {/* Sign-up CTA */}
         <FadeIn delay={200}>
           <div className="mx-auto mt-24 max-w-md text-center">
             <h2 className="mb-8 text-2xl font-bold tracking-tight sm:text-3xl">{t("readyToDropAnchor")}</h2>
             <div className="flex justify-center">
-              <WaitlistForm />
+              <Link
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center rounded-md px-6 text-sm font-medium transition-colors"
+                href="/sign-up"
+              >
+                {t("getStarted")}
+              </Link>
             </div>
           </div>
         </FadeIn>

@@ -10,27 +10,27 @@ export const metadata: Metadata = {
 
 const sections = [
   {
-    body: "We collect your email address when you join our waitlist. We use it to let you know when Anchr is ready. That's it. We don't sell your data. We don't spam you. We don't share your information with anyone except the services that help us operate.",
+    body: "We collect your name, email address, and profile information when you create an account. We use it to provide and improve the Anchr service. We don't sell your data. We don't spam you. We don't share your information with anyone except the services that help us operate.",
     heading: "The short version",
   },
   {
-    body: "When you join the waitlist, we collect your email address. That's the only personal information we ask for at this stage. We may also collect basic technical data automatically — things like your browser type and general location — through standard web infrastructure. This data is never tied to your identity.",
+    body: "When you create an account, we collect your email address, display name, and username. You may also upload a profile photo. We may collect basic technical data automatically — things like your browser type and general location — through standard web infrastructure. This data is never tied to your identity.",
     heading: "What we collect",
   },
   {
-    body: "Your email address is used for one purpose: to notify you when Anchr launches and to share meaningful updates about the product. We will never send unsolicited marketing, sell newsletter slots, or use your address for anything you didn't sign up for. You can unsubscribe from any email we send, and we'll remove you promptly.",
+    body: "Your information is used to provide the Anchr service — your link page, analytics, and account features. We may also send you important product updates. We will never send unsolicited marketing, sell newsletter slots, or use your information for anything you didn't sign up for. You can unsubscribe from any email we send, and we'll honor that promptly.",
     heading: "How we use it",
   },
   {
-    body: "We use Clerk to manage our waitlist. Your email is processed by Clerk on our behalf under their privacy and security standards. Beyond that, we do not sell, rent, trade, or otherwise share your personal information with third parties. Full stop.",
+    body: "We use Clerk to manage authentication and accounts. Your data is processed by Clerk on our behalf under their privacy and security standards. Beyond that, we do not sell, rent, trade, or otherwise share your personal information with third parties. Full stop.",
     heading: "Who we share it with",
   },
   {
-    body: "We retain your email address until Anchr launches or until you ask us to remove you — whichever comes first. After launch, if you choose not to create an account, your waitlist record will be deleted.",
+    body: "We retain your information for as long as your account is active. If you delete your account, your data will be removed promptly.",
     heading: "How long we keep it",
   },
   {
-    body: "You have the right to access, correct, or delete the information we hold about you. If you'd like to be removed from the waitlist or have any questions about your data, just reach out and we'll take care of it without fuss.",
+    body: "You have the right to access, correct, or delete the information we hold about you. If you'd like to delete your account or have any questions about your data, just reach out and we'll take care of it without fuss.",
     heading: "Your rights",
   },
   {
@@ -51,7 +51,7 @@ const PrivacyPage: React.FC = async () => {
         <div className="mb-16">
           {/* eslint-disable-next-line anchr/no-raw-string-jsx -- legal page, static content */}
           <p className="tracking-anc-caps text-anc-steel/50 mb-3 text-xs font-medium uppercase">
-            Last updated February 22, 2026
+            Last updated March 22, 2026
           </p>
           {/* eslint-disable-next-line anchr/no-raw-string-jsx -- legal page, static content */}
           <h1 className="text-anc-cream mb-6 text-4xl font-bold tracking-tight">Privacy Policy</h1>
