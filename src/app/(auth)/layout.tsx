@@ -1,11 +1,19 @@
 import { SiteLogo } from "@/components/marketing/site-logo";
 import { MarketingThemeProvider } from "@/components/marketing/theme-provider";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import * as React from "react";
 
 export type AuthLayoutProps = React.PropsWithChildren;
 
-const AuthLayout: React.FC<AuthLayoutProps> = (props) => {
+const AuthLayout: React.FC<AuthLayoutProps> = async (props) => {
   const { children } = props;
+
+  const { userId } = await auth();
+
+  if (userId != null) {
+    redirect("/dashboard");
+  }
 
   return (
     <MarketingThemeProvider>
