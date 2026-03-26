@@ -12,6 +12,7 @@ import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { Trans, useTranslation } from "react-i18next";
@@ -19,7 +20,8 @@ import { Trans, useTranslation } from "react-i18next";
 export const SignUpForm: React.FC = () => {
   //* State
   const { t } = useTranslation();
-  const { isLoaded, setActive, signUp } = useSignUp();
+  const router = useRouter();
+  const { signUp } = useSignUp();
   const [verifying, setVerifying] = React.useState(false);
   const signUpForm = useForm<SignUpValues>({ resolver: standardSchemaResolver(signUpSchema) });
   const verifyForm = useForm<VerifyEmailValues>({ resolver: standardSchemaResolver(verifyEmailSchema) });
@@ -28,33 +30,36 @@ export const SignUpForm: React.FC = () => {
   const handleClerkError = (form: { setError: (name: "root", error: { message: string }) => void }, err: unknown) => {
     if (isClerkAPIResponseError(err)) {
       for (const e of err.errors) {
-        switch (e.meta?.paramName) {
-          case "email_address":
-            form.setError("root", { message: e.longMessage ?? e.message });
-            break;
-
-          case "password":
-            form.setError("root", { message: e.longMessage ?? e.message });
-            break;
-
-          default:
-            form.setError("root", { message: e.longMessage ?? e.message });
-            break;
-        }
+        form.setError("root", { message: e.longMessage ?? e.message });
       }
     } else {
       form.setError("root", { message: t("somethingWentWrongPleaseTryAgain") });
     }
   };
 
-  const onSignUp = async (data: SignUpValues) => {
-    if (!isLoaded) {
-      return;
-    }
+  const finalizeSignUp = async () => {
+    await signUp.finalize({
+      navigate: ({ decorateUrl }) => {
+        const url = decorateUrl("/onboarding");
+        if (url.startsWith("http")) {
+          window.location.href = url;
+        } else {
+          router.push(url);
+        }
+      },
+    });
+  };
 
+  const onSignUp = async (data: SignUpValues) => {
     try {
-      await signUp.create({ emailAddress: data.email, password: data.password });
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      const { error } = await signUp.password({ emailAddress: data.email, password: data.password });
+
+      if (error != null) {
+        signUpForm.setError("root", { message: error.longMessage ?? error.message });
+        return;
+      }
+
+      await signUp.verifications.sendEmailCode();
       setVerifying(true);
     } catch (err) {
       handleClerkError(signUpForm, err);
@@ -63,16 +68,17 @@ export const SignUpForm: React.FC = () => {
 
   const onVerify = React.useCallback(
     async (data: VerifyEmailValues) => {
-      if (!isLoaded) {
-        return;
-      }
-
       try {
-        const result = await signUp.attemptEmailAddressVerification({ code: data.code });
+        const { error } = await signUp.verifications.verifyEmailCode({ code: data.code });
 
-        if (result.status === "complete") {
-          void setActive({ session: result.createdSessionId });
-          window.location.replace("/onboarding");
+        if (error != null) {
+          verifyForm.setError("root", { message: error.longMessage ?? error.message });
+          verifyForm.setValue("code", "");
+          return;
+        }
+
+        if (signUp.status === "complete") {
+          await finalizeSignUp();
           return;
         }
       } catch (err) {
@@ -80,7 +86,7 @@ export const SignUpForm: React.FC = () => {
         verifyForm.setValue("code", "");
       }
     },
-    [isLoaded, setActive, signUp, verifyForm],
+    [signUp, verifyForm],
   );
 
   const codeValue = verifyForm.watch("code");
@@ -90,12 +96,9 @@ export const SignUpForm: React.FC = () => {
   };
 
   const handleResendCode = async () => {
-    if (!isLoaded) {
-      return;
-    }
     verifyForm.clearErrors("root");
     try {
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      await signUp.verifications.sendEmailCode();
     } catch (err) {
       handleClerkError(verifyForm, err);
     }
@@ -229,7 +232,7 @@ export const SignUpForm: React.FC = () => {
               {signUpForm.formState.errors.root.message}
             </p>
           )}
-          <Button className="w-full" disabled={!isLoaded || signUpForm.formState.isSubmitting} type="submit">
+          <Button className="w-full" disabled={signUpForm.formState.isSubmitting} type="submit">
             {signUpForm.formState.isSubmitting ? <Loader2 className="size-4 animate-spin" /> : t("continue")}
           </Button>
           <div className="-mt-4" id="clerk-captcha" />

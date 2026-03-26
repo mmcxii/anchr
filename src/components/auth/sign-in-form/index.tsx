@@ -12,6 +12,7 @@ import { isClerkAPIResponseError } from "@clerk/nextjs/errors";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { Trans, useTranslation } from "react-i18next";
@@ -19,7 +20,8 @@ import { Trans, useTranslation } from "react-i18next";
 export const SignInForm: React.FC = () => {
   //* State
   const { t } = useTranslation();
-  const { isLoaded, setActive, signIn } = useSignIn();
+  const router = useRouter();
+  const { signIn } = useSignIn();
   const [verifying, setVerifying] = React.useState(false);
   const signInForm = useForm<SignInValues>({ resolver: standardSchemaResolver(signInSchema) });
   const verifyForm = useForm<VerifyEmailValues>({ resolver: standardSchemaResolver(verifyEmailSchema) });
@@ -35,29 +37,39 @@ export const SignInForm: React.FC = () => {
     }
   };
 
-  const onSignIn = async (data: SignInValues) => {
-    if (!isLoaded) {
-      return;
-    }
+  const finalizeSignIn = async () => {
+    await signIn.finalize({
+      navigate: ({ decorateUrl }) => {
+        const url = decorateUrl("/dashboard");
+        if (url.startsWith("http")) {
+          window.location.href = url;
+        } else {
+          router.push(url);
+        }
+      },
+    });
+  };
 
+  const onSignIn = async (data: SignInValues) => {
     try {
-      const result = await signIn.create({
-        identifier: data.email,
+      const { error } = await signIn.password({
+        emailAddress: data.email,
         password: data.password,
-        strategy: "password",
       });
 
-      if (result.status === "complete") {
-        void setActive({ session: result.createdSessionId });
-        window.location.replace("/dashboard");
+      if (error != null) {
+        signInForm.setError("root", { message: error.longMessage ?? error.message });
         return;
-      } else if (result.status === "needs_second_factor" || (result.status as string) === "needs_client_trust") {
-        const emailFactor = result.supportedSecondFactors?.find((f) => f.strategy === "email_code");
+      }
 
-        if (emailFactor != null) {
-          await signIn.prepareSecondFactor({ strategy: "email_code" });
-          setVerifying(true);
-        }
+      if (signIn.status === "complete") {
+        await finalizeSignIn();
+        return;
+      }
+
+      if (signIn.status === "needs_second_factor" || signIn.status === "needs_client_trust") {
+        await signIn.mfa.sendEmailCode();
+        setVerifying(true);
       }
     } catch (err) {
       if (isClerkAPIResponseError(err)) {
@@ -84,16 +96,17 @@ export const SignInForm: React.FC = () => {
 
   const onVerify = React.useCallback(
     async (data: VerifyEmailValues) => {
-      if (!isLoaded) {
-        return;
-      }
-
       try {
-        const result = await signIn.attemptSecondFactor({ code: data.code, strategy: "email_code" });
+        const { error } = await signIn.mfa.verifyEmailCode({ code: data.code });
 
-        if (result.status === "complete") {
-          void setActive({ session: result.createdSessionId });
-          window.location.replace("/dashboard");
+        if (error != null) {
+          verifyForm.setError("root", { message: error.longMessage ?? error.message });
+          verifyForm.setValue("code", "");
+          return;
+        }
+
+        if (signIn.status === "complete") {
+          await finalizeSignIn();
           return;
         }
       } catch (err) {
@@ -101,7 +114,7 @@ export const SignInForm: React.FC = () => {
         verifyForm.setValue("code", "");
       }
     },
-    [isLoaded, setActive, signIn, verifyForm],
+    [signIn, verifyForm],
   );
 
   const codeValue = verifyForm.watch("code");
@@ -111,12 +124,9 @@ export const SignInForm: React.FC = () => {
   };
 
   const handleResendCode = async () => {
-    if (!isLoaded) {
-      return;
-    }
     verifyForm.clearErrors("root");
     try {
-      await signIn.prepareSecondFactor({ strategy: "email_code" });
+      await signIn.mfa.sendEmailCode();
     } catch (err) {
       handleClerkError(verifyForm, err);
     }
@@ -243,7 +253,7 @@ export const SignInForm: React.FC = () => {
               {signInForm.formState.errors.root.message}
             </p>
           )}
-          <Button className="w-full" disabled={!isLoaded || signInForm.formState.isSubmitting} type="submit">
+          <Button className="w-full" disabled={signInForm.formState.isSubmitting} type="submit">
             {signInForm.formState.isSubmitting ? <Loader2 className="size-4 animate-spin" /> : t("continue")}
           </Button>
           <div className="-mt-4" id="clerk-captcha" />
