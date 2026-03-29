@@ -71,10 +71,7 @@ async function main() {
 
   // Reset the referral code's redemption counter
   const referralCodeId = `e2e-referral-${RUN_ID}`;
-  await db
-    .update(referralCodesTable)
-    .set({ currentRedemptions: 0 })
-    .where(eq(referralCodesTable.id, referralCodeId));
+  await db.update(referralCodesTable).set({ currentRedemptions: 0 }).where(eq(referralCodesTable.id, referralCodeId));
 
   // Delete any links added during onboarding
   await db.delete(linksTable).where(eq(linksTable.userId, freshUser.id));
