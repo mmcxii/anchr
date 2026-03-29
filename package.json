@@ -73,7 +73,8 @@
     "zod": "4.3.6"
   },
   "name": "anchr",
-  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "private": false,
   "scripts": {
     "build": "next build",
     "db:backfill-group-slugs": "npx tsx scripts/backfill-group-slugs.ts",
