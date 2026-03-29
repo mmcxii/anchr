@@ -69,7 +69,7 @@ test.describe("stage deployment smoke tests", () => {
     //* Assert — JSON-LD script tag is present with @graph structure
     const jsonLd = await page.evaluate(() => {
       const script = document.querySelector('script[type="application/ld+json"]');
-      return script ? JSON.parse(script.textContent!) : null;
+      return script?.textContent ? JSON.parse(script.textContent) : null;
     });
 
     expect(jsonLd).not.toBeNull();
