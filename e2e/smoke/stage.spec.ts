@@ -75,10 +75,9 @@ test.describe("stage deployment smoke tests", () => {
     await page.getByRole("link", { name: "JSON-LD Smoke Link" }).waitFor();
 
     //* Assert — JSON-LD script tag is present with @graph structure
-    const jsonLd = await page.evaluate(() => {
-      const script = document.querySelector('script[type="application/ld+json"]');
-      return script?.textContent ? JSON.parse(script.textContent) : null;
-    });
+    const scriptTag = page.locator('script[type="application/ld+json"]');
+    const scriptContent = await scriptTag.textContent();
+    const jsonLd = scriptContent != null ? JSON.parse(scriptContent) : null;
 
     expect(jsonLd).not.toBeNull();
     expect(jsonLd["@context"]).toBe("https://schema.org");
@@ -89,9 +88,7 @@ test.describe("stage deployment smoke tests", () => {
     expect(types).toContain("ItemList");
 
     // Verify the ItemList contains our smoke link
-    const itemList = jsonLd["@graph"].find(
-      (node: { "@type": string }) => node["@type"] === "ItemList",
-    );
+    const itemList = jsonLd["@graph"].find((node: { "@type": string }) => node["@type"] === "ItemList");
     expect(itemList.numberOfItems).toBeGreaterThanOrEqual(1);
 
     //* Cleanup
@@ -99,7 +96,7 @@ test.describe("stage deployment smoke tests", () => {
     await deleteLink(page, "JSON-LD Smoke Link");
   });
 
-  test("custom domain serves public profile via real DNS", async ({ proUser: page, browser }) => {
+  test("custom domain serves public profile via real DNS", async ({ browser, proUser: page }) => {
     //* Arrange — add custom domain and create a link
     await page.goto("/dashboard/settings");
     await page.getByRole("heading", { name: t.settings }).waitFor();
