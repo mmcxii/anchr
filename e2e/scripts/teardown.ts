@@ -14,6 +14,11 @@ const usersTable = pgTable("users", {
   username: text("username").unique().notNull(),
 });
 
+const apiKeysTable = pgTable("api_keys", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+});
+
 const linksTable = pgTable("links", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
@@ -69,6 +74,10 @@ async function deleteUserData(db: ReturnType<typeof drizzle>, userId: string) {
     console.log(`[e2e:teardown] Removed Vercel domain ${user.customDomain}`);
   }
 
+  await db
+    .delete(apiKeysTable)
+    .where(eq(apiKeysTable.userId, userId))
+    .catch(() => {});
   await db
     .delete(clicksTable)
     .where(eq(clicksTable.userId, userId))
@@ -138,9 +147,7 @@ async function main() {
     const webhookDuplicates = await db
       .select({ id: usersTable.id, username: usersTable.username })
       .from(usersTable)
-      .where(
-        sql`${usersTable.username} ~ '^e2e(pro|admin|fresh)[0-9]{1,4}$'`,
-      );
+      .where(sql`${usersTable.username} ~ '^e2e(pro|admin|fresh)[0-9]{1,4}$'`);
 
     const allEphemeral = [...ephemeralUsers, ...webhookDuplicates];
 
