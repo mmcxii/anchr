@@ -35,6 +35,13 @@
       "tag": "0004_lush_vance_astro",
       "version": "7",
       "when": 1774365973466
+    },
+    {
+      "breakpoints": true,
+      "idx": 5,
+      "tag": "0005_add-api-keys-table",
+      "version": "7",
+      "when": 1774998000000
     }
   ],
   "version": "7"

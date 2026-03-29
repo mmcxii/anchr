@@ -72,8 +72,8 @@
     "vitest": "^4.1.1",
     "zod": "4.3.6"
   },
-  "name": "anchr",
   "license": "AGPL-3.0-or-later",
+  "name": "anchr",
   "private": false,
   "scripts": {
     "build": "next build",

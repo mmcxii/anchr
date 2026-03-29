@@ -29,6 +29,14 @@ test.describe("stage deployment smoke tests", () => {
     await expect(page.getByRole("heading", { name: t.links })).toBeVisible();
   });
 
+  test("API keys page loads", async ({ proUser: page }) => {
+    //* Act
+    await page.goto("/dashboard/api");
+
+    //* Assert
+    await expect(page.getByRole("heading", { name: t.api })).toBeVisible();
+  });
+
   test("link CRUD works end-to-end", async ({ proUser: page }) => {
     //* Act — create
     await createLink(page, "Smoke Test Link", "https://example.com/smoke");

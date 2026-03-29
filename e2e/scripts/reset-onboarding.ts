@@ -8,8 +8,8 @@
  */
 import "dotenv/config";
 import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
 import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/neon-http";
 import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 const usersTable = pgTable("users", {
