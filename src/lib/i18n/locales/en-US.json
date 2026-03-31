@@ -220,6 +220,7 @@
   "permanent": "Permanent",
   "pickATheme": "Pick a theme",
   "pleaseAddAtLeastOneRelay": "Please add at least one relay.",
+  "pleaseCopyYourApiKeyBeforeClosingItWontBeShownAgain": "Please copy your API key before closing. It won't be shown again.",
   "pleaseEnterAValidEmailAddress": "Please enter a valid email address.",
   "pleaseEnterAValidNpub": "Please enter a valid npub.",
   "pleaseEnterAValidUrl": "Please enter a valid URL.",
