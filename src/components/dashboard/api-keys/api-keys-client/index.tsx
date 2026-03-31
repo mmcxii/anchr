@@ -62,9 +62,9 @@ export const ApiKeysClient: React.FC<ApiKeysClientProps> = (props) => {
     });
   };
 
-  if (keys.length === 0) {
-    return (
-      <>
+  return (
+    <>
+      {keys.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-24">
           <div className="bg-muted flex size-16 items-center justify-center rounded-full">
             <KeyRound className="text-muted-foreground size-8" />
@@ -78,96 +78,93 @@ export const ApiKeysClient: React.FC<ApiKeysClientProps> = (props) => {
             {t("createKey")}
           </Button>
         </div>
-        <CreateKeyDialog onOpenChange={setCreateDialogOpen} open={createDialogOpen} />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {hasRevokedKeys && (
-            <div className="flex items-center gap-2">
-              <Switch checked={showRevoked} id="show-revoked" onCheckedChange={setShowRevoked} />
-              <Label className="text-muted-foreground text-sm" htmlFor="show-revoked">
-                {t("showRevokedKeys")}
-              </Label>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {hasRevokedKeys && (
+                <div className="flex items-center gap-2">
+                  <Switch checked={showRevoked} id="show-revoked" onCheckedChange={setShowRevoked} />
+                  <Label className="text-muted-foreground text-sm" htmlFor="show-revoked">
+                    {t("showRevokedKeys")}
+                  </Label>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <Button onClick={handleCreateKeyButtonOnClick} size="sm">
-          <Plus className="size-3.5" />
-          {t("createKey")}
-        </Button>
-      </div>
+            <Button onClick={handleCreateKeyButtonOnClick} size="sm">
+              <Plus className="size-3.5" />
+              {t("createKey")}
+            </Button>
+          </div>
 
-      <div className="border-border overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-border border-b">
-              <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("name")}</th>
-              <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("key")}</th>
-              <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("status")}</th>
-              <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("created")}</th>
-              <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("lastUsed")}</th>
-              <th className="text-muted-foreground px-4 py-3 text-right font-medium">{t("actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredKeys.map((key) => {
-              const isRevoked = key.revokedAt != null;
-
-              return (
-                <tr className="border-border border-b last:border-b-0" key={key.id}>
-                  <td className="px-4 py-3 font-medium">{key.name}</td>
-                  <td className="px-4 py-3">
-                    <code className="text-muted-foreground text-xs">
-                      {formatMaskedKey(key.keyPrefix, key.keySuffix)}
-                    </code>
-                  </td>
-                  <td className="px-4 py-3">
-                    {isRevoked ? (
-                      <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
-                        <span className="bg-muted-foreground/40 inline-block size-1.5 rounded-full" />
-                        {t("revoked")}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                        <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
-                        {t("active")}
-                      </span>
-                    )}
-                  </td>
-                  <td className="text-muted-foreground px-4 py-3 text-xs">{formatDate(key.createdAt)}</td>
-                  <td className="text-muted-foreground px-4 py-3 text-xs">{formatDate(key.lastUsedAt)}</td>
-                  <td className="px-4 py-3 text-right">
-                    {!isRevoked && (
-                      <Button
-                        data-key-id={key.id}
-                        data-key-name={key.name}
-                        onClick={handleRevokeButtonOnClick}
-                        size="sm"
-                        variant="tertiary"
-                      >
-                        <Ban className="size-3" />
-                        {t("revoke")}
-                      </Button>
-                    )}
-                  </td>
+          <div className="border-border overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-border border-b">
+                  <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("name")}</th>
+                  <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("key")}</th>
+                  <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("status")}</th>
+                  <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("created")}</th>
+                  <th className="text-muted-foreground px-4 py-3 text-left font-medium">{t("lastUsed")}</th>
+                  <th className="text-muted-foreground px-4 py-3 text-right font-medium">{t("actions")}</th>
                 </tr>
-              );
-            })}
-            {filteredKeys.length === 0 && (
-              <tr>
-                <td className="text-muted-foreground px-4 py-8 text-center" colSpan={6}>
-                  {showRevoked ? t("noApiKeysYet") : t("noActiveApiKeys")}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {filteredKeys.map((key) => {
+                  const isRevoked = key.revokedAt != null;
+
+                  return (
+                    <tr className="border-border border-b last:border-b-0" key={key.id}>
+                      <td className="px-4 py-3 font-medium">{key.name}</td>
+                      <td className="px-4 py-3">
+                        <code className="text-muted-foreground text-xs">
+                          {formatMaskedKey(key.keyPrefix, key.keySuffix)}
+                        </code>
+                      </td>
+                      <td className="px-4 py-3">
+                        {isRevoked ? (
+                          <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+                            <span className="bg-muted-foreground/40 inline-block size-1.5 rounded-full" />
+                            {t("revoked")}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
+                            {t("active")}
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-muted-foreground px-4 py-3 text-xs">{formatDate(key.createdAt)}</td>
+                      <td className="text-muted-foreground px-4 py-3 text-xs">{formatDate(key.lastUsedAt)}</td>
+                      <td className="px-4 py-3 text-right">
+                        {!isRevoked && (
+                          <Button
+                            data-key-id={key.id}
+                            data-key-name={key.name}
+                            onClick={handleRevokeButtonOnClick}
+                            size="sm"
+                            variant="tertiary"
+                          >
+                            <Ban className="size-3" />
+                            {t("revoke")}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filteredKeys.length === 0 && (
+                  <tr>
+                    <td className="text-muted-foreground px-4 py-8 text-center" colSpan={6}>
+                      {showRevoked ? t("noApiKeysYet") : t("noActiveApiKeys")}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       <CreateKeyDialog onOpenChange={setCreateDialogOpen} open={createDialogOpen} />
 

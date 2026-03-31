@@ -36,10 +36,13 @@ export const CreateKeyDialog: React.FC<CreateKeyDialogProps> = (props) => {
   const [copied, setCopied] = React.useState(false);
   const [revokedWarning, setRevokedWarning] = React.useState(false);
   const [error, setError] = React.useState<null | string>(null);
+  const [dismissAttempts, setDismissAttempts] = React.useState(0);
+  const [showDismissWarning, setShowDismissWarning] = React.useState(false);
 
-  // Reset state when dialog opens
+  // Reset state when dialog closes (not on open — prevents remount from wiping state)
+  const prevOpenRef = React.useRef(open);
   React.useEffect(() => {
-    if (open) {
+    if (prevOpenRef.current && !open) {
       setStep("name");
       setName("");
       setRawKey("");
@@ -47,7 +50,10 @@ export const CreateKeyDialog: React.FC<CreateKeyDialogProps> = (props) => {
       setCopied(false);
       setRevokedWarning(false);
       setError(null);
+      setDismissAttempts(0);
+      setShowDismissWarning(false);
     }
+    prevOpenRef.current = open;
   }, [open]);
 
   const debounceRef = React.useRef<null | ReturnType<typeof setTimeout>>(null);
@@ -118,7 +124,11 @@ export const CreateKeyDialog: React.FC<CreateKeyDialogProps> = (props) => {
   // Prevent closing during "done" step by clicking outside (user must click Done)
   const handleOpenChange = (value: boolean) => {
     if (step === "done" && !value) {
-      // Allow closing via the Done button only
+      const next = dismissAttempts + 1;
+      setDismissAttempts(next);
+      if (next >= 2) {
+        setShowDismissWarning(true);
+      }
       return;
     }
     onOpenChange(value);
@@ -180,6 +190,12 @@ export const CreateKeyDialog: React.FC<CreateKeyDialogProps> = (props) => {
                 <TriangleAlert className="size-3.5 shrink-0" />
                 {t("thisKeyWillOnlyBeShownOnce")}
               </p>
+              {showDismissWarning && (
+                <p className="text-destructive flex items-center gap-1.5 text-sm">
+                  <TriangleAlert className="size-3.5 shrink-0" />
+                  {t("pleaseCopyYourApiKeyBeforeClosingItWontBeShownAgain")}
+                </p>
+              )}
             </div>
             <DialogFooter>
               <Button onClick={handleButtonOnClick}>{t("done")}</Button>
