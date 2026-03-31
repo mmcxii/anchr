@@ -154,7 +154,7 @@ test.describe("stage deployment smoke tests", () => {
 baseTest.describe("status endpoints smoke tests", () => {
   baseTest("health check returns ok", async ({ request }) => {
     //* Act
-    const response = await request.get("/api/__status__/health");
+    const response = await request.get("/api/status/health");
 
     //* Assert
     baseExpect(response.status()).toBe(200);
@@ -165,7 +165,7 @@ baseTest.describe("status endpoints smoke tests", () => {
 
   baseTest("release endpoint returns commit and timestamp", async ({ request }) => {
     //* Act
-    const response = await request.get("/api/__status__/release");
+    const response = await request.get("/api/status/release");
 
     //* Assert
     baseExpect(response.status()).toBe(200);
