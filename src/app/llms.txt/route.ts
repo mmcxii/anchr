@@ -15,6 +15,17 @@ Profiles can also be accessed via custom domains (e.g., \`https://alice.com\`).
 
 - [Sitemap](${baseUrl}/sitemap.xml): Discover all public Anchr profiles
 - [Pricing](${baseUrl}/pricing): Free and Pro tier details
+
+## API
+
+Anchr provides a public REST API at \`${baseUrl}/api/v1\`. Authenticate with an API key via \`Authorization: Bearer anc_k_...\`.
+
+- \`GET /api/v1/me\` — Authenticated user profile
+- \`GET /api/v1/users/{username}\` — Public user profile with links and groups
+- \`GET /api/v1/links\` — List, create, update, delete links
+- \`GET /api/v1/groups\` — List, create, update, delete groups (Pro)
+- \`GET /api/v1/analytics\` — Click analytics summary (Pro)
+- \`GET /api/v1/openapi.json\` — Full OpenAPI specification
 `;
 
   return new Response(text, {

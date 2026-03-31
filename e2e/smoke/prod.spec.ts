@@ -59,6 +59,9 @@ test.describe("production deployment smoke tests", () => {
     expect(body.version).toBe("1.0");
     expect(body.profiles).toBeDefined();
     expect(body.profiles.urlPattern).toContain("{username}");
+    expect(body.api).toBeDefined();
+    expect(body.api.baseUrl).toContain("/api/v1");
+    expect(body.api.docs).toContain("/api/v1/openapi.json");
   });
 
   test("/llms.txt returns valid LLM-readable site description", async ({ request }) => {
@@ -71,5 +74,45 @@ test.describe("production deployment smoke tests", () => {
 
     const text = await response.text();
     expect(text).toContain("# Anchr");
+    expect(text).toContain("## API");
+    expect(text).toContain("/api/v1");
+  });
+
+  test("GET /api/v1/openapi.json returns valid OpenAPI spec", async ({ request }) => {
+    //* Act
+    const response = await request.get("/api/v1/openapi.json");
+
+    //* Assert
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("application/json");
+    expect(response.headers()["access-control-allow-origin"]).toBe("*");
+
+    const body = await response.json();
+    expect(body.openapi).toBe("3.1.0");
+    expect(body.info.title).toBe("Anchr API");
+    expect(body.paths).toBeDefined();
+    expect(body.paths["/api/v1/me"]).toBeDefined();
+    expect(body.paths["/api/v1/links"]).toBeDefined();
+  });
+
+  test("GET /api/v1/me without auth returns 401", async ({ request }) => {
+    //* Act
+    const response = await request.get("/api/v1/me");
+
+    //* Assert
+    expect(response.status()).toBe(401);
+
+    const body = await response.json();
+    expect(body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  test("OPTIONS /api/v1/me returns CORS preflight headers", async ({ request }) => {
+    //* Act
+    const response = await request.fetch("/api/v1/me", { method: "OPTIONS" });
+
+    //* Assert
+    expect(response.status()).toBe(204);
+    expect(response.headers()["access-control-allow-origin"]).toBe("*");
+    expect(response.headers()["access-control-allow-methods"]).toContain("GET");
   });
 });

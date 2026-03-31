@@ -196,6 +196,10 @@ baseTest.describe("discovery endpoints smoke tests", () => {
     baseExpect(body.profiles.urlPattern).toContain("{username}");
     baseExpect(body.profiles.sitemap).toContain("/sitemap.xml");
     baseExpect(body.profiles.structuredData).toContain("JSON-LD");
+    baseExpect(body.api).toBeDefined();
+    baseExpect(body.api.baseUrl).toContain("/api/v1");
+    baseExpect(body.api.docs).toContain("/api/v1/openapi.json");
+    baseExpect(body.api.authentication).toContain("Bearer");
   });
 
   baseTest("/llms.txt returns valid LLM-readable site description", async ({ request }) => {
@@ -209,5 +213,77 @@ baseTest.describe("discovery endpoints smoke tests", () => {
     baseExpect(text).toContain("{username}");
     baseExpect(text).toContain("/sitemap.xml");
     baseExpect(text).toContain("/pricing");
+    baseExpect(text).toContain("## API");
+    baseExpect(text).toContain("/api/v1");
+    baseExpect(text).toContain("/api/v1/openapi.json");
+  });
+});
+
+baseTest.describe("public API smoke tests", () => {
+  baseTest("GET /api/v1/openapi.json returns valid OpenAPI spec", async ({ request }) => {
+    const response = await request.get("/api/v1/openapi.json");
+
+    baseExpect(response.status()).toBe(200);
+    baseExpect(response.headers()["content-type"]).toContain("application/json");
+    baseExpect(response.headers()["access-control-allow-origin"]).toBe("*");
+
+    const body = await response.json();
+    baseExpect(body.openapi).toBe("3.1.0");
+    baseExpect(body.info.title).toBe("Anchr API");
+    baseExpect(body.paths).toBeDefined();
+    baseExpect(body.paths["/api/v1/me"]).toBeDefined();
+    baseExpect(body.paths["/api/v1/links"]).toBeDefined();
+    baseExpect(body.paths["/api/v1/groups"]).toBeDefined();
+    baseExpect(body.paths["/api/v1/analytics"]).toBeDefined();
+  });
+
+  baseTest("GET /api/v1/users/:username returns public profile", async ({ request }) => {
+    const response = await request.get(`/api/v1/users/${testUsers.pro.username}`);
+
+    baseExpect(response.status()).toBe(200);
+    baseExpect(response.headers()["access-control-allow-origin"]).toBe("*");
+
+    const body = await response.json();
+    baseExpect(body.data).toBeDefined();
+    baseExpect(body.data.username).toBe(testUsers.pro.username);
+    baseExpect(body.data.profileUrl).toBeDefined();
+    baseExpect(Array.isArray(body.data.links)).toBe(true);
+    baseExpect(Array.isArray(body.data.groups)).toBe(true);
+  });
+
+  baseTest("GET /api/v1/users/:username returns 404 for nonexistent user", async ({ request }) => {
+    const response = await request.get("/api/v1/users/this-user-definitely-does-not-exist-12345");
+
+    baseExpect(response.status()).toBe(404);
+
+    const body = await response.json();
+    baseExpect(body.error.code).toBe("NOT_FOUND");
+  });
+
+  baseTest("GET /api/v1/me without auth returns 401", async ({ request }) => {
+    const response = await request.get("/api/v1/me");
+
+    baseExpect(response.status()).toBe(401);
+
+    const body = await response.json();
+    baseExpect(body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  baseTest("GET /api/v1/links without auth returns 401", async ({ request }) => {
+    const response = await request.get("/api/v1/links");
+
+    baseExpect(response.status()).toBe(401);
+
+    const body = await response.json();
+    baseExpect(body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  baseTest("OPTIONS /api/v1/me returns CORS preflight headers", async ({ request }) => {
+    const response = await request.fetch("/api/v1/me", { method: "OPTIONS" });
+
+    baseExpect(response.status()).toBe(204);
+    baseExpect(response.headers()["access-control-allow-origin"]).toBe("*");
+    baseExpect(response.headers()["access-control-allow-methods"]).toContain("GET");
+    baseExpect(response.headers()["access-control-allow-headers"]).toContain("Authorization");
   });
 });
