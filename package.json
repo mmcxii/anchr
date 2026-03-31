@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@clerk/shared": "^3.45.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

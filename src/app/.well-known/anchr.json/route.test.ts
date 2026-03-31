@@ -15,6 +15,11 @@ describe("GET /.well-known/anchr.json", () => {
 
     //* Assert
     expect(body).toEqual({
+      api: {
+        authentication: "Bearer token via API key (Authorization: Bearer anc_k_...)",
+        baseUrl: `${TEST_BASE_URL}/api/v1`,
+        docs: `${TEST_BASE_URL}/api/v1/openapi.json`,
+      },
       description: "Link-in-bio platform for the AI agent era",
       name: "Anchr",
       profiles: {
