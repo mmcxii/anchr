@@ -10,7 +10,7 @@ import { expect, test } from "@playwright/test";
 test.describe("production deployment smoke tests", () => {
   test("health check returns ok", async ({ request }) => {
     //* Act
-    const response = await request.get("/api/__status__/health");
+    const response = await request.get("/api/status/health");
 
     //* Assert
     expect(response.status()).toBe(200);
@@ -21,7 +21,7 @@ test.describe("production deployment smoke tests", () => {
 
   test("release endpoint returns commit and timestamp", async ({ request }) => {
     //* Act
-    const response = await request.get("/api/__status__/release");
+    const response = await request.get("/api/status/release");
 
     //* Assert
     expect(response.status()).toBe(200);
