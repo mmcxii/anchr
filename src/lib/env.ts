@@ -44,7 +44,7 @@ export const envSchema = createEnv({
     ADMIN_USER_ID: z.string().optional(),
     CLERK_SECRET_KEY: z.string(),
     CLERK_WEBHOOK_SECRET: z.string(),
-    CRON_SECRET: z.string().optional(),
+    CRON_SECRET: z.string(),
     DATABASE_URL: z.url(),
     RESEND_API_KEY: z.string(),
     STRIPE_PRO_PRICE_ID: z.string(),
