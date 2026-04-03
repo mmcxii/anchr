@@ -51,7 +51,7 @@
     "@playwright/test": "^1.59.1",
     "@t3-oss/env-nextjs": "0.13.11",
     "@tailwindcss/postcss": "4.2.2",
-    "@types/node": "25.5.0",
+    "@types/node": "25.5.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@types/ua-parser-js": "^0.7.39",
