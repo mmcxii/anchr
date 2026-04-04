@@ -187,6 +187,7 @@ jobs:
           E2E_USER_PASSWORD: e2e-test-password-ephemeral
           E2E_RUN_ID: ${{ github.run_id }}
           NEXT_PUBLIC_APP_URL: http://localhost:3000
+          WEBHOOK_SIGNING_ENCRYPTION_KEY: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v7

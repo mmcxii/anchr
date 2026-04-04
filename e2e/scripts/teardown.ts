@@ -34,6 +34,16 @@ const clicksTable = pgTable("clicks", {
   userId: text("user_id").notNull(),
 });
 
+const webhooksTable = pgTable("webhooks", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+});
+
+const webhookDeliveriesTable = pgTable("webhook_deliveries", {
+  id: text("id").primaryKey(),
+  webhookId: text("webhook_id").notNull(),
+});
+
 const referralCodesTable = pgTable("referral_codes", {
   id: text("id").primaryKey(),
 });
@@ -74,6 +84,22 @@ async function deleteUserData(db: ReturnType<typeof drizzle>, userId: string) {
     console.log(`[e2e:teardown] Removed Vercel domain ${user.customDomain}`);
   }
 
+  // Delete webhook deliveries for user's webhooks, then webhooks themselves
+  const userWebhooks = await db
+    .select({ id: webhooksTable.id })
+    .from(webhooksTable)
+    .where(eq(webhooksTable.userId, userId))
+    .catch(() => [] as { id: string }[]);
+  for (const wh of userWebhooks) {
+    await db
+      .delete(webhookDeliveriesTable)
+      .where(eq(webhookDeliveriesTable.webhookId, wh.id))
+      .catch(() => {});
+  }
+  await db
+    .delete(webhooksTable)
+    .where(eq(webhooksTable.userId, userId))
+    .catch(() => {});
   await db
     .delete(apiKeysTable)
     .where(eq(apiKeysTable.userId, userId))
