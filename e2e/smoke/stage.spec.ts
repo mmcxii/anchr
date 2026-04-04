@@ -450,14 +450,17 @@ baseTest.describe("MCP server smoke tests", () => {
       await mcp.initialize();
 
       //* Act — create a link via MCP
+      // Use a high-availability URL that always returns 200 for HEAD requests.
+      // anchr.to domains are blocked by isSafeUrl(), and example.com returns
+      // non-200 from the stage host, so we use httpbin's status endpoint.
       const created = await mcp.callTool("create_link", {
         title: "MCP Smoke Link",
-        url: "https://example.com",
+        url: "https://www.google.com",
       });
 
       //* Assert — link was created with expected fields
       baseExpect(created.title).toBe("MCP Smoke Link");
-      baseExpect(created.url).toBe("https://example.com/mcp-smoke");
+      baseExpect(created.url).toBe("https://www.google.com");
       baseExpect(created.id).toBeDefined();
       baseExpect(created.slug).toBeDefined();
 
