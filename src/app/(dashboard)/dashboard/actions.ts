@@ -337,22 +337,14 @@ export async function toggleFeaturedLink(id: string): Promise<ActionResult> {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
-  if (link.isFeatured) {
-    await db
-      .update(linksTable)
-      .set({ isFeatured: false })
-      .where(and(eq(linksTable.id, id), eq(linksTable.userId, user.id)));
-  } else {
-    await db
-      .update(linksTable)
-      .set({ isFeatured: false })
-      .where(and(eq(linksTable.userId, user.id), eq(linksTable.isFeatured, true)));
+  const newFeatured = !link.isFeatured;
 
-    await db
-      .update(linksTable)
-      .set({ isFeatured: true })
-      .where(and(eq(linksTable.id, id), eq(linksTable.userId, user.id)));
-  }
+  await db
+    .update(linksTable)
+    .set({
+      isFeatured: sql`CASE WHEN ${linksTable.id} = ${id} THEN ${newFeatured} ELSE false END`,
+    })
+    .where(and(eq(linksTable.userId, user.id), sql`(${linksTable.id} = ${id} OR ${linksTable.isFeatured} = true)`));
 
   revalidatePages(user.username);
 

@@ -329,24 +329,22 @@ export async function toggleFeaturedLink(
     return serviceError(API_ERROR_CODES.NOT_FOUND, "Link not found.", 404);
   }
 
-  if (link.isFeatured) {
-    // Unfeature
-    await db
-      .update(linksTable)
-      .set({ isFeatured: false })
-      .where(and(eq(linksTable.id, id), eq(linksTable.userId, user.id)));
-  } else {
-    // Unfeature current, then feature this one
-    await db
-      .update(linksTable)
-      .set({ isFeatured: false })
-      .where(and(eq(linksTable.userId, user.id), eq(linksTable.isFeatured, true)));
+  const newFeatured = !link.isFeatured;
 
-    await db
-      .update(linksTable)
-      .set({ isFeatured: true })
-      .where(and(eq(linksTable.id, id), eq(linksTable.userId, user.id)));
-  }
+  // Single atomic UPDATE: set the target link's featured state and
+  // unfeature any other link in one statement (no transaction needed).
+  await db
+    .update(linksTable)
+    .set({
+      isFeatured: sql`CASE WHEN ${linksTable.id} = ${id} THEN ${newFeatured} ELSE false END`,
+    })
+    .where(
+      and(
+        eq(linksTable.userId, user.id),
+        // Only touch the target link and any currently-featured link
+        sql`(${linksTable.id} = ${id} OR ${linksTable.isFeatured} = true)`,
+      ),
+    );
 
   revalidatePath("/dashboard");
   revalidatePath(`/${user.username}`);
