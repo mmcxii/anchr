@@ -5,12 +5,12 @@ import { FadeIn } from "@/components/marketing/fade-in";
 import { RedirectHubUrlPreview } from "@/components/marketing/redirect-hub-url-preview";
 import { Container } from "@/components/ui/container";
 import { cn } from "@/lib/utils";
-import { Anchor, ArrowUpRight, BarChart3, ChevronRight, Globe, Palette, Zap } from "lucide-react";
+import { Anchor, ArrowUpRight, BarChart3, ChevronRight, Globe, Palette, Webhook } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BeautifulThemesVisual } from "./beautiful-themes-visual";
-import { BlazingFastVisual } from "./blazing-fast-visual";
 import { cardBase, cardClasses, cardHoverClass } from "./card-styles";
 import { IconHeader } from "./icon-header";
+import { WebhooksApiVisual } from "./webhooks-api-visual";
 
 export const Features: React.FC = () => {
   const { t } = useTranslation();
@@ -23,15 +23,15 @@ export const Features: React.FC = () => {
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {/* Blazing Fast — top-left */}
+          {/* Webhooks & API — top-left */}
           <FadeIn className="sm:col-start-1 sm:row-start-1" delay={0}>
             <div className={cn(cardBase, cardClasses, cardHoverClass, "h-full p-6")}>
               <div className="m-accent-gradient-bg absolute inset-x-0 top-0 h-px" />
-              <IconHeader icon={Zap} title={t("blazingFast")} />
+              <IconHeader icon={Webhook} title={t("webhooksAndApi")} />
               <p className="m-muted-70 text-sm leading-relaxed">
-                {t("noWaitingRoomBetweenYouAndYourAudienceYourPageLoadsTheMomentTheyArrive")}
+                {t("connectAnchrToYourWorkflowWithRealTimeWebhooksAndAFullRestApiAutomateEverything")}
               </p>
-              <BlazingFastVisual />
+              <WebhooksApiVisual />
             </div>
           </FadeIn>
 

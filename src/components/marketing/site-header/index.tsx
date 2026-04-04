@@ -1,3 +1,4 @@
+import { MobileMenu } from "@/components/marketing/mobile-menu";
 import { SiteBrandmark } from "@/components/marketing/site-brandmark";
 import { Container } from "@/components/ui/container";
 import { initTranslations } from "@/lib/i18n/server";
@@ -30,6 +31,7 @@ export const SiteHeader: React.FC = async () => {
         >
           {t("signUp")}
         </Link>
+        <MobileMenu />
       </nav>
     </Container>
   );

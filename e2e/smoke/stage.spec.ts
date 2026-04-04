@@ -1,5 +1,6 @@
 import { expect as baseExpect, test as baseTest } from "@playwright/test";
 import { createLink, deleteLink, expect, test } from "../fixtures/auth";
+import { createTestApiKey, deleteTestApiKeys } from "../fixtures/db";
 import { t } from "../fixtures/i18n";
 import { testDomain, testUsers } from "../fixtures/test-users";
 
@@ -18,7 +19,7 @@ test.describe("stage deployment smoke tests", () => {
     await page.goto("/developers");
 
     //* Assert
-    await expect(page.getByRole("heading", { name: t.builtForTheAiAgentEra })).toBeVisible();
+    await expect(page.getByRole("heading", { exact: true, name: t.builtForTheAiAgentEra })).toBeVisible();
   });
 
   test("app boots and serves the landing page", async ({ page }) => {
@@ -34,7 +35,7 @@ test.describe("stage deployment smoke tests", () => {
     await page.goto("/dashboard");
 
     //* Assert
-    await expect(page.getByRole("heading", { name: t.links })).toBeVisible();
+    await expect(page.getByRole("heading", { exact: true, name: t.links })).toBeVisible();
   });
 
   test("API keys page loads", async ({ proUser: page }) => {
@@ -107,7 +108,7 @@ test.describe("stage deployment smoke tests", () => {
   test("custom domain serves public profile via real DNS", async ({ browser, proUser: page }) => {
     //* Arrange — add custom domain and create a link
     await page.goto("/dashboard/settings");
-    await page.getByRole("heading", { name: t.settings }).waitFor();
+    await page.getByRole("heading", { exact: true, name: t.settings }).waitFor();
 
     // Clean up any leftover domain from a previous run
     const removeButton = page.getByRole("button", { name: t.removeDomain });
@@ -124,7 +125,7 @@ test.describe("stage deployment smoke tests", () => {
     await page.getByRole("button", { name: t.addDomain }).click();
     await page.waitForTimeout(2000);
     await page.reload();
-    await page.getByRole("heading", { name: t.settings }).waitFor();
+    await page.getByRole("heading", { exact: true, name: t.settings }).waitFor();
     await page.getByRole("button", { name: t.verifyDns }).waitFor();
 
     // Verify DNS (may need a retry if SSL is still provisioning)
@@ -153,7 +154,7 @@ test.describe("stage deployment smoke tests", () => {
     //* Arrange — cleanup
     await deleteLink(page, "Custom Domain Smoke");
     await page.goto("/dashboard/settings");
-    await page.getByRole("heading", { name: t.settings }).waitFor();
+    await page.getByRole("heading", { exact: true, name: t.settings }).waitFor();
     await page.getByRole("button", { name: t.removeDomain }).click();
     await page.getByText(t.domainRemoved).waitFor();
   });
@@ -228,8 +229,11 @@ baseTest.describe("discovery endpoints smoke tests", () => {
     baseExpect(body.profiles.structuredData).toContain("JSON-LD");
     baseExpect(body.api).toBeDefined();
     baseExpect(body.api.baseUrl).toContain("/api/v1");
-    baseExpect(body.api.docs).toContain("/api/v1/openapi.json");
+    baseExpect(body.api.docs).toContain("/docs");
+    baseExpect(body.api.openApiSpec).toContain("/api/v1/openapi.json");
     baseExpect(body.api.authentication).toContain("Bearer");
+    baseExpect(body.mcp).toBeDefined();
+    baseExpect(body.mcp.hosted).toContain("/api/v1/mcp");
   });
 
   baseTest("/llms.txt returns valid LLM-readable site description", async ({ request }) => {
@@ -331,3 +335,170 @@ baseTest.describe("public API smoke tests", () => {
     baseExpect(response.headers()["access-control-allow-headers"]).toContain("Authorization");
   });
 });
+
+baseTest.describe("MCP server smoke tests", () => {
+  baseTest("POST /api/v1/mcp without auth returns 401", async ({ request }) => {
+    //* Act
+    const response = await request.post("/api/v1/mcp", {
+      data: {
+        id: 1,
+        jsonrpc: "2.0",
+        method: "initialize",
+        params: {
+          capabilities: {},
+          clientInfo: { name: "smoke-test", version: "1.0.0" },
+          protocolVersion: "2025-03-26",
+        },
+      },
+      headers: { "Content-Type": "application/json" },
+    });
+
+    //* Assert
+    baseExpect(response.status()).toBe(401);
+
+    const body = await response.json();
+    baseExpect(body.error.code).toBe("UNAUTHORIZED");
+  });
+
+  baseTest("POST /api/v1/mcp with invalid key returns 401", async ({ request }) => {
+    //* Act
+    const response = await request.post("/api/v1/mcp", {
+      data: {
+        id: 1,
+        jsonrpc: "2.0",
+        method: "initialize",
+        params: {
+          capabilities: {},
+          clientInfo: { name: "smoke-test", version: "1.0.0" },
+          protocolVersion: "2025-03-26",
+        },
+      },
+      headers: {
+        Authorization: "Bearer anc_k_invalidkeyinvalidkeyinvalidkeyinvalid",
+        "Content-Type": "application/json",
+      },
+    });
+
+    //* Assert
+    baseExpect(response.status()).toBe(401);
+  });
+
+  baseTest("OPTIONS /api/v1/mcp returns CORS preflight headers", async ({ request }) => {
+    //* Act
+    const response = await request.fetch("/api/v1/mcp", { method: "OPTIONS" });
+
+    //* Assert
+    baseExpect(response.status()).toBe(204);
+    baseExpect(response.headers()["access-control-allow-origin"]).toBe("*");
+    baseExpect(response.headers()["access-control-allow-methods"]).toContain("POST");
+  });
+
+  baseTest("MCP server initializes and lists tools for Pro user", async ({ request }) => {
+    //* Arrange
+    const mcp = await createMcpHelper(request);
+
+    try {
+      //* Act — initialize the MCP session
+      const initBody = await mcp.initialize();
+
+      //* Assert — server accepts the connection
+      baseExpect(initBody.result.serverInfo.name).toBe("Anchr");
+      baseExpect(initBody.result.serverInfo.version).toBe("1.0.0");
+      baseExpect(initBody.result.capabilities.tools).toBeDefined();
+
+      //* Act — list available tools
+      const toolsBody = await mcp.rpc("tools/list", {});
+
+      //* Assert — all 20 tools are listed
+      const toolNames: string[] = toolsBody.result.tools.map((tool: { name: string }) => tool.name);
+      baseExpect(toolNames).toHaveLength(20);
+      baseExpect(toolNames).toContain("get_profile");
+      baseExpect(toolNames).toContain("create_link");
+      baseExpect(toolNames).toContain("list_groups");
+      baseExpect(toolNames).toContain("get_analytics");
+      baseExpect(toolNames).toContain("lookup_profile");
+    } finally {
+      //* Cleanup
+      await mcp.cleanup();
+    }
+  });
+
+  baseTest("MCP get_profile tool returns user data for Pro user", async ({ request }) => {
+    //* Arrange
+    const mcp = await createMcpHelper(request);
+
+    try {
+      //* Act
+      await mcp.initialize();
+      const data = await mcp.callTool("get_profile", {});
+
+      //* Assert
+      baseExpect(data.username).toBe(testUsers.pro.username);
+      baseExpect(data.tier).toBe("pro");
+      baseExpect(data.profileUrl).toBeDefined();
+    } finally {
+      //* Cleanup
+      await mcp.cleanup();
+    }
+  });
+});
+
+// ---------- MCP test helper ----------
+
+/**
+ * Creates a short-lived MCP test client backed by a real API key.
+ * Handles key creation, JSON-RPC plumbing, and cleanup.
+ */
+type RequestLike = {
+  post: (
+    url: string,
+    options: Record<string, unknown>,
+  ) => Promise<{ json: () => Promise<unknown>; status: () => number }>;
+};
+
+async function createMcpHelper(request: RequestLike, username: string = testUsers.pro.username) {
+  const rawKey = await createTestApiKey(username);
+  const headers = {
+    Accept: "application/json, text/event-stream",
+    Authorization: `Bearer ${rawKey}`,
+    "Content-Type": "application/json",
+  };
+  let nextId = 1;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function rpc(method: string, params: unknown): Promise<any> {
+    const response = await request.post("/api/v1/mcp", {
+      data: { id: nextId++, jsonrpc: "2.0", method, params },
+      headers,
+    });
+    baseExpect(response.status()).toBe(200);
+    return response.json();
+  }
+
+  async function initialize() {
+    return rpc("initialize", {
+      capabilities: {},
+      clientInfo: { name: "smoke-test", version: "1.0.0" },
+      protocolVersion: "2025-03-26",
+    });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function callToolRaw(name: string, args: unknown): Promise<any> {
+    const body = await rpc("tools/call", { arguments: args, name });
+    return body.result;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function callTool(name: string, args: unknown): Promise<any> {
+    const result = await callToolRaw(name, args);
+    baseExpect(result.isError, `${name} returned error: ${result.content?.[0]?.text}`).toBeFalsy();
+    return JSON.parse(result.content[0].text);
+  }
+
+  async function cleanup() {
+    await deleteTestApiKeys(username);
+  }
+
+  return { callTool, callToolRaw, cleanup, headers, initialize, rpc };
+}
