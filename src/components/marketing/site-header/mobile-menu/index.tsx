@@ -46,7 +46,7 @@ export const MobileMenu: React.FC = () => {
       <div
         aria-hidden={!open}
         className={cn(
-          "fixed inset-0 z-[55] flex items-center justify-center bg-(--m-page-bg) transition-opacity duration-300 ease-in-out sm:hidden",
+          "fixed inset-0 z-[55] flex items-center justify-center bg-(--m-page-bg) transition-all duration-300 ease-in-out sm:hidden",
           {
             "opacity-100": open,
             "pointer-events-none opacity-0": !open,
