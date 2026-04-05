@@ -14,15 +14,25 @@ export const testDomain = {
 
 export const testUsers = {
   admin: {
-    email: `e2e-admin-${RUN_ID}@anchr.io`,
+    email: `e2e-admin-${RUN_ID}@anchr.to`,
     username: `e2eadmin${RUN_ID}`,
   },
   fresh: {
-    email: `e2e-fresh-${RUN_ID}@anchr.io`,
+    email: `e2e-fresh-${RUN_ID}@anchr.to`,
     username: `e2efresh${RUN_ID}`,
   },
+  /**
+   * Dedicated user for password tests. Uses +clerk_test email suffix
+   * so Clerk skips real email delivery and bypasses the 100/month
+   * dev instance email limit. Cannot use clerk.signIn() — use
+   * the passwordProUser fixture from fixtures/auth.ts instead.
+   */
+  passwordPro: {
+    email: `e2e-password-${RUN_ID}+clerk_test@anchr.to`,
+    username: `e2epassword${RUN_ID}`,
+  },
   pro: {
-    email: `e2e-pro-${RUN_ID}@anchr.io`,
+    email: `e2e-pro-${RUN_ID}@anchr.to`,
     username: `e2epro${RUN_ID}`,
   },
 } as const;

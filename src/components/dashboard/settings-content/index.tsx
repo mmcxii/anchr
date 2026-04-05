@@ -19,6 +19,7 @@ import {
 import { CheckoutCelebration } from "@/components/dashboard/checkout-celebration";
 import { PagePreview } from "@/components/dashboard/page-preview";
 import { PreviewToggle } from "@/components/dashboard/preview-toggle";
+import { PasswordSection } from "@/components/dashboard/settings-content/password-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconButton } from "@/components/ui/icon-button";
@@ -925,6 +926,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
             )}
           </CardContent>
         </Card>
+
+        <PasswordSection />
 
         <Card>
           <CardHeader>
