@@ -107,6 +107,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
       style.backgroundAttachment = "fixed";
     }
 
+    if (customTheme.overlayColor != null) {
+      style["--anc-theme-overlay-color"] = customTheme.overlayColor;
+    }
+    if (customTheme.overlayOpacity != null) {
+      style["--anc-theme-overlay-opacity"] = String(customTheme.overlayOpacity);
+    }
+
     if (customTheme.font != null && customTheme.font.trim() !== "") {
       style.fontFamily = `"${customTheme.font}", var(--anc-font-sans)`;
     }
@@ -123,6 +130,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
 
   // Listen for live preview messages from the Theme Studio (postMessage from parent iframe)
   const pageRootRef = React.useRef<HTMLDivElement>(null);
+  const previewStyleRef = React.useRef<null | HTMLStyleElement>(null);
   React.useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type !== "theme-studio-preview" || pageRootRef.current == null) {
@@ -130,10 +138,44 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
       }
 
       const el = pageRootRef.current;
-      const { variables: vars } = event.data as { type: string; variables: Record<string, string> };
+      const {
+        borderRadius: br,
+        font,
+        rawCss,
+        variables: vars,
+      } = event.data as {
+        borderRadius?: null | number;
+        font?: null | string;
+        rawCss?: null | string;
+        type: string;
+        variables: Record<string, string>;
+      };
 
       for (const [key, val] of Object.entries(vars)) {
         el.style.setProperty(key, val);
+      }
+
+      // Apply border radius
+      if (br != null) {
+        el.style.setProperty("--anc-theme-border-radius", `${br}px`);
+      }
+
+      // Apply font
+      if (font != null && font.trim() !== "") {
+        el.style.fontFamily = `"${font}", var(--anc-font-sans)`;
+      } else {
+        el.style.fontFamily = "";
+      }
+
+      // Apply raw CSS via dynamic style tag
+      if (rawCss != null && rawCss.trim() !== "") {
+        if (previewStyleRef.current == null) {
+          previewStyleRef.current = document.createElement("style");
+          el.appendChild(previewStyleRef.current);
+        }
+        previewStyleRef.current.textContent = rawCss;
+      } else if (previewStyleRef.current != null) {
+        previewStyleRef.current.textContent = "";
       }
 
       // Set data-theme so Tailwind dark: variant works
@@ -161,7 +203,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
   return (
     <LinkPageThemeContext.Provider value={value}>
       <div
-        className="lp-page-bg flex min-h-dvh flex-col"
+        className="anchr-page flex min-h-dvh flex-col"
         data-theme={dataTheme}
         ref={pageRootRef}
         // eslint-disable-next-line anchr/no-inline-style -- dynamic theme styles and color-scheme for browser chrome
@@ -172,11 +214,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
         {/* Background image overlay */}
         {isCustom && customTheme.backgroundImage != null && (
           <div
-            className="pointer-events-none fixed inset-0"
-            // eslint-disable-next-line anchr/no-inline-style -- dynamic overlay
+            className="anchr-overlay pointer-events-none fixed inset-0"
+            // eslint-disable-next-line anchr/no-inline-style -- dynamic overlay via CSS variables
             style={{
-              background: customTheme.overlayColor ?? "rgba(0,0,0,0.4)",
-              opacity: customTheme.overlayOpacity ?? 0.4,
+              background: "var(--anc-theme-overlay-color, rgba(0,0,0,0.4))",
+              opacity: "var(--anc-theme-overlay-opacity, 0.4)" as unknown as number,
             }}
           />
         )}

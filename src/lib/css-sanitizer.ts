@@ -38,8 +38,8 @@ const BLOCKED_AT_RULES = /^@(import|font-face|media)\b/i;
 /** Selectors that are never allowed. */
 const FORBIDDEN_SELECTORS = /(?:^|\s|,)(?:html|body|:root)(?:\s|{|,|$)/i;
 
-/** All selectors must start with .lp-page-bg */
-const SCOPE_SELECTOR = ".lp-page-bg";
+/** All selectors must contain at least one .anchr- prefixed class */
+const SCOPE_PATTERN = /\.anchr-[\w-]+/;
 
 /**
  * Decode CSS unicode escapes (e.g., `\70` → `p`) to prevent bypass of property name checks.
@@ -120,11 +120,11 @@ function sanitizeRuleBlock(block: string, errors: string[]): null | string {
     return null;
   }
 
-  // Check all selectors in comma-separated list are scoped
+  // Check all selectors in comma-separated list contain an .anchr- class
   const selectors = selector.split(",").map((s) => s.trim());
   for (const sel of selectors) {
-    if (!sel.startsWith(SCOPE_SELECTOR)) {
-      errors.push(`Selector "${sel}" must be scoped to ${SCOPE_SELECTOR}`);
+    if (!SCOPE_PATTERN.test(sel)) {
+      errors.push(`Selector "${sel}" must contain an .anchr- prefixed class`);
       return null;
     }
   }
@@ -197,7 +197,7 @@ function sanitizeRuleBlock(block: string, errors: string[]): null | string {
 /**
  * Sanitize user-provided CSS by stripping disallowed properties, values, selectors, and at-rules.
  *
- * All CSS must be scoped to `.lp-page-bg`. Dangerous properties (positioning, visibility,
+ * All selectors must contain an `.anchr-` prefixed class. Dangerous properties (positioning, visibility,
  * overflow, etc.) and XSS vectors (expression, javascript: URLs, etc.) are stripped.
  *
  * @returns The sanitized CSS string and an array of human-readable error messages.

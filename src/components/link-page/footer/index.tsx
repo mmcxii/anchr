@@ -14,13 +14,13 @@ export const Footer: React.FC<FooterProps> = (props) => {
   }
 
   return (
-    <footer className="border-anc-theme-divider mt-auto grid grid-cols-[1fr_auto_1fr] items-center border-t pt-6 pb-2">
+    <footer className="anchr-footer border-anc-theme-divider mt-auto grid grid-cols-[1fr_auto_1fr] items-center border-t pt-6 pb-2">
       <div />
       {hideBranding ? (
         <div />
       ) : (
         <a
-          className="tracking-anc-caps-wide text-anc-theme-brand flex items-center gap-2 text-xs font-bold uppercase transition-opacity hover:opacity-80"
+          className="anchr-brand tracking-anc-caps-wide text-anc-theme-brand flex items-center gap-2 text-xs font-bold uppercase transition-opacity hover:opacity-80"
           href="https://anchr.to?ref=user_page"
           rel="noopener noreferrer"
           target="_blank"

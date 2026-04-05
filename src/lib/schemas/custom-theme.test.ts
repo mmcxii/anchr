@@ -25,7 +25,7 @@ describe("customThemeSchema", () => {
       font: "Inter",
       overlayColor: "#000000",
       overlayOpacity: 0.5,
-      rawCss: ".lp-page-bg { color: red; }",
+      rawCss: ".anchr-page { color: red; }",
     };
 
     //* Act

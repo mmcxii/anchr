@@ -10,7 +10,7 @@ export const LinkPageThemeToggle: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="anchr-theme-toggle flex items-center gap-1">
       {MODES.map(({ icon: Icon, labelKey, value }) => {
         const handleButtonOnClick = () => setMode(value);
 

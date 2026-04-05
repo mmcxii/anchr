@@ -5,7 +5,7 @@ describe("sanitizeCss", () => {
   describe("valid CSS", () => {
     it("passes valid scoped CSS through unchanged", () => {
       //* Arrange
-      const css = `.lp-page-bg .card { color: red; background: blue; }`;
+      const css = `.anchr-page .card { color: red; background: blue; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -26,9 +26,9 @@ describe("sanitizeCss", () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it("allows nested selectors under .lp-page-bg", () => {
+    it("allows nested selectors under .anchr-page", () => {
       //* Arrange
-      const css = `.lp-page-bg a:hover { text-decoration: underline; }`;
+      const css = `.anchr-page a:hover { text-decoration: underline; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -42,7 +42,7 @@ describe("sanitizeCss", () => {
   describe("JavaScript execution / XSS", () => {
     it("strips expression() in values", () => {
       //* Arrange
-      const css = `.lp-page-bg { width: expression(document.body.clientWidth); }`;
+      const css = `.anchr-page { width: expression(document.body.clientWidth); }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -54,7 +54,7 @@ describe("sanitizeCss", () => {
 
     it("strips url(javascript:) values", () => {
       //* Arrange
-      const css = `.lp-page-bg { background: url(javascript:alert(1)); }`;
+      const css = `.anchr-page { background: url(javascript:alert(1)); }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -66,7 +66,7 @@ describe("sanitizeCss", () => {
 
     it("strips url(data:) values", () => {
       //* Arrange
-      const css = `.lp-page-bg { background: url(data:text/html,<script>alert(1)</script>); }`;
+      const css = `.anchr-page { background: url(data:text/html,<script>alert(1)</script>); }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -78,7 +78,7 @@ describe("sanitizeCss", () => {
 
     it("strips -moz-binding property", () => {
       //* Arrange
-      const css = `.lp-page-bg { -moz-binding: url(evil.xml#xss); }`;
+      const css = `.anchr-page { -moz-binding: url(evil.xml#xss); }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -90,7 +90,7 @@ describe("sanitizeCss", () => {
 
     it("strips behavior property", () => {
       //* Arrange
-      const css = `.lp-page-bg { behavior: url(evil.htc); }`;
+      const css = `.anchr-page { behavior: url(evil.htc); }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -104,7 +104,7 @@ describe("sanitizeCss", () => {
   describe("external resource loading", () => {
     it("strips @import rules", () => {
       //* Arrange
-      const css = `@import url("https://evil.com/track.css"); .lp-page-bg { color: red; }`;
+      const css = `@import url("https://evil.com/track.css"); .anchr-page { color: red; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -117,7 +117,7 @@ describe("sanitizeCss", () => {
 
     it("strips @font-face rules", () => {
       //* Arrange
-      const css = `@font-face { font-family: evil; src: url(https://evil.com/font.woff2); } .lp-page-bg { color: red; }`;
+      const css = `@font-face { font-family: evil; src: url(https://evil.com/font.woff2); } .anchr-page { color: red; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -130,7 +130,7 @@ describe("sanitizeCss", () => {
 
     it("strips @media queries", () => {
       //* Arrange
-      const css = `@media (max-width: 768px) { .lp-page-bg { display: block; } }`;
+      const css = `@media (max-width: 768px) { .anchr-page { display: block; } }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -144,7 +144,7 @@ describe("sanitizeCss", () => {
   describe("layout/positioning attacks", () => {
     it("strips position: fixed", () => {
       //* Arrange
-      const css = `.lp-page-bg .overlay { position: fixed; top: 0; left: 0; }`;
+      const css = `.anchr-page .overlay { position: fixed; top: 0; left: 0; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -156,7 +156,7 @@ describe("sanitizeCss", () => {
 
     it("strips position: absolute", () => {
       //* Arrange
-      const css = `.lp-page-bg .overlay { position: absolute; }`;
+      const css = `.anchr-page .overlay { position: absolute; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -168,7 +168,7 @@ describe("sanitizeCss", () => {
 
     it("allows position: relative", () => {
       //* Arrange
-      const css = `.lp-page-bg .card { position: relative; }`;
+      const css = `.anchr-page .card { position: relative; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -180,7 +180,7 @@ describe("sanitizeCss", () => {
 
     it("strips z-index", () => {
       //* Arrange
-      const css = `.lp-page-bg .overlay { z-index: 9999; }`;
+      const css = `.anchr-page .overlay { z-index: 9999; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -192,7 +192,7 @@ describe("sanitizeCss", () => {
 
     it("strips content property", () => {
       //* Arrange
-      const css = `.lp-page-bg::before { content: "phishing"; }`;
+      const css = `.anchr-page::before { content: "phishing"; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -204,7 +204,7 @@ describe("sanitizeCss", () => {
 
     it("strips pointer-events", () => {
       //* Arrange
-      const css = `.lp-page-bg { pointer-events: none; }`;
+      const css = `.anchr-page { pointer-events: none; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -216,7 +216,7 @@ describe("sanitizeCss", () => {
 
     it("strips cursor", () => {
       //* Arrange
-      const css = `.lp-page-bg a { cursor: pointer; }`;
+      const css = `.anchr-page a { cursor: pointer; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -230,7 +230,7 @@ describe("sanitizeCss", () => {
   describe("visibility manipulation", () => {
     it("strips visibility", () => {
       //* Arrange
-      const css = `.lp-page-bg .footer { visibility: hidden; }`;
+      const css = `.anchr-page .footer { visibility: hidden; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -242,7 +242,7 @@ describe("sanitizeCss", () => {
 
     it("strips display: none", () => {
       //* Arrange
-      const css = `.lp-page-bg .branding { display: none; }`;
+      const css = `.anchr-page .branding { display: none; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -254,7 +254,7 @@ describe("sanitizeCss", () => {
 
     it("allows display: flex", () => {
       //* Arrange
-      const css = `.lp-page-bg .card { display: flex; }`;
+      const css = `.anchr-page .card { display: flex; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -266,7 +266,7 @@ describe("sanitizeCss", () => {
 
     it("strips clip-path", () => {
       //* Arrange
-      const css = `.lp-page-bg { clip-path: circle(0); }`;
+      const css = `.anchr-page { clip-path: circle(0); }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -278,7 +278,7 @@ describe("sanitizeCss", () => {
 
     it("strips clip", () => {
       //* Arrange
-      const css = `.lp-page-bg { clip: rect(0, 0, 0, 0); }`;
+      const css = `.anchr-page { clip: rect(0, 0, 0, 0); }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -292,7 +292,7 @@ describe("sanitizeCss", () => {
   describe("breakout / overflow", () => {
     it("strips overflow", () => {
       //* Arrange
-      const css = `.lp-page-bg { overflow: hidden; }`;
+      const css = `.anchr-page { overflow: hidden; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -304,7 +304,7 @@ describe("sanitizeCss", () => {
 
     it("strips resize", () => {
       //* Arrange
-      const css = `.lp-page-bg textarea { resize: both; }`;
+      const css = `.anchr-page textarea { resize: both; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -316,7 +316,7 @@ describe("sanitizeCss", () => {
   });
 
   describe("selector restrictions", () => {
-    it("rejects selectors not scoped to .lp-page-bg", () => {
+    it("rejects selectors not scoped to .anchr-page", () => {
       //* Arrange
       const css = `.some-other-class { color: red; }`;
 
@@ -363,12 +363,72 @@ describe("sanitizeCss", () => {
       expect(result.sanitized).not.toContain("--evil");
       expect(result.errors.length).toBeGreaterThan(0);
     });
+
+    it("accepts any .anchr- prefixed class as selector", () => {
+      //* Arrange
+      const css = `.anchr-link { color: red; }`;
+
+      //* Act
+      const result = sanitizeCss(css);
+
+      //* Assert
+      expect(result.sanitized).toContain("color: red");
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("accepts pseudo-classes on .anchr- selectors", () => {
+      //* Arrange
+      const css = `.anchr-link:hover { color: blue; }`;
+
+      //* Act
+      const result = sanitizeCss(css);
+
+      //* Assert
+      expect(result.sanitized).toContain("color: blue");
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("accepts combinators between .anchr- selectors", () => {
+      //* Arrange
+      const css = `.anchr-link + .anchr-link { margin-top: 8px; }`;
+
+      //* Act
+      const result = sanitizeCss(css);
+
+      //* Assert
+      expect(result.sanitized).toContain("margin-top: 8px");
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("accepts descendant .anchr- selectors", () => {
+      //* Arrange
+      const css = `.anchr-page .anchr-avatar { border-radius: 0; }`;
+
+      //* Act
+      const result = sanitizeCss(css);
+
+      //* Assert
+      expect(result.sanitized).toContain("border-radius: 0");
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("rejects selectors without .anchr- prefix", () => {
+      //* Arrange
+      const css = `.random-class { color: red; }`;
+
+      //* Act
+      const result = sanitizeCss(css);
+
+      //* Assert
+      expect(result.sanitized).not.toContain("color");
+      expect(result.errors.length).toBeGreaterThan(0);
+    });
   });
 
   describe("edge cases", () => {
     it("handles malformed CSS without throwing", () => {
       //* Arrange
-      const css = `.lp-page-bg { color: red; /* unclosed comment`;
+      const css = `.anchr-page { color: red; /* unclosed comment`;
 
       //* Act
       const act = () => sanitizeCss(css);
@@ -379,7 +439,7 @@ describe("sanitizeCss", () => {
 
     it("handles CSS with multiple rules, stripping only bad ones", () => {
       //* Arrange
-      const css = `.lp-page-bg { color: red; } .lp-page-bg { position: fixed; } .lp-page-bg .link { font-size: 14px; }`;
+      const css = `.anchr-page { color: red; } .anchr-page { position: fixed; } .anchr-page .link { font-size: 14px; }`;
 
       //* Act
       const result = sanitizeCss(css);
@@ -392,7 +452,7 @@ describe("sanitizeCss", () => {
 
     it("handles unicode escapes for blacklisted properties", () => {
       //* Arrange — \70osition is "position" via CSS unicode escape
-      const css = `.lp-page-bg { \\70osition: fixed; }`;
+      const css = `.anchr-page { \\70osition: fixed; }`;
 
       //* Act
       const result = sanitizeCss(css);

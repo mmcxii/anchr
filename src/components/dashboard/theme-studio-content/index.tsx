@@ -6,7 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
-import { PRESET_THEME_VARIABLES, THEME_NAME_MAX_LENGTH, type ThemeVariables } from "@/lib/custom-themes";
+import {
+  generateCssScaffold,
+  parseCssToThemeState,
+  updateProPropertyInCss,
+  updateVariableInCss,
+} from "@/lib/css-theme-sync";
+import {
+  PRESET_THEME_VARIABLES,
+  THEME_NAME_MAX_LENGTH,
+  type ThemeVariableKey,
+  type ThemeVariables,
+} from "@/lib/custom-themes";
 import type { customThemesTable } from "@/lib/db/schema/custom-theme";
 import type { usersTable } from "@/lib/db/schema/user";
 import type { TranslationKey } from "@/lib/i18n/i18next.d";
@@ -70,12 +81,15 @@ export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => 
   const [previewVersion, setPreviewVersion] = React.useState(0);
   const previewKey = `${name}|${previewVersion}`;
 
+  // Guard to prevent infinite sync loops between CSS editor and UI inputs
+  const syncSourceRef = React.useRef<null | "css" | "ui">(null);
+
   //* Mark dirty on any change
   React.useEffect(() => {
     setIsDirty(true);
   }, [name, variables, font, borderRadius, rawCss]);
 
-  //* Live preview — post theme variables to the preview iframe on every change
+  //* Live preview — post all theme data to the preview iframe on every change
   React.useEffect(() => {
     const iframe = document.querySelector<HTMLIFrameElement>("iframe[title]");
     if (iframe?.contentWindow == null) {
@@ -83,8 +97,17 @@ export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => 
     }
 
     const vars = variablesToInlineStyle(variables);
-    iframe.contentWindow.postMessage({ type: "theme-studio-preview", variables: vars }, "*");
-  }, [variables]);
+    iframe.contentWindow.postMessage(
+      {
+        borderRadius: isPro ? borderRadius : null,
+        font: isPro && font.trim() !== "" ? font : null,
+        rawCss: isPro ? rawCss : null,
+        type: "theme-studio-preview",
+        variables: vars,
+      },
+      "*",
+    );
+  }, [variables, font, borderRadius, rawCss, isPro]);
 
   //* Exit guard
   React.useEffect(() => {
@@ -97,10 +120,48 @@ export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => 
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
-  //* Variable change handler (curried for use in map iterations)
+  //* CSS → UI sync (debounced): parse CSS editor changes back into UI state
+  React.useEffect(() => {
+    if (syncSourceRef.current === "ui") {
+      syncSourceRef.current = null;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      if (rawCss.trim() === "") {
+        return;
+      }
+
+      const parsed = parseCssToThemeState(rawCss);
+
+      // Only update if we actually parsed something
+      if (Object.keys(parsed.variables).length > 0) {
+        syncSourceRef.current = "css";
+        setVariables((prev) => ({ ...prev, ...parsed.variables }));
+      }
+
+      if (parsed.pro.font !== undefined) {
+        setFont(parsed.pro.font ?? "");
+      }
+      if (parsed.pro.borderRadius !== undefined) {
+        setBorderRadius(parsed.pro.borderRadius ?? 12);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [rawCss]);
+
+  //* Variable change handler (curried for use in map iterations) — UI → CSS sync
   const handleVariableChange = React.useCallback(
     (key: keyof ThemeVariables) => (value: string) => {
+      syncSourceRef.current = "ui";
       setVariables((prev) => ({ ...prev, [key]: value }));
+      setRawCss((prev) => {
+        if (prev.trim() === "") {
+          return prev;
+        }
+        return updateVariableInCss(prev, key as ThemeVariableKey, value);
+      });
     },
     [],
   );
@@ -110,16 +171,46 @@ export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => 
   }, []);
 
   const handleFontChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setFont(e.target.value);
+    const newFont = e.target.value;
+    syncSourceRef.current = "ui";
+    setFont(newFont);
+    setRawCss((prev) => {
+      if (prev.trim() === "") {
+        return prev;
+      }
+      return updateProPropertyInCss(prev, "font", newFont.trim() !== "" ? newFont : null);
+    });
   }, []);
 
   const handleBorderRadiusChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setBorderRadius(parseInt(e.target.value, 10) || 0);
+    const newRadius = parseInt(e.target.value, 10) || 0;
+    syncSourceRef.current = "ui";
+    setBorderRadius(newRadius);
+    setRawCss((prev) => {
+      if (prev.trim() === "") {
+        return prev;
+      }
+      return updateProPropertyInCss(prev, "borderRadius", newRadius);
+    });
   }, []);
 
   const handleToggleRawCss = React.useCallback(() => {
-    setShowRawCss((prev) => !prev);
-  }, []);
+    setShowRawCss((prev) => {
+      const willShow = !prev;
+      // Generate scaffold when opening editor for the first time with no CSS
+      if (willShow && rawCss.trim() === "") {
+        const scaffold = generateCssScaffold(variables, {
+          backgroundImage: null,
+          borderRadius: isPro ? borderRadius : null,
+          font: isPro && font.trim() !== "" ? font : null,
+          overlayColor: null,
+          overlayOpacity: null,
+        });
+        setRawCss(scaffold);
+      }
+      return willShow;
+    });
+  }, [rawCss, variables, isPro, borderRadius, font]);
 
   const handleRawCssChange = React.useCallback((v: undefined | string) => {
     setRawCss(v ?? "");

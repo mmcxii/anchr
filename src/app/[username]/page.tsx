@@ -305,14 +305,14 @@ const UserPage: React.FC<UserPageProps> = async (props) => {
     >
       <JsonLd data={profileJsonLd} />
       {/* Hairline accent */}
-      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,color-mix(in_srgb,var(--anc-theme-hairline)_60%,transparent),transparent)]" />
+      <div className="anchr-hairline absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,color-mix(in_srgb,var(--anc-theme-hairline)_60%,transparent),transparent)]" />
 
       {/* Radial glow */}
-      <div className="pointer-events-none absolute top-0 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full bg-[var(--anc-theme-glow-bg)] opacity-25 blur-3xl" />
+      <div className="anchr-glow pointer-events-none absolute top-0 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full bg-[var(--anc-theme-glow-bg)] opacity-25 blur-3xl" />
 
       {/* Wave texture */}
       <svg
-        className="lp-wave-mask pointer-events-none absolute inset-0 h-full w-full"
+        className="anchr-wave pointer-events-none absolute inset-0 h-full w-full"
         preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
       >

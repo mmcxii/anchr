@@ -34,7 +34,7 @@ export const CopyButton: React.FC<CopyButtonProps> = (props) => {
   return (
     <button
       aria-label={copied ? t("copied") : t("copy")}
-      className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+      className="anchr-copy-btn flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-white/10"
       onClick={handleClick}
       type="button"
     >
