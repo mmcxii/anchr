@@ -67,7 +67,7 @@ test.describe("Theme Studio — Pro User", () => {
     await page.goto(`/${testUsers.pro.username}`, { waitUntil: "domcontentloaded" });
 
     //* Assert — public page renders the custom theme with correct CSS variable
-    const pageRoot = page.locator(".lp-page-bg");
+    const pageRoot = page.locator(".anchr-page");
     await expect(pageRoot).toHaveAttribute("data-theme", /custom-dark|custom-light/);
     const nameColor = await pageRoot.evaluate(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser context; e2e tsconfig lacks DOM types
@@ -121,7 +121,7 @@ test.describe("Theme Studio — Light/Dark Toggles", () => {
 
     //* Assert — public page data-theme does not contain "dark"
     await page.goto(`/${testUsers.pro.username}`, { waitUntil: "domcontentloaded" });
-    const pageRoot = page.locator(".lp-page-bg");
+    const pageRoot = page.locator(".anchr-page");
     const dataTheme = await pageRoot.getAttribute("data-theme");
     expect(dataTheme).not.toMatch(/dark/);
 
@@ -162,7 +162,7 @@ test.describe("Theme Studio — Raw CSS", () => {
     //* Arrange — insert a theme with raw CSS via DB and assign to both slots
     await resetCustomThemes(testUsers.pro.username);
     await setUserTier(testUsers.pro.username, "pro");
-    const rawCss = ".lp-page-bg .card { border-width: 2px; }";
+    const rawCss = ".anchr-page .card { border-width: 2px; }";
     const themeId = await insertCustomTheme(testUsers.pro.username, { rawCss });
     await assignThemeSlotsDirectly(testUsers.pro.username, themeId);
 
@@ -193,7 +193,7 @@ test.describe("Theme Studio — Deletion", () => {
     //* Assert — deletion toast appears, public page falls back to a stock preset
     await expect(page.getByText(t.themeDeleted)).toBeVisible();
     await page.goto(`/${testUsers.pro.username}`, { waitUntil: "domcontentloaded" });
-    const pageRoot = page.locator(".lp-page-bg");
+    const pageRoot = page.locator(".anchr-page");
     const dataTheme = await pageRoot.getAttribute("data-theme");
     expect(dataTheme).toMatch(/dark-depths|stateroom|obsidian|seafoam/);
   });
@@ -248,5 +248,88 @@ test.describe("Theme Studio — Exit Guard", () => {
 
     //* Assert
     expect(dialogFired).toBe(true);
+  });
+});
+
+// ─── CSS Editor Sync ────────────────────────────────────────────────────────
+
+test.describe("Theme Studio — CSS Editor Sync", () => {
+  test("opening CSS editor generates scaffold with variables and class reference", async ({ proUser: page }) => {
+    //* Arrange
+    await resetCustomThemes(testUsers.pro.username);
+    await setUserTier(testUsers.pro.username, "pro");
+    await page.goto("/dashboard/theme/studio/new");
+    await page.waitForLoadState("domcontentloaded");
+
+    //* Act — open the CSS editor
+    await page.getByRole("button", { name: t.showEditor }).click();
+    await page.waitForTimeout(2_000);
+
+    //* Assert — Monaco model contains scaffold with variables and class reference
+    const editorContent = await page.evaluate(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser context; monaco global
+      () => (window as any).monaco?.editor?.getModels()?.[0]?.getValue() ?? "",
+    );
+    expect(editorContent).toContain("Theme Variables (synced with UI)");
+    expect(editorContent).toContain("--anc-theme-anchor-color");
+    expect(editorContent).toContain("--anc-theme-name-color");
+    expect(editorContent).toContain(".anchr-page");
+    expect(editorContent).toContain(".anchr-link");
+    expect(editorContent).toContain(".anchr-avatar");
+  });
+
+  test("color picker change updates CSS editor variable", async ({ proUser: page }) => {
+    //* Arrange
+    await resetCustomThemes(testUsers.pro.username);
+    await setUserTier(testUsers.pro.username, "pro");
+    await page.goto("/dashboard/theme/studio/new");
+    await page.waitForLoadState("domcontentloaded");
+
+    //* Act — open editor, then change the name color via UI
+    await page.getByRole("button", { name: t.showEditor }).click();
+    await page.waitForTimeout(2_000);
+    const nameColorInput = page.locator('input[type="text"][aria-label="Name color"]');
+    await nameColorInput.clear();
+    await nameColorInput.fill("#ff0000");
+    await page.waitForTimeout(500);
+
+    //* Assert — Monaco model contains the updated value
+    const editorContent = await page.evaluate(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- browser context; monaco global
+      () => (window as any).monaco?.editor?.getModels()?.[0]?.getValue() ?? "",
+    );
+    expect(editorContent).toContain("#ff0000");
+  });
+
+  test("public page has .anchr- classes on link page elements", async ({ proUser: page }) => {
+    //* Arrange
+    await resetCustomThemes(testUsers.pro.username);
+    await setUserTier(testUsers.pro.username, "pro");
+    const themeId = await insertCustomTheme(testUsers.pro.username);
+    await assignThemeSlotsDirectly(testUsers.pro.username, themeId);
+
+    //* Act — visit public page
+    await page.goto(`/${testUsers.pro.username}`, { waitUntil: "domcontentloaded" });
+
+    //* Assert — key .anchr- classes are present
+    await expect(page.locator(".anchr-page")).toBeVisible();
+    await expect(page.locator(".anchr-display-name")).toBeVisible();
+    await expect(page.locator(".anchr-footer")).toBeVisible();
+  });
+
+  test("custom CSS targeting .anchr- classes renders on public page", async ({ proUser: page }) => {
+    //* Arrange — insert a theme with raw CSS targeting .anchr- class
+    await resetCustomThemes(testUsers.pro.username);
+    await setUserTier(testUsers.pro.username, "pro");
+    const rawCss = ".anchr-page .card { border-width: 2px; }";
+    const themeId = await insertCustomTheme(testUsers.pro.username, { rawCss });
+    await assignThemeSlotsDirectly(testUsers.pro.username, themeId);
+
+    //* Act — visit public page
+    await page.goto(`/${testUsers.pro.username}`, { waitUntil: "domcontentloaded" });
+
+    //* Assert — the raw CSS appears in a <style> tag on the page
+    const html = await page.content();
+    expect(html).toContain("border-width: 2px");
   });
 });

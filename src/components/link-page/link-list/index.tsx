@@ -44,7 +44,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
 
     return (
       <a
-        className="border-anc-theme-link-border bg-anc-theme-link-bg flex min-h-[52px] items-center gap-3 rounded-xl border px-4 py-3 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        className="anchr-link border-anc-theme-link-border bg-anc-theme-link-bg flex min-h-[52px] items-center gap-3 rounded-xl border px-4 py-3 transition-transform hover:scale-[1.02] active:scale-[0.98]"
         href={`${linkBasePath}/${link.slug}`}
         key={link.id}
         rel="noopener noreferrer"
@@ -59,16 +59,18 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
         }
         target="_blank"
       >
-        <div className="lp-link-icon-bg flex size-7 shrink-0 items-center justify-center rounded-lg">
-          {link.icon != null && <RenderedIcon className="lp-link-icon-color size-4" iconId={link.icon} />}
+        <div className="anchr-link-icon-bg flex size-7 shrink-0 items-center justify-center rounded-lg">
+          {link.icon != null && <RenderedIcon className="anchr-link-icon size-4" iconId={link.icon} />}
           {link.icon == null && link.platform != null && (
-            <PlatformIcon className="lp-link-icon-color size-4" platform={link.platform} />
+            <PlatformIcon className="anchr-link-icon size-4" platform={link.platform} />
           )}
           {link.icon == null && link.platform == null && (
             <Link2 className="text-anc-theme-link-icon size-4" strokeWidth={1.75} />
           )}
         </div>
-        <span className="text-anc-theme-link-text flex-1 truncate text-center text-sm font-medium">{link.title}</span>
+        <span className="anchr-link-text text-anc-theme-link-text flex-1 truncate text-center text-sm font-medium">
+          {link.title}
+        </span>
         {link.copyValue != null ? <CopyButton value={link.copyValue} /> : <div className="size-7 shrink-0" />}
       </a>
     );
@@ -79,27 +81,33 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
   }
 
   return (
-    <div className="flex w-full flex-col gap-2.5">
+    <div className="anchr-link-list flex w-full flex-col gap-2.5">
       {/* Featured link */}
       {featuredLink != null && (
         <a
-          className="border-anc-theme-featured-border bg-anc-theme-featured-bg flex min-h-[52px] items-center gap-3 rounded-xl border px-4 py-3 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          className="anchr-featured-link border-anc-theme-featured-border bg-anc-theme-featured-bg flex min-h-[52px] items-center gap-3 rounded-xl border px-4 py-3 transition-transform hover:scale-[1.02] active:scale-[0.98]"
           href={`${linkBasePath}/${featuredLink.slug}`}
           rel="noopener noreferrer"
           target="_blank"
         >
-          <div className="bg-anc-theme-featured-icon-bg flex size-7 shrink-0 items-center justify-center rounded-lg">
+          <div className="anchr-featured-link-icon-bg bg-anc-theme-featured-icon-bg flex size-7 shrink-0 items-center justify-center rounded-lg">
             {featuredLink.icon != null && (
-              <RenderedIcon className="text-anc-theme-featured-icon size-4" iconId={featuredLink.icon} />
+              <RenderedIcon
+                className="anchr-featured-link-icon text-anc-theme-featured-icon size-4"
+                iconId={featuredLink.icon}
+              />
             )}
             {featuredLink.icon == null && featuredLink.platform != null && (
-              <PlatformIcon className="text-anc-theme-featured-icon size-4" platform={featuredLink.platform} />
+              <PlatformIcon
+                className="anchr-featured-link-icon text-anc-theme-featured-icon size-4"
+                platform={featuredLink.platform}
+              />
             )}
             {featuredLink.icon == null && featuredLink.platform == null && (
-              <Link2 className="text-anc-theme-featured-icon size-4" strokeWidth={1.75} />
+              <Link2 className="anchr-featured-link-icon text-anc-theme-featured-icon size-4" strokeWidth={1.75} />
             )}
           </div>
-          <span className="text-anc-theme-featured-text flex-1 truncate text-center text-sm font-semibold">
+          <span className="anchr-featured-link-text text-anc-theme-featured-text flex-1 truncate text-center text-sm font-semibold">
             {featuredLink.title}
           </span>
           {featuredLink.copyValue != null ? (
@@ -123,13 +131,15 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
           <React.Fragment key={group.id}>
             {group.slug != null ? (
               <a
-                className="text-anc-theme-link-text hover:text-anc-theme-name mt-2 text-center text-sm font-semibold underline-offset-4 transition-colors hover:underline"
+                className="anchr-group-header text-anc-theme-link-text hover:text-anc-theme-name mt-2 text-center text-sm font-semibold underline-offset-4 transition-colors hover:underline"
                 href={`${linkBasePath}/${group.slug}`}
               >
                 {group.title}
               </a>
             ) : (
-              <h2 className="text-anc-theme-link-text mt-2 text-center text-sm font-semibold">{group.title}</h2>
+              <h2 className="anchr-group-header text-anc-theme-link-text mt-2 text-center text-sm font-semibold">
+                {group.title}
+              </h2>
             )}
             {group.links.map(renderLink)}
           </React.Fragment>

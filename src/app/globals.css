@@ -985,11 +985,11 @@
 
 /* ── Link page background ─────────────────────────────────────────────── */
 
-.lp-page-bg {
+.anchr-page {
   background: var(--anc-theme-card-bg);
 }
 
-.lp-link-icon-bg {
+.anchr-link-icon-bg {
   background: color-mix(
     in srgb,
     var(--anc-platform-accent-light, transparent) 14%,
@@ -997,7 +997,7 @@
   );
 }
 
-.lp-page-bg:is([data-theme="dark"], [data-theme="dark-depths"], [data-theme="obsidian"]) .lp-link-icon-bg {
+.anchr-page:is([data-theme="dark"], [data-theme="dark-depths"], [data-theme="obsidian"]) .anchr-link-icon-bg {
   background: color-mix(
     in srgb,
     var(--anc-platform-accent-dark, transparent) 14%,
@@ -1005,15 +1005,15 @@
   );
 }
 
-.lp-link-icon-color {
+.anchr-link-icon {
   color: var(--anc-platform-accent-light, var(--anc-theme-link-icon-color));
 }
 
-.lp-page-bg:is([data-theme="dark"], [data-theme="dark-depths"], [data-theme="obsidian"]) .lp-link-icon-color {
+.anchr-page:is([data-theme="dark"], [data-theme="dark-depths"], [data-theme="obsidian"]) .anchr-link-icon {
   color: var(--anc-platform-accent-dark, var(--anc-theme-link-icon-color));
 }
 
-.lp-wave-mask {
+.anchr-wave {
   mask-image: linear-gradient(to bottom, transparent 0%, black 3%, black 20%, transparent 35%);
 }
 
