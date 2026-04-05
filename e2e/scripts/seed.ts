@@ -29,20 +29,27 @@ const referralCodesTable = pgTable("referral_codes", {
 const RUN_ID = process.env.E2E_RUN_ID ?? "local";
 
 const E2E_USERS = [
-  { email: `e2e-pro-${RUN_ID}@anchr.io`, onboarded: true, role: "pro", tier: "pro", username: `e2epro${RUN_ID}` },
+  { email: `e2e-pro-${RUN_ID}@anchr.to`, onboarded: true, role: "pro", tier: "pro", username: `e2epro${RUN_ID}` },
   {
-    email: `e2e-admin-${RUN_ID}@anchr.io`,
+    email: `e2e-admin-${RUN_ID}@anchr.to`,
     onboarded: true,
     role: "admin",
     tier: "free",
     username: `e2eadmin${RUN_ID}`,
   },
   {
-    email: `e2e-fresh-${RUN_ID}@anchr.io`,
+    email: `e2e-fresh-${RUN_ID}@anchr.to`,
     onboarded: false,
     role: "fresh",
     tier: "free",
     username: `e2efresh${RUN_ID}`,
+  },
+  {
+    email: `e2e-password-${RUN_ID}+clerk_test@anchr.to`,
+    onboarded: true,
+    role: "passwordPro",
+    tier: "pro",
+    username: `e2epassword${RUN_ID}`,
   },
 ] as const;
 
@@ -84,6 +91,7 @@ async function main() {
         lastName: user.role.charAt(0).toUpperCase() + user.role.slice(1),
         password,
         skipPasswordChecks: true,
+        username: user.username,
       });
       clerkId = created.id;
       console.log(`[e2e:seed] Created ${user.role} user: ${clerkId}`);

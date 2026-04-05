@@ -247,6 +247,12 @@ export const SignInForm: React.FC = () => {
             {signInForm.formState.isSubmitting ? <Loader2 className="size-4 animate-spin" /> : t("continue")}
           </Button>
           <div className="-mt-4" id="clerk-captcha" />
+          <Link
+            className="self-center text-sm font-medium text-[rgb(var(--m-accent))] underline underline-offset-4"
+            href="/update-password"
+          >
+            {t("forgotYourPassword")}
+          </Link>
         </form>
       </CardContent>
       <CardFooter className="w-full max-w-sm justify-center pt-6">
