@@ -601,6 +601,38 @@ export async function redeemReferralCode(code: string): Promise<ActionResult> {
 
 export type ReferralCodeResult = { code: string; success: true } | { error: string; success: false };
 
+// ─── Account Deletion Actions ─────────��────────────────────────────────────
+
+export type { AccountDeletionSummary } from "@/lib/services/account-deletion";
+
+export async function fetchAccountDeletionSummary() {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return null;
+  }
+
+  const { getAccountDeletionSummary } = await import("@/lib/services/account-deletion");
+  return getAccountDeletionSummary(userId);
+}
+
+export async function deleteMyAccount(): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  const { deleteAccount } = await import("@/lib/services/account-deletion");
+  const result = await deleteAccount(userId);
+
+  if (!result.success) {
+    return { error: result.error, success: false };
+  }
+
+  return { success: true };
+}
+
 export async function getOrCreateUserReferralCode(): Promise<ReferralCodeResult> {
   const { userId } = await auth();
 

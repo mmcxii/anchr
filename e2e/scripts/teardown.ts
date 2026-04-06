@@ -3,12 +3,15 @@ import { createClerkClient } from "@clerk/backend";
 import { neon } from "@neondatabase/serverless";
 import { and, eq, like, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import fs from "node:fs";
 import path from "node:path";
+import { UTApi } from "uploadthing/server";
 
 const usersTable = pgTable("users", {
+  avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  customAvatar: boolean("custom_avatar"),
   customDomain: text("custom_domain"),
   id: text("id").primaryKey(),
   username: text("username").unique().notNull(),
@@ -44,6 +47,18 @@ const webhookDeliveriesTable = pgTable("webhook_deliveries", {
   webhookId: text("webhook_id").notNull(),
 });
 
+const customThemesTable = pgTable("custom_themes", {
+  backgroundImage: text("background_image"),
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+});
+
+const accountDeletionLogsTable = pgTable("account_deletion_logs", {
+  clerkUserId: text("clerk_user_id").notNull(),
+  id: text("id").primaryKey(),
+  username: text("username").notNull(),
+});
+
 const referralCodesTable = pgTable("referral_codes", {
   id: text("id").primaryKey(),
 });
@@ -71,10 +86,41 @@ async function removeVercelDomain(domain: string) {
   }).catch(() => {});
 }
 
+async function deleteUploadthingFiles(fileKeys: string[]) {
+  if (fileKeys.length === 0) {
+    return;
+  }
+  try {
+    const utapi = new UTApi();
+    await utapi.deleteFiles(fileKeys);
+    console.log(`[e2e:teardown] Deleted ${fileKeys.length} UploadThing file(s)`);
+  } catch {
+    // UploadThing cleanup is best-effort
+  }
+}
+
+function extractFileKey(url: string): null | string {
+  try {
+    const parsed = new URL(url);
+    const segments = parsed.pathname.split("/");
+    const fIndex = segments.indexOf("f");
+    if (fIndex !== -1 && fIndex + 1 < segments.length) {
+      return segments[fIndex + 1] ?? null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function deleteUserData(db: ReturnType<typeof drizzle>, userId: string) {
   // Remove custom domain from Vercel before deleting user
   const [user] = await db
-    .select({ customDomain: usersTable.customDomain })
+    .select({
+      avatarUrl: usersTable.avatarUrl,
+      customAvatar: usersTable.customAvatar,
+      customDomain: usersTable.customDomain,
+    })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
     .limit(1)
@@ -83,6 +129,35 @@ async function deleteUserData(db: ReturnType<typeof drizzle>, userId: string) {
     await removeVercelDomain(user.customDomain);
     console.log(`[e2e:teardown] Removed Vercel domain ${user.customDomain}`);
   }
+
+  // Clean up UploadThing files (avatar + theme background images)
+  const fileKeys: string[] = [];
+  if (user?.customAvatar && user.avatarUrl) {
+    const key = extractFileKey(user.avatarUrl);
+    if (key != null) {
+      fileKeys.push(key);
+    }
+  }
+  const themes = await db
+    .select({ backgroundImage: customThemesTable.backgroundImage })
+    .from(customThemesTable)
+    .where(eq(customThemesTable.userId, userId))
+    .catch(() => [] as { backgroundImage: null | string }[]);
+  for (const theme of themes) {
+    if (theme.backgroundImage != null) {
+      const key = extractFileKey(theme.backgroundImage);
+      if (key != null) {
+        fileKeys.push(key);
+      }
+    }
+  }
+  await deleteUploadthingFiles(fileKeys);
+
+  // Clean up any account deletion log entries for this user
+  await db
+    .delete(accountDeletionLogsTable)
+    .where(eq(accountDeletionLogsTable.clerkUserId, userId))
+    .catch(() => {});
 
   // Delete webhook deliveries for user's webhooks, then webhooks themselves
   const userWebhooks = await db
