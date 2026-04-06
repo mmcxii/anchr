@@ -1,4 +1,5 @@
 import { db } from "@/lib/db/client";
+import { accountDeletionLogsTable } from "@/lib/db/schema/account-deletion-log";
 import { referralCodesTable } from "@/lib/db/schema/referral-code";
 import { usersTable } from "@/lib/db/schema/user";
 import { usernameSchema } from "@/lib/schemas/username";
@@ -18,6 +19,16 @@ export async function isUsernameReservedByCode(username: string): Promise<boolea
     .limit(1);
 
   return reserved != null;
+}
+
+async function isUsernamePendingDeletion(username: string): Promise<boolean> {
+  const [pending] = await db
+    .select({ id: accountDeletionLogsTable.id })
+    .from(accountDeletionLogsTable)
+    .where(eq(accountDeletionLogsTable.username, username))
+    .limit(1);
+
+  return pending != null;
 }
 
 export type CheckUsernameResult = {
@@ -42,6 +53,10 @@ export async function checkUsernameAvailability(userId: string, username: string
   }
 
   if (await isUsernameReservedByCode(result.data)) {
+    return { available: false };
+  }
+
+  if (await isUsernamePendingDeletion(result.data)) {
     return { available: false };
   }
 
@@ -70,6 +85,10 @@ export async function updateUsername(userId: string, username: string): Promise<
   }
 
   if (await isUsernameReservedByCode(result.data)) {
+    return { error: "thisUsernameIsAlreadyTaken", success: false };
+  }
+
+  if (await isUsernamePendingDeletion(result.data)) {
     return { error: "thisUsernameIsAlreadyTaken", success: false };
   }
 

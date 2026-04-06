@@ -19,6 +19,7 @@ import {
 import { CheckoutCelebration } from "@/components/dashboard/checkout-celebration";
 import { PagePreview } from "@/components/dashboard/page-preview";
 import { PreviewToggle } from "@/components/dashboard/preview-toggle";
+import { DangerZone } from "@/components/dashboard/settings-content/danger-zone";
 import { PasswordSection } from "@/components/dashboard/settings-content/password-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1116,6 +1117,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
             )}
           </CardContent>
         </Card>
+
+        <DangerZone username={user.username} />
       </div>
 
       <aside className="hidden w-72 shrink-0 xl:block">
