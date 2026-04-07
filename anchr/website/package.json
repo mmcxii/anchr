@@ -48,7 +48,7 @@
     "@clerk/backend": "^3.2.2",
     "@clerk/nextjs": "6.37.4",
     "@clerk/testing": "^2.0.6",
-    "@eslint/compat": "^2.0.3",
+    "@eslint/compat": "^2.0.4",
     "@november-sierra/eslint-config": "workspace:*",
     "@playwright/test": "^1.59.1",
     "@t3-oss/env-nextjs": "0.13.11",
