@@ -75,7 +75,7 @@ export const PagePreview: React.FC<PagePreviewProps> = (props) => {
       <div
         className="border-border overflow-hidden rounded-xl border"
         ref={containerRef}
-        // eslint-disable-next-line anchr/no-inline-style -- dynamic runtime value
+        // eslint-disable-next-line november-sierra/no-inline-style -- dynamic runtime value
         style={{ height: scale > 0 ? IFRAME_HEIGHT * scale : undefined }}
       >
         {scale > 0 && (
@@ -86,7 +86,7 @@ export const PagePreview: React.FC<PagePreviewProps> = (props) => {
             height={IFRAME_HEIGHT}
             onLoad={handleIframeOnLoad}
             src={src}
-            // eslint-disable-next-line anchr/no-inline-style -- dynamic runtime value
+            // eslint-disable-next-line november-sierra/no-inline-style -- dynamic runtime value
             style={{ transform: `scale(${scale})` }}
             tabIndex={-1}
             title={t("preview")}

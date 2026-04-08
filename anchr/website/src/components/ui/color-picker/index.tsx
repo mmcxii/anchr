@@ -42,11 +42,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = (props) => {
 
   const gl = gradientLabels ?? { end: "End", gradient: "Gradient", start: "Start" };
 
+  //* State
   const [useGradient, setUseGradient] = React.useState(() => isGradient(value));
   const [gradientColors, setGradientColors] = React.useState(() => parseGradientColors(value));
 
+  //* Variables
   const solidColor = isGradient(value) ? parseGradientColors(value).start : value;
+  const inputId = React.useId();
 
+  //* Handlers
   const handleSolidChange = React.useCallback(
     (color: string) => {
       onChange(color);
@@ -104,8 +108,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = (props) => {
     },
     [handleGradientColorChange],
   );
-
-  const inputId = React.useId();
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>

@@ -11,6 +11,7 @@ export type LinkPageThemeContextValue = {
 export const LinkPageThemeContext = React.createContext<null | LinkPageThemeContextValue>(null);
 
 export function useLinkPageTheme(): LinkPageThemeContextValue {
+  //* State
   const ctx = React.useContext(LinkPageThemeContext);
   if (ctx == null) {
     throw new Error("useLinkPageTheme must be used within LinkPageThemeProvider");

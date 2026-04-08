@@ -5,6 +5,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 export const CompleteStep: React.FC = () => {
+  //* State
   const { t } = useTranslation();
 
   return (

@@ -7,7 +7,7 @@ export const DeveloperApiVisual: React.FC = () => (
         <div className="m-muted-bg-15 size-2 rounded-full" />
       </div>
       <div className="px-4 py-3">
-        {/* eslint-disable anchr/no-raw-string-jsx -- decorative code snippet in mockup */}
+        {/* eslint-disable november-sierra/no-raw-string-jsx -- decorative code snippet in mockup */}
         <div>
           <span className="m-muted-40">curl </span>
           <span className="m-accent-55-color">anchr.to/api/v1/links</span>
@@ -21,7 +21,7 @@ export const DeveloperApiVisual: React.FC = () => (
           <span className="m-muted-40">]</span>
         </div>
         <div className="m-muted-40">{"}"}</div>
-        {/* eslint-enable anchr/no-raw-string-jsx */}
+        {/* eslint-enable november-sierra/no-raw-string-jsx */}
       </div>
     </div>
   </div>

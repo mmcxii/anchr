@@ -13,10 +13,21 @@ export type CheckoutCelebrationProps = {
 export const CheckoutCelebration: React.FC<CheckoutCelebrationProps> = (props) => {
   const { onOpenChange, open } = props;
 
+  //* State
   const { t } = useTranslation();
   const [mounted, setMounted] = React.useState(open);
   const [visible, setVisible] = React.useState(false);
 
+  //* Handlers
+  const handleTransitionEnd = () => {
+    if (!visible) {
+      setMounted(false);
+    }
+  };
+
+  const handleButtonOnClick = () => onOpenChange(false);
+
+  //* Effects
   React.useEffect(() => {
     if (open) {
       setMounted(true);
@@ -26,24 +37,16 @@ export const CheckoutCelebration: React.FC<CheckoutCelebrationProps> = (props) =
     }
   }, [open]);
 
-  const handleTransitionEnd = () => {
-    if (!visible) {
-      setMounted(false);
-    }
-  };
-
   if (!mounted) {
     return null;
   }
-
-  const handleButtonOnClick = () => onOpenChange(false);
 
   return (
     <div
       className="bg-anc-deep-navy/95 fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300"
       data-theme="dark-depths"
       onTransitionEnd={handleTransitionEnd}
-      // eslint-disable-next-line anchr/no-inline-style -- dynamic opacity for mount/unmount transition
+      // eslint-disable-next-line november-sierra/no-inline-style -- dynamic opacity for mount/unmount transition
       style={{ opacity: visible ? 1 : 0 }}
     >
       {/* Wave texture */}
@@ -72,12 +75,12 @@ export const CheckoutCelebration: React.FC<CheckoutCelebrationProps> = (props) =
           <span className="anc-celebration-ring border-anc-gold/30 absolute size-40 rounded-full border-2" />
           <span
             className="anc-celebration-ring border-anc-gold/20 absolute size-40 rounded-full border-2"
-            // eslint-disable-next-line anchr/no-inline-style -- staggered animation delay for sonar ring
+            // eslint-disable-next-line november-sierra/no-inline-style -- staggered animation delay for sonar ring
             style={{ animationDelay: "0.8s" }}
           />
           <span
             className="anc-celebration-ring border-anc-gold/10 absolute size-40 rounded-full border-2"
-            // eslint-disable-next-line anchr/no-inline-style -- staggered animation delay for sonar ring
+            // eslint-disable-next-line november-sierra/no-inline-style -- staggered animation delay for sonar ring
             style={{ animationDelay: "1.6s" }}
           />
 

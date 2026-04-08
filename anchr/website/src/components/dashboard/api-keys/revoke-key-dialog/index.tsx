@@ -26,9 +26,11 @@ export type RevokeKeyDialogProps = {
 export const RevokeKeyDialog: React.FC<RevokeKeyDialogProps> = (props) => {
   const { keyId, keyName, onOpenChange, open } = props;
 
+  //* State
   const { t } = useTranslation();
   const [isRevoking, setIsRevoking] = React.useState(false);
 
+  //* Handlers
   const handleRevoke = async () => {
     if (keyId == null) {
       return;

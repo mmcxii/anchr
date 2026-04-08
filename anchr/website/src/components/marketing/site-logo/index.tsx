@@ -19,8 +19,10 @@ export type SiteLogoProps = {
 export const SiteLogo: React.FC<SiteLogoProps> = (props) => {
   const { accent, cardBg, className, opaque, size = "md" } = props;
 
+  //* Variables
   const s = SIZE_MAP[size];
 
+  //* Handlers
   const outerRef = React.useCallback(
     (el: null | HTMLDivElement) => {
       if (el == null) {

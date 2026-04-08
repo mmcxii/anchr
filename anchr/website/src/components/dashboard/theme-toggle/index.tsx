@@ -15,9 +15,11 @@ import { useTranslation } from "react-i18next";
 import { MODE_OPTIONS } from "./utils";
 
 export const DashboardThemeToggle: React.FC = () => {
+  //* State
   const { isDark, mode, setMode } = useDashboardTheme();
   const { t } = useTranslation();
 
+  //* Handlers
   const handleDropdownMenuRadioGroupOnValueChange = (v: string) => setMode(v as UiMode);
 
   return (

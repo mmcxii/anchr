@@ -29,21 +29,14 @@ export type EditWebhookDialogProps = {
 export const EditWebhookDialog: React.FC<EditWebhookDialogProps> = (props) => {
   const { onOpenChange, open, webhook } = props;
 
+  //* State
   const { t } = useTranslation();
-
   const [url, setUrl] = React.useState("");
   const [selectedEvents, setSelectedEvents] = React.useState<WebhookEvent[]>([]);
   const [isSaving, setIsSaving] = React.useState(false);
   const [error, setError] = React.useState<null | string>(null);
 
-  React.useEffect(() => {
-    if (webhook != null && open) {
-      setUrl(webhook.url);
-      setSelectedEvents(webhook.events as WebhookEvent[]);
-      setError(null);
-    }
-  }, [webhook, open]);
-
+  //* Handlers
   const handleEventToggle = (event: WebhookEvent) => {
     setSelectedEvents((prev) => (prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event]));
   };
@@ -82,6 +75,15 @@ export const EditWebhookDialog: React.FC<EditWebhookDialogProps> = (props) => {
     setUrl(e.target.value);
     setError(null);
   };
+
+  //* Effects
+  React.useEffect(() => {
+    if (webhook != null && open) {
+      setUrl(webhook.url);
+      setSelectedEvents(webhook.events as WebhookEvent[]);
+      setError(null);
+    }
+  }, [webhook, open]);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>

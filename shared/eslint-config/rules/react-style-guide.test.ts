@@ -347,6 +347,7 @@ export const Foo: React.FC<FooProps> = (props) => {
       code: `
 import { useState } from "react";
 export const Foo: React.FC = () => {
+  //* State
   const [a, setA] = useState(0);
   return <div />;
 };
@@ -357,6 +358,7 @@ export const Foo: React.FC = () => {
       output: `
 import * as React from "react";
 export const Foo: React.FC = () => {
+  //* State
   const [a, setA] = React.useState(0);
   return <div />;
 };
@@ -367,6 +369,7 @@ export const Foo: React.FC = () => {
       code: `
 import { type RefCallback, useCallback } from "react";
 export const Foo: React.FC = () => {
+  //* Handlers
   const cb: RefCallback<HTMLDivElement> = useCallback(() => {}, []);
   return <div />;
 };
@@ -377,6 +380,7 @@ export const Foo: React.FC = () => {
       output: `
 import * as React from "react";
 export const Foo: React.FC = () => {
+  //* Handlers
   const cb: React.RefCallback<HTMLDivElement> = React.useCallback(() => {}, []);
   return <div />;
 };

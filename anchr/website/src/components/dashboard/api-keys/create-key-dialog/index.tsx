@@ -29,6 +29,7 @@ export type CreateKeyDialogProps = {
 export const CreateKeyDialog: React.FC<CreateKeyDialogProps> = (props) => {
   const { onOpenChange, open } = props;
 
+  //* State
   const { t } = useTranslation();
   const [step, setStep] = React.useState<Step>("name");
   const [name, setName] = React.useState("");
@@ -40,25 +41,11 @@ export const CreateKeyDialog: React.FC<CreateKeyDialogProps> = (props) => {
   const [dismissAttempts, setDismissAttempts] = React.useState(0);
   const [showDismissWarning, setShowDismissWarning] = React.useState(false);
 
-  // Reset state when dialog closes (not on open — prevents remount from wiping state)
+  //* Refs
   const prevOpenRef = React.useRef(open);
-  React.useEffect(() => {
-    if (prevOpenRef.current && !open) {
-      setStep("name");
-      setName("");
-      setRawKey("");
-      setIsCreating(false);
-      setCopied(false);
-      setRevokedWarning(false);
-      setError(null);
-      setDismissAttempts(0);
-      setShowDismissWarning(false);
-    }
-    prevOpenRef.current = open;
-  }, [open]);
-
   const debounceRef = React.useRef<null | ReturnType<typeof setTimeout>>(null);
 
+  //* Handlers
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setName(value);
@@ -136,6 +123,23 @@ export const CreateKeyDialog: React.FC<CreateKeyDialogProps> = (props) => {
   };
 
   const handleButtonOnClick = () => onOpenChange(false);
+
+  //* Effects
+  // Reset state when dialog closes (not on open — prevents remount from wiping state)
+  React.useEffect(() => {
+    if (prevOpenRef.current && !open) {
+      setStep("name");
+      setName("");
+      setRawKey("");
+      setIsCreating(false);
+      setCopied(false);
+      setRevokedWarning(false);
+      setError(null);
+      setDismissAttempts(0);
+      setShowDismissWarning(false);
+    }
+    prevOpenRef.current = open;
+  }, [open]);
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>

@@ -73,7 +73,7 @@ export const SortableGroup: React.FC<SortableGroupProps> = (props) => {
     <div
       className={cn("flex flex-col gap-2", { "opacity-50": isDragging })}
       ref={setNodeRef}
-      // eslint-disable-next-line anchr/no-inline-style -- dnd-kit requires dynamic transform/transition via inline style
+      // eslint-disable-next-line november-sierra/no-inline-style -- dnd-kit requires dynamic transform/transition via inline style
       style={style}
     >
       {/* Group header */}

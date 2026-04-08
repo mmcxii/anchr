@@ -18,11 +18,13 @@ export type ThemeStepProps = {
 export const ThemeStep: React.FC<ThemeStepProps> = (props) => {
   const { onComplete, onSkip } = props;
 
+  //* State
   const { t } = useTranslation();
   const [submitting, setSubmitting] = React.useState(false);
   const [selectedDark, setSelectedDark] = React.useState<ThemeId>("dark-depths");
   const [selectedLight, setSelectedLight] = React.useState<ThemeId>("stateroom");
 
+  //* Handlers
   const handleSubmit = async () => {
     setSubmitting(true);
     try {

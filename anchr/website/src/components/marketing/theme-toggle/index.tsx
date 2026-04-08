@@ -4,6 +4,7 @@ import { useMarketingTheme } from "@/components/marketing/theme-provider";
 import { Moon, Sun } from "lucide-react";
 
 export const ThemeToggle: React.FC = () => {
+  //* State
   const { theme, toggle } = useMarketingTheme();
 
   return (

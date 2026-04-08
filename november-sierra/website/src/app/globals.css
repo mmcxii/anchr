@@ -1,0 +1,250 @@
+@import "tailwindcss";
+
+/* ── Base palette ──────────────────────────────────────────────────────────── */
+
+:root {
+  --ns-forest-deep: #1a2e1a;
+  --ns-forest: #2d4a2d;
+  --ns-moss: #4a7c59;
+  --ns-fog: #c8cec3;
+  --ns-mist: #e8ede5;
+  --ns-white: #f5f7f4;
+  --ns-black: #0d170d;
+
+  /* ── Semantic tokens (dark/forest mode — default) ───────────────────────── */
+  --ns-bg: var(--ns-forest-deep);
+  --ns-bg-surface: var(--ns-forest);
+  --ns-text: var(--ns-fog);
+  --ns-text-muted: color-mix(in srgb, var(--ns-fog) 60%, transparent);
+  --ns-text-heading: var(--ns-mist);
+  --ns-accent: var(--ns-moss);
+  --ns-accent-hover: color-mix(in srgb, var(--ns-moss) 80%, var(--ns-mist));
+  --ns-border: color-mix(in srgb, var(--ns-fog) 15%, transparent);
+
+  /* ── Component tokens ───────────────────────────────────────────────────── */
+  --ns-nav-bg: color-mix(in srgb, var(--ns-bg-surface) 90%, transparent);
+  --ns-nav-text: var(--ns-text);
+  --ns-nav-text-active: var(--ns-mist);
+  --ns-nav-indicator: var(--ns-accent);
+  --ns-card-bg: var(--ns-bg-surface);
+  --ns-card-border: var(--ns-border);
+  --ns-btn-bg: var(--ns-accent);
+  --ns-btn-text: var(--ns-mist);
+  --ns-btn-hover: var(--ns-accent-hover);
+  --ns-input-bg: color-mix(in srgb, var(--ns-bg-surface) 50%, transparent);
+  --ns-input-border: var(--ns-border);
+  --ns-input-text: var(--ns-text);
+  --ns-input-placeholder: var(--ns-text-muted);
+  --ns-hero-overlay: color-mix(in srgb, var(--ns-forest-deep) 70%, transparent);
+  --ns-footer-text: var(--ns-text-muted);
+  --ns-error: #e55;
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --ns-font-serif: "Libre Baskerville", Georgia, "Times New Roman", serif;
+  --ns-font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* ── Radius ─────────────────────────────────────────────────────────────── */
+  --ns-radius: 0.5rem;
+  --ns-radius-sm: 0.25rem;
+  --ns-radius-lg: 0.75rem;
+  --ns-radius-full: 9999px;
+}
+
+/* ── Light/fog mode ────────────────────────────────────────────────────────── */
+
+[data-theme="fog"] {
+  --ns-bg: var(--ns-fog);
+  --ns-bg-surface: var(--ns-mist);
+  --ns-text: var(--ns-forest-deep);
+  --ns-text-muted: color-mix(in srgb, var(--ns-forest-deep) 60%, transparent);
+  --ns-text-heading: var(--ns-black);
+  --ns-accent: var(--ns-moss);
+  --ns-accent-hover: color-mix(in srgb, var(--ns-moss) 80%, var(--ns-forest-deep));
+  --ns-border: color-mix(in srgb, var(--ns-forest-deep) 15%, transparent);
+
+  --ns-nav-bg: color-mix(in srgb, var(--ns-bg-surface) 90%, transparent);
+  --ns-nav-text: var(--ns-text);
+  --ns-nav-text-active: var(--ns-black);
+  --ns-nav-indicator: var(--ns-accent);
+  --ns-card-bg: var(--ns-bg-surface);
+  --ns-card-border: var(--ns-border);
+  --ns-btn-bg: var(--ns-accent);
+  --ns-btn-text: var(--ns-mist);
+  --ns-btn-hover: var(--ns-accent-hover);
+  --ns-input-bg: color-mix(in srgb, var(--ns-bg-surface) 50%, transparent);
+  --ns-input-border: var(--ns-border);
+  --ns-input-text: var(--ns-text);
+  --ns-input-placeholder: var(--ns-text-muted);
+  --ns-hero-overlay: color-mix(in srgb, var(--ns-fog) 60%, transparent);
+  --ns-footer-text: var(--ns-text-muted);
+}
+
+/* ── Tailwind theme integration ────────────────────────────────────────────── */
+
+@theme {
+  --color-ns-bg: var(--ns-bg);
+  --color-ns-bg-surface: var(--ns-bg-surface);
+  --color-ns-text: var(--ns-text);
+  --color-ns-text-muted: var(--ns-text-muted);
+  --color-ns-text-heading: var(--ns-text-heading);
+  --color-ns-accent: var(--ns-accent);
+  --color-ns-accent-hover: var(--ns-accent-hover);
+  --color-ns-border: var(--ns-border);
+  --color-ns-nav-bg: var(--ns-nav-bg);
+  --color-ns-nav-text: var(--ns-nav-text);
+  --color-ns-nav-text-active: var(--ns-nav-text-active);
+  --color-ns-nav-indicator: var(--ns-nav-indicator);
+  --color-ns-card-bg: var(--ns-card-bg);
+  --color-ns-card-border: var(--ns-card-border);
+  --color-ns-btn-bg: var(--ns-btn-bg);
+  --color-ns-btn-text: var(--ns-btn-text);
+  --color-ns-btn-hover: var(--ns-btn-hover);
+  --color-ns-input-bg: var(--ns-input-bg);
+  --color-ns-input-border: var(--ns-input-border);
+  --color-ns-input-text: var(--ns-input-text);
+  --color-ns-input-placeholder: var(--ns-input-placeholder);
+  --color-ns-hero-overlay: var(--ns-hero-overlay);
+  --color-ns-footer-text: var(--ns-footer-text);
+  --color-ns-error: var(--ns-error);
+  --font-serif: var(--ns-font-serif);
+  --font-sans: var(--ns-font-sans);
+}
+
+/* ── Global styles ─────────────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ns-bg);
+  color: var(--ns-text);
+  font-family: var(--ns-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--ns-text-heading);
+  font-family: var(--ns-font-serif);
+}
+
+/* ── Scroll-triggered section reveals ──────────────────────────────────────── */
+
+.section-reveal {
+  opacity: 0;
+  transform: translateY(2rem);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+
+.section-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Hero Ken Burns ────────────────────────────────────────────────────────── */
+
+@keyframes kenBurns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.1) translate(-1%, -1%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+.ken-burns {
+  animation: kenBurns 30s ease-in-out infinite;
+}
+
+/* ── Wordmark animation ───────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulseArrow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0.5rem);
+  }
+}
+
+.pulse-arrow {
+  animation: pulseArrow 2s ease-in-out infinite;
+}
+
+/* ── Wordmark letter animation ─────────────────────────────────────────────── */
+
+.wordmark-bar {
+  transition:
+    width 0.7s ease-out,
+    opacity 0.7s ease-out;
+}
+
+.wordmark-letters {
+  transition:
+    max-width 0.7s ease-out,
+    opacity 0.7s ease-out;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.wordmark-spacer {
+  transition: width 0.7s ease-out;
+  display: inline-block;
+}
+
+/* ── Form focus styles ─────────────────────────────────────────────────────── */
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--ns-accent);
+  outline-offset: 2px;
+}
+
+/* ── Selection ─────────────────────────────────────────────────────────────── */
+
+::selection {
+  background-color: var(--ns-accent);
+  color: var(--ns-mist);
+}
+
+/* ── Hover state utilities ─────────────────────────────────────────────────── */
+
+.btn-primary:hover {
+  background-color: var(--ns-accent-hover);
+}
+
+.nav-link:hover {
+  color: var(--ns-nav-text-active);
+}
+
+.github-link:hover {
+  color: var(--ns-text-heading);
+}

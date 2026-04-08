@@ -282,6 +282,8 @@ export const reactStyleGuide = createRule({
       inlineProps: "Inline prop types are not allowed. Extract to a named type above the component.",
       missingBlankLine: "A blank line is required before this {{ kind }}.",
       missingFCAnnotation: "Components must be typed with React.FC: `export const {{ name }}: React.FC = ...`.",
+      missingSectionHeaders:
+        "Components and hooks with hook calls must use section headers (//* State, //* Refs, //* Variables, //* Handlers, //* Effects).",
       propsDestructuringLocation: "Props must be destructured on the first line of the component body.",
       propsTypeNaming: "Props type must be named {{ expected }}, not {{ actual }}.",
       reactNamespaceImport:
@@ -658,7 +660,30 @@ export const reactStyleGuide = createRule({
           const sections = buildSections(allComments, funcBody.body, funcBody.bodyNode);
 
           if (sections.length === 0) {
-            // No sections — check for missingBlankLine after destructuring only
+            // Check if body contains actual React hook calls — if so, section headers are required.
+            // Only flag when there are real hooks (use*), not plain derived values or function assignments.
+            const hasHookCalls = funcBody.body.some((bodyStmt) => {
+              if (bodyStmt.type === "ExpressionStatement" && bodyStmt.expression.type === "CallExpression") {
+                const info = getCalleeInfo(bodyStmt.expression);
+                return info != null && info.isHook;
+              }
+              if (
+                bodyStmt.type === "VariableDeclaration" &&
+                bodyStmt.declarations[0]?.init?.type === "CallExpression"
+              ) {
+                const info = getCalleeInfo(bodyStmt.declarations[0].init);
+                return info != null && info.isHook;
+              }
+              return false;
+            });
+
+            if (hasHookCalls) {
+              context.report({
+                messageId: "missingSectionHeaders",
+                node: stmt,
+              });
+            }
+
             checkMissingBlankLineAfterDestructuring(context, funcBody, sections, sourceCode);
             continue;
           }

@@ -10,6 +10,7 @@ export type DashboardThemeProviderProps = React.PropsWithChildren;
 export const DashboardThemeProvider: React.FC<DashboardThemeProviderProps> = (props) => {
   const { children } = props;
 
+  //* State
   const [mode, setModeState] = React.useState<UiMode>(() => readStorage(LS_MODE, "system"));
   const [preferredLight, setPrefLightState] = React.useState<ThemeId>(() => readStorage(LS_LIGHT, "stateroom"));
   const [preferredDark, setPrefDarkState] = React.useState<ThemeId>(() => readStorage(LS_DARK, "dark-depths"));
@@ -17,24 +18,12 @@ export const DashboardThemeProvider: React.FC<DashboardThemeProviderProps> = (pr
     typeof window !== "undefined" ? window.matchMedia(MEDIA).matches : true,
   );
 
-  // Listen for OS preference changes
-  React.useEffect(() => {
-    const mql = window.matchMedia(MEDIA);
-    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
-
+  //* Variables
   // Derived values
   const isDark = mode === "dark" || (mode === "system" && systemDark);
   const resolvedTheme: ThemeId = isDark ? preferredDark : preferredLight;
 
-  // Apply to DOM on any change
-  React.useEffect(() => {
-    disableTransitions();
-    applyToDom(resolvedTheme);
-  }, [resolvedTheme]);
-
+  //* Handlers
   // Setters that persist to localStorage
   const setMode = React.useCallback((m: UiMode) => {
     localStorage.setItem(LS_MODE, m);
@@ -51,6 +40,7 @@ export const DashboardThemeProvider: React.FC<DashboardThemeProviderProps> = (pr
     setPrefDarkState(id);
   }, []);
 
+  // eslint-disable-next-line november-sierra/react-style-guide -- context value memo depends on handler callbacks above
   const value = React.useMemo(
     () => ({
       isDark,
@@ -64,6 +54,21 @@ export const DashboardThemeProvider: React.FC<DashboardThemeProviderProps> = (pr
     }),
     [isDark, mode, preferredDark, preferredLight, resolvedTheme, setMode, setPreferredDark, setPreferredLight],
   );
+
+  //* Effects
+  // Listen for OS preference changes
+  React.useEffect(() => {
+    const mql = window.matchMedia(MEDIA);
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Apply to DOM on any change
+  React.useEffect(() => {
+    disableTransitions();
+    applyToDom(resolvedTheme);
+  }, [resolvedTheme]);
 
   return <DashboardThemeContext.Provider value={value}>{children}</DashboardThemeContext.Provider>;
 };

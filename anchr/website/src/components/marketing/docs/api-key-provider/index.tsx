@@ -10,15 +10,18 @@ export type ApiKeyProviderProps = React.PropsWithChildren;
 export const ApiKeyProvider: React.FC<ApiKeyProviderProps> = (props) => {
   const { children } = props;
 
+  //* State
   const [apiKey, setApiKey] = React.useState("");
 
-  const clearApiKey = React.useCallback(() => {
-    setApiKey("");
-  }, []);
-
-  const value = React.useMemo(() => {
-    return { apiKey, clearApiKey, setApiKey };
-  }, [apiKey, clearApiKey]);
+  //* Variables
+  const value = React.useMemo(
+    () => ({
+      apiKey,
+      setApiKey,
+      clearApiKey: () => setApiKey(""),
+    }),
+    [apiKey],
+  );
 
   return <ApiKeyContext value={value}>{children}</ApiKeyContext>;
 };

@@ -27,8 +27,8 @@ export type WebhooksClientProps = {
 export const WebhooksClient: React.FC<WebhooksClientProps> = (props) => {
   const { webhooks } = props;
 
+  //* State
   const { t } = useTranslation();
-
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [editTarget, setEditTarget] = React.useState<null | WebhookRow>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<null | WebhookRow>(null);
@@ -36,6 +36,7 @@ export const WebhooksClient: React.FC<WebhooksClientProps> = (props) => {
   const [testingId, setTestingId] = React.useState<null | string>(null);
   const [reenablingId, setReenablingId] = React.useState<null | string>(null);
 
+  //* Handlers
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
       day: "numeric",

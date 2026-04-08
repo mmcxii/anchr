@@ -12,9 +12,11 @@ export type CopyButtonProps = {
 export const CopyButton: React.FC<CopyButtonProps> = (props) => {
   const { value } = props;
 
+  //* State
   const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
 
+  //* Handlers
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -23,6 +25,7 @@ export const CopyButton: React.FC<CopyButtonProps> = (props) => {
     toast.success(t("npubCopied"));
   };
 
+  //* Effects
   React.useEffect(() => {
     if (!copied) {
       return;

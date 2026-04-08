@@ -133,7 +133,7 @@ export const QrCodeModal: React.FC<QrCodeModalProps> = (props) => {
               level="H"
               ref={canvasRef}
               size={selectedSize.px}
-              // eslint-disable-next-line anchr/no-inline-style -- CSS-scale the canvas to a fixed display size
+              // eslint-disable-next-line november-sierra/no-inline-style -- CSS-scale the canvas to a fixed display size
               style={{ height: 200, width: 200 }}
               value={url}
             />

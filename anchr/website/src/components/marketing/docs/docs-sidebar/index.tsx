@@ -12,9 +12,33 @@ export type DocsSidebarProps = {
 export const DocsSidebar: React.FC<DocsSidebarProps> = (props) => {
   const { resourceTags } = props;
 
+  //* State
   const { t } = useTranslation();
   const [activeSection, setActiveSection] = React.useState<string>("overview");
 
+  //* Handlers
+  const handleClick = React.useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const href = e.currentTarget.getAttribute("href");
+    if (href == null) {
+      return;
+    }
+    const id = href.slice(1);
+    const el = document.getElementById(id);
+    if (el != null) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveSection(id);
+    }
+  }, []);
+
+  const linkClass = (id: string) => {
+    return cn("block py-1.5 text-sm transition-colors", {
+      "font-medium text-white": activeSection === id,
+      "m-muted-40 hover:text-white/80": activeSection !== id,
+    });
+  };
+
+  //* Effects
   React.useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -40,27 +64,6 @@ export const DocsSidebar: React.FC<DocsSidebarProps> = (props) => {
       observer.disconnect();
     };
   }, [resourceTags]);
-
-  const handleClick = React.useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const href = e.currentTarget.getAttribute("href");
-    if (href == null) {
-      return;
-    }
-    const id = href.slice(1);
-    const el = document.getElementById(id);
-    if (el != null) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      setActiveSection(id);
-    }
-  }, []);
-
-  const linkClass = (id: string) => {
-    return cn("block py-1.5 text-sm transition-colors", {
-      "font-medium text-white": activeSection === id,
-      "m-muted-40 hover:text-white/80": activeSection !== id,
-    });
-  };
 
   return (
     <nav className="sticky top-24 space-y-1" data-testid="docs-sidebar">

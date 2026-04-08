@@ -40,22 +40,22 @@ const GlobalError: React.FC<GlobalErrorProps> = (props) => {
             <p className="text-anc-steel tracking-anc-caps mb-3 font-mono text-sm">500</p>
 
             {/* Heading */}
-            {/* eslint-disable-next-line anchr/no-raw-string-jsx -- error boundary renders before i18n loads */}
+            {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- error boundary renders before i18n loads */}
             <h1 className="text-anc-cream mb-4 text-2xl font-semibold tracking-tight">Something Went Wrong</h1>
 
             {/* Description */}
-            {/* eslint-disable-next-line anchr/no-raw-string-jsx -- error boundary renders before i18n loads */}
+            {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- error boundary renders before i18n loads */}
             <p className="text-anc-steel/80 mb-10 leading-relaxed">
               We hit unexpected waters. Please try again, and if the issue persists, we&apos;re already on it.
             </p>
 
             {/* CTA */}
-            {/* eslint-disable anchr/no-raw-string-jsx -- error boundary renders before i18n loads */}
+            {/* eslint-disable november-sierra/no-raw-string-jsx -- error boundary renders before i18n loads */}
             <Button onClick={reset} size="lg">
               <RefreshCw className="size-4" />
               Try again
             </Button>
-            {/* eslint-enable anchr/no-raw-string-jsx */}
+            {/* eslint-enable november-sierra/no-raw-string-jsx */}
           </div>
         </div>
       </body>

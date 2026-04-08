@@ -30,8 +30,8 @@ export type CreateWebhookDialogProps = {
 export const CreateWebhookDialog: React.FC<CreateWebhookDialogProps> = (props) => {
   const { onOpenChange, open } = props;
 
+  //* State
   const { t } = useTranslation();
-
   const [step, setStep] = React.useState<Step>("form");
   const [url, setUrl] = React.useState("");
   const [selectedEvents, setSelectedEvents] = React.useState<WebhookEvent[]>([]);
@@ -42,22 +42,10 @@ export const CreateWebhookDialog: React.FC<CreateWebhookDialogProps> = (props) =
   const [dismissAttempts, setDismissAttempts] = React.useState(0);
   const [showDismissWarning, setShowDismissWarning] = React.useState(false);
 
+  //* Refs
   const prevOpenRef = React.useRef(open);
-  React.useEffect(() => {
-    if (prevOpenRef.current && !open) {
-      setStep("form");
-      setUrl("");
-      setSelectedEvents([]);
-      setSecret("");
-      setIsCreating(false);
-      setCopied(false);
-      setError(null);
-      setDismissAttempts(0);
-      setShowDismissWarning(false);
-    }
-    prevOpenRef.current = open;
-  }, [open]);
 
+  //* Handlers
   const handleEventToggle = (event: WebhookEvent) => {
     setSelectedEvents((prev) => (prev.includes(event) ? prev.filter((e) => e !== event) : [...prev, event]));
   };
@@ -111,6 +99,22 @@ export const CreateWebhookDialog: React.FC<CreateWebhookDialogProps> = (props) =
     setUrl(e.target.value);
     setError(null);
   };
+
+  //* Effects
+  React.useEffect(() => {
+    if (prevOpenRef.current && !open) {
+      setStep("form");
+      setUrl("");
+      setSelectedEvents([]);
+      setSecret("");
+      setIsCreating(false);
+      setCopied(false);
+      setError(null);
+      setDismissAttempts(0);
+      setShowDismissWarning(false);
+    }
+    prevOpenRef.current = open;
+  }, [open]);
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>

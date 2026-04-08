@@ -15,10 +15,10 @@ import { toast } from "sonner";
 type Step = "email-fallback" | "form";
 
 export const PasswordSection: React.FC = () => {
+  //* State
   const { t } = useTranslation();
   const { user } = useUser();
   const { session } = useSession();
-
   const [step, setStep] = React.useState<Step>("form");
   const [currentPassword, setCurrentPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
@@ -27,6 +27,11 @@ export const PasswordSection: React.FC = () => {
   const [pending, setPending] = React.useState(false);
   const [error, setError] = React.useState<null | string>(null);
 
+  //* Variables
+  const showEmailFallbackLink =
+    error != null && step === "form" && error === t("incorrectPasswordYouCanVerifyViaEmailInstead");
+
+  //* Handlers
   const resetState = () => {
     setStep("form");
     setCurrentPassword("");
@@ -151,6 +156,11 @@ export const PasswordSection: React.FC = () => {
     setCode(value);
   };
 
+  const handleCurrentPasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setCurrentPassword(e.target.value);
+  const handleNewPasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value);
+  const handleConfirmPasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value);
+
+  //* Effects
   React.useEffect(() => {
     if (
       /^\d{6}$/.test(code) &&
@@ -162,13 +172,6 @@ export const PasswordSection: React.FC = () => {
       void handleEmailFallbackSubmit();
     }
   }, [code, pending, step, newPassword, confirmPassword, handleEmailFallbackSubmit]);
-
-  const handleCurrentPasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setCurrentPassword(e.target.value);
-  const handleNewPasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value);
-  const handleConfirmPasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value);
-
-  const showEmailFallbackLink =
-    error != null && step === "form" && error === t("incorrectPasswordYouCanVerifyViaEmailInstead");
 
   return (
     <Card>

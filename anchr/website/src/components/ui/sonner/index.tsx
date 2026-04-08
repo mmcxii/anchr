@@ -5,6 +5,7 @@ import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
 export const Toaster: React.FC<ToasterProps> = (props) => {
+  //* State
   const { isDark } = useDashboardTheme();
 
   return (

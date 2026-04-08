@@ -51,107 +51,59 @@ export type ThemeStudioContentProps =
 export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => {
   const { existingNames, mode, user } = props;
 
-  const isPro = isProUser(user);
+  //* State
   const { t } = useTranslation();
   const router = useRouter();
-
-  //* Initial state
-  const defaultVariables = PRESET_THEME_VARIABLES["dark-depths"];
-  const initialTheme = mode === "edit" ? props.theme : null;
-  const initialVars =
-    mode === "edit" && initialTheme != null
-      ? (initialTheme.variables as ThemeVariables)
-      : ((mode === "create" ? props.initialVariables : undefined) ?? defaultVariables);
-
-  const themeId = initialTheme?.id ?? null;
-
-  const [name, setName] = React.useState(
-    mode === "edit" && initialTheme != null
-      ? initialTheme.name
-      : ((mode === "create" ? props.initialName : undefined) ?? generateThemeName(existingNames)),
-  );
-  const [variables, setVariables] = React.useState<ThemeVariables>({ ...initialVars });
-  const [font, setFont] = React.useState(initialTheme?.font ?? "");
-  const [borderRadius, setBorderRadius] = React.useState(initialTheme?.borderRadius ?? 12);
-  const [rawCss, setRawCss] = React.useState(initialTheme?.rawCss ?? "");
+  const [name, setName] = React.useState(() => {
+    const theme = mode === "edit" ? props.theme : null;
+    return mode === "edit" && theme != null
+      ? theme.name
+      : ((mode === "create" ? props.initialName : undefined) ?? generateThemeName(existingNames));
+  });
+  const [variables, setVariables] = React.useState<ThemeVariables>(() => {
+    const defaultVars = PRESET_THEME_VARIABLES["dark-depths"];
+    const theme = mode === "edit" ? props.theme : null;
+    const vars =
+      mode === "edit" && theme != null
+        ? (theme.variables as ThemeVariables)
+        : ((mode === "create" ? props.initialVariables : undefined) ?? defaultVars);
+    return { ...vars };
+  });
+  const [font, setFont] = React.useState(() => {
+    const theme = mode === "edit" ? props.theme : null;
+    return theme?.font ?? "";
+  });
+  const [borderRadius, setBorderRadius] = React.useState(() => {
+    const theme = mode === "edit" ? props.theme : null;
+    return theme?.borderRadius ?? 12;
+  });
+  const [rawCss, setRawCss] = React.useState(() => {
+    const theme = mode === "edit" ? props.theme : null;
+    return theme?.rawCss ?? "";
+  });
   const [showRawCss, setShowRawCss] = React.useState(false);
   const [isSaving, startSaveTransition] = React.useTransition();
   const [showPreview, setShowPreview] = React.useState(false);
   const [isDirty, setIsDirty] = React.useState(false);
   const [previewVersion, setPreviewVersion] = React.useState(0);
-  const previewKey = `${name}|${previewVersion}`;
 
+  //* Refs
   // Guard to prevent infinite sync loops between CSS editor and UI inputs
   const syncSourceRef = React.useRef<null | "css" | "ui">(null);
 
-  //* Mark dirty on any change
-  React.useEffect(() => {
-    setIsDirty(true);
-  }, [name, variables, font, borderRadius, rawCss]);
+  //* Variables
+  const isPro = isProUser(user);
+  const initialTheme = mode === "edit" ? props.theme : null;
+  const themeId = initialTheme?.id ?? null;
+  const previewKey = `${name}|${previewVersion}`;
+  // Monaco lazy load
+  const MonacoEditor = React.useMemo(
+    () => (showRawCss && isPro ? React.lazy(() => import("@monaco-editor/react")) : null),
+    [showRawCss, isPro],
+  );
 
-  //* Live preview — post all theme data to the preview iframe on every change
-  React.useEffect(() => {
-    const iframe = document.querySelector<HTMLIFrameElement>("iframe[title]");
-    if (iframe?.contentWindow == null) {
-      return;
-    }
-
-    const vars = variablesToInlineStyle(variables);
-    iframe.contentWindow.postMessage(
-      {
-        borderRadius: isPro ? borderRadius : null,
-        font: isPro && font.trim() !== "" ? font : null,
-        rawCss: isPro ? rawCss : null,
-        type: "theme-studio-preview",
-        variables: vars,
-      },
-      "*",
-    );
-  }, [variables, font, borderRadius, rawCss, isPro]);
-
-  //* Exit guard
-  React.useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-      }
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [isDirty]);
-
-  //* CSS → UI sync (debounced): parse CSS editor changes back into UI state
-  React.useEffect(() => {
-    if (syncSourceRef.current === "ui") {
-      syncSourceRef.current = null;
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      if (rawCss.trim() === "") {
-        return;
-      }
-
-      const parsed = parseCssToThemeState(rawCss);
-
-      // Only update if we actually parsed something
-      if (Object.keys(parsed.variables).length > 0) {
-        syncSourceRef.current = "css";
-        setVariables((prev) => ({ ...prev, ...parsed.variables }));
-      }
-
-      if (parsed.pro.font !== undefined) {
-        setFont(parsed.pro.font ?? "");
-      }
-      if (parsed.pro.borderRadius !== undefined) {
-        setBorderRadius(parsed.pro.borderRadius ?? 12);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [rawCss]);
-
-  //* Variable change handler (curried for use in map iterations) — UI → CSS sync
+  //* Handlers
+  // Variable change handler (curried for use in map iterations) — UI → CSS sync
   const handleVariableChange = React.useCallback(
     (key: keyof ThemeVariables) => (value: string) => {
       syncSourceRef.current = "ui";
@@ -224,7 +176,7 @@ export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => 
     setShowPreview(false);
   }, []);
 
-  //* Save handler
+  // Save handler
   const handleSave = () => {
     startSaveTransition(async () => {
       const data = {
@@ -265,7 +217,7 @@ export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => 
     });
   };
 
-  //* Save & Apply handler
+  // Save & Apply handler
   const handleSaveAndApply = React.useCallback(
     (slot: "both" | "dark" | "light") => {
       startSaveTransition(async () => {
@@ -342,11 +294,73 @@ export const ThemeStudioContent: React.FC<ThemeStudioContentProps> = (props) => 
     handleSaveAndApply("both");
   }, [handleSaveAndApply]);
 
-  //* Monaco lazy load
-  const MonacoEditor = React.useMemo(
-    () => (showRawCss && isPro ? React.lazy(() => import("@monaco-editor/react")) : null),
-    [showRawCss, isPro],
-  );
+  //* Effects
+  // Mark dirty on any change
+  React.useEffect(() => {
+    setIsDirty(true);
+  }, [name, variables, font, borderRadius, rawCss]);
+
+  // Live preview — post all theme data to the preview iframe on every change
+  React.useEffect(() => {
+    const iframe = document.querySelector<HTMLIFrameElement>("iframe[title]");
+    if (iframe?.contentWindow == null) {
+      return;
+    }
+
+    const vars = variablesToInlineStyle(variables);
+    iframe.contentWindow.postMessage(
+      {
+        borderRadius: isPro ? borderRadius : null,
+        font: isPro && font.trim() !== "" ? font : null,
+        rawCss: isPro ? rawCss : null,
+        type: "theme-studio-preview",
+        variables: vars,
+      },
+      "*",
+    );
+  }, [variables, font, borderRadius, rawCss, isPro]);
+
+  // Exit guard
+  React.useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  // CSS → UI sync (debounced): parse CSS editor changes back into UI state
+  React.useEffect(() => {
+    if (syncSourceRef.current === "ui") {
+      syncSourceRef.current = null;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      if (rawCss.trim() === "") {
+        return;
+      }
+
+      const parsed = parseCssToThemeState(rawCss);
+
+      // Only update if we actually parsed something
+      if (Object.keys(parsed.variables).length > 0) {
+        syncSourceRef.current = "css";
+        setVariables((prev) => ({ ...prev, ...parsed.variables }));
+      }
+
+      if (parsed.pro.font !== undefined) {
+        setFont(parsed.pro.font ?? "");
+      }
+      if (parsed.pro.borderRadius !== undefined) {
+        setBorderRadius(parsed.pro.borderRadius ?? 12);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [rawCss]);
 
   return (
     <div className="flex flex-col gap-6 xl:flex-row">

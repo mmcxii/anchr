@@ -1,4 +1,4 @@
-/* eslint-disable anchr/no-inline-style */
+/* eslint-disable november-sierra/no-inline-style */
 import { ImageResponse } from "next/og";
 
 export const contentType = "image/png";

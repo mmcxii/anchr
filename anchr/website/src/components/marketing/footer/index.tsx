@@ -37,7 +37,7 @@ export const Footer: React.FC<FooterProps> = (props) => {
         >
           {t("github")}
         </Link>
-        {/* eslint-disable-next-line anchr/no-raw-string-jsx -- copyright punctuation around translated values */}
+        {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- copyright punctuation around translated values */}
         <p className="m-muted-40 text-xs">
           &copy; {new Date().getFullYear()} {t("anchr")}. {t("allRightsReserved")}
         </p>
