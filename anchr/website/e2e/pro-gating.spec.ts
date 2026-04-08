@@ -30,21 +30,32 @@ test.describe("Pro feature gating", () => {
   });
 
   test("hidden link does not appear on public profile", async ({ proUser: page }) => {
-    //* Arrange — create and hide a link
-    await createLink(page, "Invisible Link", "https://example.com/invisible");
-    const linkCard = page.locator("li", { hasText: "Invisible Link" });
-    await linkCard.getByRole("button", { name: t.actions }).click();
-    await page.getByRole("menuitem", { name: t.hideLink }).click();
-    await linkCard.getByText(t.hidden, { exact: true }).waitFor();
+    try {
+      //* Arrange — create and hide a link
+      await createLink(page, "Invisible Link", "https://example.com/invisible");
+      const linkCard = page.locator("li", { hasText: "Invisible Link" }).first();
+      await linkCard.getByRole("button", { name: t.actions }).click();
+      await page.getByRole("menuitem", { name: t.hideLink }).click();
+      await linkCard.getByText(t.hidden, { exact: true }).waitFor();
 
-    //* Act — visit public profile
-    await page.goto(`/${testUsers.pro.username}`);
+      //* Act — visit public profile
+      await page.goto(`/${testUsers.pro.username}`);
 
-    //* Assert — hidden link not rendered
-    await expect(page.getByRole("link", { name: "Invisible Link" })).toBeHidden();
-
-    //* Arrange — cleanup
-    await page.goto("/dashboard");
-    await deleteLink(page, "Invisible Link");
+      //* Assert — hidden link not rendered
+      await expect(page.getByRole("link", { name: "Invisible Link" })).toBeHidden();
+    } finally {
+      //* Arrange — cleanup (runs even if test fails, preventing stale links on retry)
+      await page.goto("/dashboard");
+      // Delete all "Invisible Link" instances (may be >1 from prior retries)
+      while (
+        await page
+          .locator("li", { hasText: "Invisible Link" })
+          .first()
+          .isVisible({ timeout: 2000 })
+          .catch(() => false)
+      ) {
+        await deleteLink(page, "Invisible Link");
+      }
+    }
   });
 });

@@ -7,9 +7,11 @@ import { useTranslation } from "react-i18next";
 import { STORAGE_KEY, getServerSnapshot, getSnapshot, subscribe } from "./utils";
 
 export const CookieBanner: React.FC = () => {
+  //* State
   const { t } = useTranslation();
   const consent = React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  //* Handlers
   const accept = React.useCallback(() => {
     localStorage.setItem(STORAGE_KEY, "accepted");
     window.dispatchEvent(new StorageEvent("storage"));

@@ -21,7 +21,10 @@ export type DocsContentProps = {
 export const DocsContent: React.FC<DocsContentProps> = (props) => {
   const { authCurlExample, baseUrl, highlightedExamples, resourceGroups } = props;
 
+  //* State
   const { t } = useTranslation();
+
+  //* Variables
   const resourceTags = resourceGroups.map((g) => g.tag);
 
   return (
@@ -42,7 +45,7 @@ export const DocsContent: React.FC<DocsContentProps> = (props) => {
             </p>
             <div className="m-card-bg-bg m-card-border mt-4 rounded-lg p-4">
               <p className="mb-1 text-xs font-semibold tracking-wider uppercase">{t("baseUrl")}</p>
-              {/* eslint-disable-next-line anchr/no-raw-string-jsx -- API base URL path */}
+              {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- API base URL path */}
               <code className="text-sm">{baseUrl}/api/v1</code>
             </div>
           </section>
@@ -81,17 +84,17 @@ export const DocsContent: React.FC<DocsContentProps> = (props) => {
                 <tbody>
                   <tr className="border-b border-white/5">
                     <td className="px-4 py-3">{t("pro")}</td>
-                    {/* eslint-disable-next-line anchr/no-raw-string-jsx -- rate limit value */}
+                    {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- rate limit value */}
                     <td className="px-4 py-3 font-mono">1,000 / min</td>
                   </tr>
                   <tr className="border-b border-white/5">
                     <td className="px-4 py-3">{t("free")}</td>
-                    {/* eslint-disable-next-line anchr/no-raw-string-jsx -- rate limit value */}
+                    {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- rate limit value */}
                     <td className="px-4 py-3 font-mono">100 / min</td>
                   </tr>
                   <tr>
                     <td className="px-4 py-3">{t("unauthenticated")}</td>
-                    {/* eslint-disable-next-line anchr/no-raw-string-jsx -- rate limit value */}
+                    {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- rate limit value */}
                     <td className="px-4 py-3 font-mono">60 / min</td>
                   </tr>
                 </tbody>
@@ -102,7 +105,7 @@ export const DocsContent: React.FC<DocsContentProps> = (props) => {
               <div className="m-card-bg-bg overflow-hidden rounded-lg border border-white/10">
                 <table className="w-full text-sm">
                   <tbody>
-                    {/* eslint-disable anchr/no-raw-string-jsx -- HTTP header names */}
+                    {/* eslint-disable november-sierra/no-raw-string-jsx -- HTTP header names */}
                     <tr className="border-b border-white/5">
                       <td className="px-4 py-2.5 font-mono text-xs">X-RateLimit-Limit</td>
                       <td className="m-muted-70 px-4 py-2.5 text-xs">{t("maxRequestsPerWindow")}</td>
@@ -115,7 +118,7 @@ export const DocsContent: React.FC<DocsContentProps> = (props) => {
                       <td className="px-4 py-2.5 font-mono text-xs">X-RateLimit-Reset</td>
                       <td className="m-muted-70 px-4 py-2.5 text-xs">{t("secondsUntilTheWindowResets")}</td>
                     </tr>
-                    {/* eslint-enable anchr/no-raw-string-jsx */}
+                    {/* eslint-enable november-sierra/no-raw-string-jsx */}
                   </tbody>
                 </table>
               </div>

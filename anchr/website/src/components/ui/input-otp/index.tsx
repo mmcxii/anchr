@@ -35,7 +35,10 @@ type InputOTPSlotProps = React.ComponentProps<"div"> & {
 export const InputOTPSlot: React.FC<InputOTPSlotProps> = (props) => {
   const { className, index, ...rest } = props;
 
+  //* State
   const inputOTPContext = React.useContext(OTPInputContext);
+
+  //* Variables
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {};
 
   return (

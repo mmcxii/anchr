@@ -1,4 +1,4 @@
-/* eslint-disable anchr/no-inline-style, anchr/no-raw-string-jsx */
+/* eslint-disable november-sierra/no-inline-style, november-sierra/no-raw-string-jsx */
 import type { ThemeVariables } from "@/lib/custom-themes";
 import { db } from "@/lib/db/client";
 import { customThemesTable } from "@/lib/db/schema/custom-theme";

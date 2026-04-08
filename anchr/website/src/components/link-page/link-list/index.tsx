@@ -48,7 +48,7 @@ export const LinkList: React.FC<LinkListProps> = (props) => {
         href={`${linkBasePath}/${link.slug}`}
         key={link.id}
         rel="noopener noreferrer"
-        // eslint-disable-next-line anchr/no-inline-style -- dynamic CSS custom properties for platform accent
+        // eslint-disable-next-line november-sierra/no-inline-style -- dynamic CSS custom properties for platform accent
         style={
           brandColor != null
             ? ({

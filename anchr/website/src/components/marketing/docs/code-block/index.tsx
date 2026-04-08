@@ -13,9 +13,11 @@ export type CodeBlockProps = {
 export const CodeBlock: React.FC<CodeBlockProps> = (props) => {
   const { code, highlightedHtml } = props;
 
+  //* State
   const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
 
+  //* Handlers
   const handleCopy = React.useCallback(async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);

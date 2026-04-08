@@ -17,6 +17,7 @@ export type DashboardThemeContextValue = {
 export const DashboardThemeContext = React.createContext<null | DashboardThemeContextValue>(null);
 
 export function useDashboardTheme(): DashboardThemeContextValue {
+  //* State
   const ctx = React.useContext(DashboardThemeContext);
   if (ctx == null) {
     throw new Error("useDashboardTheme must be used within DashboardThemeProvider");

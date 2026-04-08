@@ -4,12 +4,14 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 
 export const TryApi: React.FC = () => {
+  //* State
   const { t } = useTranslation();
   const [username, setUsername] = React.useState("a");
   const [result, setResult] = React.useState<null | string>(null);
   const [error, setError] = React.useState<null | string>(null);
   const [loading, setLoading] = React.useState(false);
 
+  //* Handlers
   const handleFetch = React.useCallback(async () => {
     setLoading(true);
     setError(null);

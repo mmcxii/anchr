@@ -25,7 +25,7 @@ export const ThemeSwatch: React.FC<ThemeSwatchProps> = (props) => {
       onClick={onClick}
       type="button"
     >
-      {/* eslint-disable anchr/no-inline-style -- swatch must render each theme's actual colors via inline hex values */}
+      {/* eslint-disable november-sierra/no-inline-style -- swatch must render each theme's actual colors via inline hex values */}
       {variant === "page" ? (
         <div
           className="pointer-events-none overflow-hidden border-b select-none"
@@ -73,7 +73,7 @@ export const ThemeSwatch: React.FC<ThemeSwatchProps> = (props) => {
           </div>
         </div>
       )}
-      {/* eslint-enable anchr/no-inline-style */}
+      {/* eslint-enable november-sierra/no-inline-style */}
 
       {/* Label bar — uses dashboard theme via Tailwind classes */}
       <div className="flex items-center gap-2 px-3 py-2.5">

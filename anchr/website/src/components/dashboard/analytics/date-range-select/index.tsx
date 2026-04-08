@@ -13,11 +13,21 @@ export type DateRangeSelectProps = {
 export const DateRangeSelect: React.FC<DateRangeSelectProps> = (props) => {
   const { isPro } = props;
 
+  //* State
   const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  //* Variables
   const value = (searchParams.get("range") as DateRange) ?? "7d";
 
+  const options: { label: string; proOnly: boolean; value: DateRange }[] = [
+    { label: t("last7Days"), proOnly: false, value: "7d" },
+    { label: t("last30Days"), proOnly: true, value: "30d" },
+    { label: t("allTime"), proOnly: true, value: "all" },
+  ];
+
+  //* Handlers
   const handleChange = (range: DateRange) => {
     if (!isPro && range !== "7d") {
       return;
@@ -27,12 +37,6 @@ export const DateRangeSelect: React.FC<DateRangeSelectProps> = (props) => {
     params.set("range", range);
     router.replace(`?${params.toString()}`);
   };
-
-  const options: { label: string; proOnly: boolean; value: DateRange }[] = [
-    { label: t("last7Days"), proOnly: false, value: "7d" },
-    { label: t("last30Days"), proOnly: true, value: "30d" },
-    { label: t("allTime"), proOnly: true, value: "all" },
-  ];
 
   return (
     <div className="flex items-center gap-1">

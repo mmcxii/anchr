@@ -50,12 +50,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
           </div>
         </div>
       </div>
-      {/* eslint-disable anchr/no-raw-string-jsx -- sr-only brand prefix for SEO */}
+      {/* eslint-disable november-sierra/no-raw-string-jsx -- sr-only brand prefix for SEO */}
       <h1 className="anchr-display-name text-anc-theme-name text-lg font-bold tracking-wide">
         <span className="sr-only">Anchr | </span>
         <span>{name}</span>
       </h1>
-      {/* eslint-enable anchr/no-raw-string-jsx */}
+      {/* eslint-enable november-sierra/no-raw-string-jsx */}
       {bio != null && bio.length > 0 && (
         <p className="anchr-bio text-anc-theme-link-text mt-1 max-w-xs text-center text-sm">{bio}</p>
       )}

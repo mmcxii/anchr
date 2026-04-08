@@ -38,23 +38,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
     lightThemeId,
   } = props;
 
+  //* State
   const [mode, setModeState] = React.useState<PageMode>("system");
   const [systemDark, setSystemDark] = React.useState(() =>
     typeof window !== "undefined" ? window.matchMedia(MEDIA).matches : true,
   );
 
-  // Read stored preference before first browser paint
-  React.useLayoutEffect(() => {
-    setModeState(readMode());
-  }, []);
+  //* Refs
+  // Listen for live preview messages from the Theme Studio (postMessage from parent iframe)
+  const pageRootRef = React.useRef<HTMLDivElement>(null);
+  const previewStyleRef = React.useRef<null | HTMLStyleElement>(null);
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(MEDIA);
-    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
-
+  //* Variables
   // Light/dark toggle logic: force single mode if one is disabled
   let effectiveIsDark: boolean;
   if (!darkEnabled) {
@@ -121,16 +116,42 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
     return style as React.CSSProperties;
   }, [isCustom, customTheme, colorScheme]);
 
+  // Blocking FOUC-prevention script
+  let isDarkExpression: string;
+  if (!darkEnabled) {
+    isDarkExpression = "false";
+  } else if (!lightEnabled) {
+    isDarkExpression = "true";
+  } else {
+    isDarkExpression = `m==="dark"||(m==="system"&&matchMedia("${MEDIA}").matches)`;
+  }
+
+  const themeScript = isCustom
+    ? `(function(){try{var el=document.currentScript.parentElement;var m=localStorage.getItem("${LS_KEY}")||"system";var isDark=${isDarkExpression};el.setAttribute("data-theme",isDark?"custom-dark":"custom-light");el.style.colorScheme=isDark?"dark":"light"}catch(e){}})()`
+    : `(function(){try{var el=document.currentScript.parentElement;var m=localStorage.getItem("${LS_KEY}")||"system";var isDark=${isDarkExpression};el.setAttribute("data-theme",isDark?"${darkThemeId}":"${lightThemeId}");el.style.colorScheme=isDark?"dark":"light"}catch(e){}})()`;
+
+  //* Handlers
   const setMode = React.useCallback((m: PageMode) => {
     localStorage.setItem(LS_KEY, m);
     setModeState(m);
   }, []);
 
+  // eslint-disable-next-line november-sierra/react-style-guide -- context value memo depends on handler callback above
   const value = React.useMemo(() => ({ isDark: effectiveIsDark, mode, setMode }), [effectiveIsDark, mode, setMode]);
 
-  // Listen for live preview messages from the Theme Studio (postMessage from parent iframe)
-  const pageRootRef = React.useRef<HTMLDivElement>(null);
-  const previewStyleRef = React.useRef<null | HTMLStyleElement>(null);
+  //* Effects
+  // Read stored preference before first browser paint
+  React.useLayoutEffect(() => {
+    setModeState(readMode());
+  }, []);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia(MEDIA);
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
   React.useEffect(() => {
     const handler = (event: MessageEvent) => {
       if (event.data?.type !== "theme-studio-preview" || pageRootRef.current == null) {
@@ -186,27 +207,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
     return () => window.removeEventListener("message", handler);
   }, []);
 
-  // Blocking FOUC-prevention script
-  let isDarkExpression: string;
-  if (!darkEnabled) {
-    isDarkExpression = "false";
-  } else if (!lightEnabled) {
-    isDarkExpression = "true";
-  } else {
-    isDarkExpression = `m==="dark"||(m==="system"&&matchMedia("${MEDIA}").matches)`;
-  }
-
-  const themeScript = isCustom
-    ? `(function(){try{var el=document.currentScript.parentElement;var m=localStorage.getItem("${LS_KEY}")||"system";var isDark=${isDarkExpression};el.setAttribute("data-theme",isDark?"custom-dark":"custom-light");el.style.colorScheme=isDark?"dark":"light"}catch(e){}})()`
-    : `(function(){try{var el=document.currentScript.parentElement;var m=localStorage.getItem("${LS_KEY}")||"system";var isDark=${isDarkExpression};el.setAttribute("data-theme",isDark?"${darkThemeId}":"${lightThemeId}");el.style.colorScheme=isDark?"dark":"light"}catch(e){}})()`;
-
   return (
     <LinkPageThemeContext.Provider value={value}>
       <div
         className="anchr-page flex min-h-dvh flex-col"
         data-theme={dataTheme}
         ref={pageRootRef}
-        // eslint-disable-next-line anchr/no-inline-style -- dynamic theme styles and color-scheme for browser chrome
+        // eslint-disable-next-line november-sierra/no-inline-style -- dynamic theme styles and color-scheme for browser chrome
         style={isCustom ? customStyle : { colorScheme }}
         suppressHydrationWarning
       >
@@ -215,7 +222,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = (props) => {
         {isCustom && customTheme.backgroundImage != null && (
           <div
             className="anchr-overlay pointer-events-none fixed inset-0"
-            // eslint-disable-next-line anchr/no-inline-style -- dynamic overlay via CSS variables
+            // eslint-disable-next-line november-sierra/no-inline-style -- dynamic overlay via CSS variables
             style={{
               background: "var(--anc-theme-overlay-color, rgba(0,0,0,0.4))",
               opacity: "var(--anc-theme-overlay-opacity, 0.4)" as unknown as number,

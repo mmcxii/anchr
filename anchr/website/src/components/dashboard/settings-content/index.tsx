@@ -662,7 +662,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
               {usernameAvailability === "available" && !usernameHasValidationError && (
                 <p className="mt-1 text-xs text-emerald-500">{t("usernameIsAvailable")}</p>
               )}
-              {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand URL prefix with dynamic username */}
+              {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- brand URL prefix with dynamic username */}
               <p className="text-muted-foreground mt-1 text-xs">anchr.to/{usernameInput}</p>
             </div>
 
@@ -1047,21 +1047,21 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="text-muted-foreground">
-                          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- standard DNS table headers */}
+                          {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- standard DNS table headers */}
                           <th className="pb-1 text-left font-medium">Type</th>
-                          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- standard DNS table headers */}
+                          {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- standard DNS table headers */}
                           <th className="pb-1 text-left font-medium">Name</th>
-                          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- standard DNS table headers */}
+                          {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- standard DNS table headers */}
                           <th className="pb-1 text-left font-medium">Value</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr className="text-foreground">
-                          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- DNS record type */}
+                          {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- DNS record type */}
                           <td className="font-mono">CNAME</td>
-                          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- DNS wildcard */}
+                          {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- DNS wildcard */}
                           <td className="font-mono">@</td>
-                          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- Vercel CNAME target */}
+                          {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- Vercel CNAME target */}
                           <td className="font-mono">cname.vercel-dns.com</td>
                         </tr>
                       </tbody>

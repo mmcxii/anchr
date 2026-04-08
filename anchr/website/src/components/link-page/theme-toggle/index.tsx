@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { MODES } from "./utils";
 
 export const LinkPageThemeToggle: React.FC = () => {
+  //* State
   const { mode, setMode } = useLinkPageTheme();
   const { t } = useTranslation();
 
@@ -20,7 +21,7 @@ export const LinkPageThemeToggle: React.FC = () => {
             className="text-anc-theme-brand cursor-pointer rounded-md p-1.5 transition-opacity"
             key={value}
             onClick={handleButtonOnClick}
-            // eslint-disable-next-line anchr/no-inline-style -- active indicator
+            // eslint-disable-next-line november-sierra/no-inline-style -- active indicator
             style={{ opacity: mode === value ? 1 : 0.4 }}
             type="button"
           >

@@ -7,11 +7,15 @@ import { CHART_AREA, CHART_LINE, DAYS, PEAK_IDX, TOP_LINKS } from "./constants";
 import { ProgressBar } from "./progress-bar";
 
 export const AnalyticsPreview: React.FC = () => {
+  //* State
   const { t } = useTranslation();
-  const ref = React.useRef<HTMLDivElement>(null);
   const [triggered, setTriggered] = React.useState(false);
   const [count, setCount] = React.useState(0);
 
+  //* Refs
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  //* Effects
   React.useEffect(() => {
     const el = ref.current;
     if (el == null) {
@@ -59,7 +63,7 @@ export const AnalyticsPreview: React.FC = () => {
           <span className="text-[28px] leading-none font-bold tracking-tight tabular-nums">
             {count.toLocaleString()}
           </span>
-          {/* eslint-disable-next-line anchr/no-raw-string-jsx -- decorative mockup data */}
+          {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- decorative mockup data */}
           <span className="m-accent-color text-[11px] font-semibold">↑ 12%</span>
         </div>
         <p className="m-muted-40 tracking-anc-tight mt-1 text-[10px]">{t("clicksThisWeek")}</p>

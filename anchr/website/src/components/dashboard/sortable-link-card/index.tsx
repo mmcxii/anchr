@@ -111,7 +111,7 @@ export const SortableLinkCard: React.FC<SortableLinkCardProps> = (props) => {
         "opacity-50": isDragging || !link.visible,
       })}
       ref={setNodeRef}
-      // eslint-disable-next-line anchr/no-inline-style -- dnd-kit requires dynamic transform/transition via inline style
+      // eslint-disable-next-line november-sierra/no-inline-style -- dnd-kit requires dynamic transform/transition via inline style
       style={style}
     >
       <Checkbox

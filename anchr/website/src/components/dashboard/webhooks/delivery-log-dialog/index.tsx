@@ -24,22 +24,12 @@ export type DeliveryLogDialogProps = {
 export const DeliveryLogDialog: React.FC<DeliveryLogDialogProps> = (props) => {
   const { onOpenChange, open, webhookId, webhookUrl } = props;
 
+  //* State
   const { t } = useTranslation();
-
   const [deliveries, setDeliveries] = React.useState<WebhookDeliveryRow[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  React.useEffect(() => {
-    if (open && webhookId != null) {
-      setIsLoading(true);
-      void getWebhookDeliveries(webhookId)
-        .then(setDeliveries)
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
-  }, [open, webhookId]);
-
+  //* Handlers
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString("en-US", {
       day: "numeric",
@@ -50,6 +40,18 @@ export const DeliveryLogDialog: React.FC<DeliveryLogDialogProps> = (props) => {
   };
 
   const handleButtonOnClick = () => onOpenChange(false);
+
+  //* Effects
+  React.useEffect(() => {
+    if (open && webhookId != null) {
+      setIsLoading(true);
+      void getWebhookDeliveries(webhookId)
+        .then(setDeliveries)
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [open, webhookId]);
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>

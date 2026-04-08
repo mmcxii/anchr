@@ -152,7 +152,7 @@ export const AdminContent: React.FC<AdminContentProps> = (props) => {
           <div>
             <p className="text-muted-foreground mb-2 text-sm font-medium">{t("reservedHandle")}</p>
             <div className="flex items-center gap-0">
-              {/* eslint-disable-next-line anchr/no-raw-string-jsx -- static @ prefix */}
+              {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- static @ prefix */}
               <span className="bg-muted text-muted-foreground border-input flex h-9 items-center rounded-l-md border border-r-0 px-3 text-sm">
                 @
               </span>
@@ -271,7 +271,7 @@ export const AdminContent: React.FC<AdminContentProps> = (props) => {
                           <td className="text-muted-foreground max-w-[200px] truncate py-3 pr-4">{code.note ?? "—"}</td>
                           <td className="py-3 pr-4">
                             {code.reservedUsername != null ? (
-                              /* eslint-disable-next-line anchr/no-raw-string-jsx -- dynamic username with @ prefix */
+                              /* eslint-disable-next-line november-sierra/no-raw-string-jsx -- dynamic username with @ prefix */
                               <code className="text-xs">@{code.reservedUsername}</code>
                             ) : (
                               <span className="text-muted-foreground">—</span>
@@ -330,7 +330,7 @@ export const AdminContent: React.FC<AdminContentProps> = (props) => {
                                   <tbody>
                                     {code.redemptions.map((redemption) => (
                                       <tr key={`${code.id}-${redemption.username}`}>
-                                        {/* eslint-disable-next-line anchr/no-raw-string-jsx -- dynamic username with @ prefix */}
+                                        {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- dynamic username with @ prefix */}
                                         <td className="py-1">@{redemption.username}</td>
                                         <td className="py-1">{redemption.createdAt.toLocaleDateString()}</td>
                                       </tr>

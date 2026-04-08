@@ -13,10 +13,12 @@ export type CodeTabsProps = {
 export const CodeTabs: React.FC<CodeTabsProps> = (props) => {
   const { highlightedHtml } = props;
 
+  //* State
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState<TabId>("curl");
   const [copied, setCopied] = React.useState(false);
 
+  //* Handlers
   const handleTabClick = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const tab = e.currentTarget.dataset.tab as TabId;
     setActiveTab(tab);

@@ -1,4 +1,4 @@
-/* eslint-disable anchr/no-inline-style, anchr/no-raw-string-jsx */
+/* eslint-disable november-sierra/no-inline-style, november-sierra/no-raw-string-jsx */
 import { ImageResponse } from "next/og";
 
 export const alt = "Anchr for Developers — Built for the AI Agent Era";

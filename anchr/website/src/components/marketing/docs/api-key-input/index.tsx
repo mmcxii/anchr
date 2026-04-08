@@ -6,13 +6,18 @@ import { useTranslation } from "react-i18next";
 import { maskApiKey } from "../constants";
 
 export const ApiKeyInput: React.FC = () => {
+  //* State
   const { t } = useTranslation();
   const { apiKey, clearApiKey, setApiKey } = useApiKey();
   const [isEditing, setIsEditing] = React.useState(false);
+
+  //* Refs
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  //* Variables
   const maskedKey = maskApiKey(apiKey);
 
+  //* Handlers
   const handleEdit = React.useCallback(() => {
     setIsEditing(true);
     requestAnimationFrame(() => {

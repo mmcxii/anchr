@@ -6,6 +6,7 @@ export type ThemeSwatchProps = { accent: string; bg: string; border: string };
 export const ThemeSwatch: React.FC<ThemeSwatchProps> = (props) => {
   const { accent, bg, border } = props;
 
+  //* Refs
   const cardRef = useStyleRef({ background: bg, border: `1px solid ${border}` });
   const hairRef = useStyleRef({ background: `linear-gradient(to right, transparent, ${accent}cc, transparent)` });
   const dotRef = useStyleRef({ background: accent, opacity: "0.4" });

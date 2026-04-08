@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { GITHUB_REPO_URL } from "./constants";
 
 export const OpenSourceVisual: React.FC = () => {
+  //* State
   const { t } = useTranslation();
 
   return (
@@ -43,7 +44,7 @@ export const OpenSourceVisual: React.FC = () => {
         target="_blank"
       >
         {t("viewOnGithub")}
-        {/* eslint-disable-next-line anchr/no-raw-string-jsx -- decorative arrow in link */}
+        {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- decorative arrow in link */}
         <span aria-hidden="true">&rarr;</span>
       </Link>
     </div>

@@ -8,9 +8,20 @@ import { MOBILE_LINKS, STAGGER_MS } from "./constants";
 import { HamburgerIcon } from "./hamburger-icon";
 
 export const MobileMenu: React.FC = () => {
+  //* State
   const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
 
+  //* Handlers
+  const handleToggle = React.useCallback(() => {
+    setOpen((prev) => !prev);
+  }, []);
+
+  const handleClose = React.useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  //* Effects
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -21,14 +32,6 @@ export const MobileMenu: React.FC = () => {
       document.body.style.overflow = "";
     };
   }, [open]);
-
-  const handleToggle = React.useCallback(() => {
-    setOpen((prev) => !prev);
-  }, []);
-
-  const handleClose = React.useCallback(() => {
-    setOpen(false);
-  }, []);
 
   return (
     <>

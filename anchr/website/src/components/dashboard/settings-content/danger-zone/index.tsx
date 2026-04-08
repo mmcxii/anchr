@@ -32,15 +32,19 @@ type DangerZoneProps = {
 export const DangerZone: React.FC<DangerZoneProps> = (props) => {
   const { username } = props;
 
+  //* State
   const { t } = useTranslation();
   const router = useRouter();
-
   const [step, setStep] = React.useState<"closed" | "confirm" | "summary">("closed");
   const [summary, setSummary] = React.useState<null | AccountDeletionSummary>(null);
   const [summaryLoading, setSummaryLoading] = React.useState(false);
   const [confirmInput, setConfirmInput] = React.useState("");
   const [deletePending, startDeleteTransition] = React.useTransition();
 
+  //* Variables
+  const accountAge = summary != null ? formatAccountAge(summary.accountAge, t) : "";
+
+  //* Handlers
   const handleOpenDialog = () => {
     setSummaryLoading(true);
     setStep("summary");
@@ -85,8 +89,6 @@ export const DangerZone: React.FC<DangerZoneProps> = (props) => {
       handleClose();
     }
   };
-
-  const accountAge = summary != null ? formatAccountAge(summary.accountAge, t) : "";
 
   return (
     <>

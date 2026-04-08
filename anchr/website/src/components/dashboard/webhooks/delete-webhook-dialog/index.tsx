@@ -24,10 +24,11 @@ export type DeleteWebhookDialogProps = {
 export const DeleteWebhookDialog: React.FC<DeleteWebhookDialogProps> = (props) => {
   const { onOpenChange, open, webhookId, webhookUrl } = props;
 
+  //* State
   const { t } = useTranslation();
-
   const [isDeleting, setIsDeleting] = React.useState(false);
 
+  //* Handlers
   const handleDelete = async () => {
     if (webhookId == null) {
       return;

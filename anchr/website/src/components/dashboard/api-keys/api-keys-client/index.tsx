@@ -27,14 +27,17 @@ export type ApiKeysClientProps = {
 export const ApiKeysClient: React.FC<ApiKeysClientProps> = (props) => {
   const { keys } = props;
 
+  //* State
   const { t } = useTranslation();
   const [showRevoked, setShowRevoked] = React.useState(false);
   const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
   const [revokeTarget, setRevokeTarget] = React.useState<null | { id: string; name: string }>(null);
 
+  //* Variables
   const filteredKeys = showRevoked ? keys : keys.filter((k) => k.revokedAt == null);
   const hasRevokedKeys = keys.some((k) => k.revokedAt != null);
 
+  //* Handlers
   const handleCreateKeyButtonOnClick = () => setCreateDialogOpen(true);
 
   const handleRevokeDialogOpenChange = (open: boolean) => {

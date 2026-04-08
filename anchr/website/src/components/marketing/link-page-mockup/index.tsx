@@ -7,37 +7,21 @@ import { CardBack } from "./card-back";
 import { BASE, FLIP_DURATION, LINKS, MOCKUP_THEMES, SOCIAL_ICONS, applyTheme } from "./constants";
 
 export const LinkPageMockup: React.FC = () => {
+  //* State
   const [rotation, setRotation] = React.useState(BASE);
   const [themeIndex, setThemeIndex] = React.useState(0);
   const [playing, setPlaying] = React.useState(true);
+
+  //* Refs
   const rotateYRef = React.useRef(BASE.rotateY);
   const hoveredRef = React.useRef(false);
   const playingRef = React.useRef(true);
   const animatingRef = React.useRef(false);
 
-  // Theme cycling — every 5 s
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      if ((hoveredRef.current ?? !playingRef.current) || animatingRef.current) {
-        return;
-      }
+  //* Variables
+  const theme = MOCKUP_THEMES[themeIndex];
 
-      animatingRef.current = true;
-      rotateYRef.current -= 360;
-      setRotation({ rotateX: BASE.rotateX, rotateY: rotateYRef.current, rotateZ: BASE.rotateZ });
-
-      setTimeout(() => {
-        setThemeIndex((prev) => (prev + 1) % MOCKUP_THEMES.length);
-      }, FLIP_DURATION / 2);
-
-      setTimeout(() => {
-        animatingRef.current = false;
-      }, FLIP_DURATION);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
+  //* Handlers
   const navigate = (direction: -1 | 1) => {
     if (animatingRef.current) {
       return;
@@ -61,8 +45,6 @@ export const LinkPageMockup: React.FC = () => {
     playingRef.current = !playingRef.current;
     setPlaying(playingRef.current);
   };
-
-  const theme = MOCKUP_THEMES[themeIndex];
 
   /** Single ref that sets the data-theme attribute for CSS custom properties. */
   const cardRef = React.useCallback(
@@ -108,6 +90,30 @@ export const LinkPageMockup: React.FC = () => {
   );
 
   const handleNextButtonOnClick = () => navigate(1);
+
+  //* Effects
+  // Theme cycling — every 5 s
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      if ((hoveredRef.current ?? !playingRef.current) || animatingRef.current) {
+        return;
+      }
+
+      animatingRef.current = true;
+      rotateYRef.current -= 360;
+      setRotation({ rotateX: BASE.rotateX, rotateY: rotateYRef.current, rotateZ: BASE.rotateZ });
+
+      setTimeout(() => {
+        setThemeIndex((prev) => (prev + 1) % MOCKUP_THEMES.length);
+      }, FLIP_DURATION / 2);
+
+      setTimeout(() => {
+        animatingRef.current = false;
+      }, FLIP_DURATION);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div
@@ -191,7 +197,7 @@ export const LinkPageMockup: React.FC = () => {
                     <div className="mc-featured-icon-bg flex size-6 shrink-0 items-center justify-center rounded-lg">
                       <GraduationCap className="mc-featured-icon-color size-3.5" strokeWidth={1.75} />
                     </div>
-                    {/* eslint-disable-next-line anchr/no-raw-string-jsx -- decorative mockup content */}
+                    {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- decorative mockup content */}
                     <span className="mc-featured-text flex-1 text-center text-[11px] leading-tight font-semibold">
                       Master Video Editing — Enroll Now
                     </span>
@@ -212,7 +218,7 @@ export const LinkPageMockup: React.FC = () => {
               {/* Branding */}
               <div className="mc-branding mt-auto flex items-center justify-center gap-1.5 pt-2">
                 <Anchor className="mc-brand-color size-2.5" strokeWidth={1.5} />
-                {/* eslint-disable-next-line anchr/no-raw-string-jsx -- brand name */}
+                {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- brand name */}
                 <span className="mc-brand-color tracking-anc-caps-wide text-[9px] font-bold uppercase">Anchr</span>
               </div>
             </div>

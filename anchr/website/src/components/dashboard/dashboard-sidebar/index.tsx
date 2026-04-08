@@ -187,7 +187,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = (props) => {
                       </span>
                     )}
                   </span>
-                  {/* eslint-disable-next-line anchr/no-raw-string-jsx -- dynamic username with @ prefix */}
+                  {/* eslint-disable-next-line november-sierra/no-raw-string-jsx -- dynamic username with @ prefix */}
                   <span className="text-sidebar-foreground/50 text-xs">@{user.username}</span>
                 </div>
               </DropdownMenuTrigger>

@@ -17,6 +17,7 @@ export type TryItProps = {
 export const TryIt: React.FC<TryItProps> = (props) => {
   const { baseUrl, method, params, path, requiresAuth } = props;
 
+  //* State
   const { t } = useTranslation();
   const { apiKey } = useApiKey();
   const [pathParams, setPathParams] = React.useState<Record<string, string>>({});
@@ -25,11 +26,13 @@ export const TryIt: React.FC<TryItProps> = (props) => {
   const [error, setError] = React.useState<null | string>(null);
   const [loading, setLoading] = React.useState(false);
 
+  //* Variables
   const pathParamDefs = params.filter((p) => p.in === "path");
   const queryParamDefs = params.filter((p) => p.in === "query");
 
   const canExecute = (!requiresAuth || Boolean(apiKey)) && pathParamDefs.every((p) => pathParams[p.name]?.trim());
 
+  //* Handlers
   const handleExecute = React.useCallback(async () => {
     setLoading(true);
     setError(null);

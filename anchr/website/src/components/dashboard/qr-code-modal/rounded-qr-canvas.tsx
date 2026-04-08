@@ -133,7 +133,7 @@ export const RoundedQrCanvas = React.forwardRef<HTMLCanvasElement, RoundedQrCanv
     }
   }, [bgColor, fgColor, level, size, value]);
 
-  // eslint-disable-next-line anchr/no-inline-style -- CSS-scale the canvas to a fixed display size
+  // eslint-disable-next-line november-sierra/no-inline-style -- CSS-scale the canvas to a fixed display size
   return <canvas className={className} ref={canvasRef} style={style} />;
 });
 

@@ -9,9 +9,11 @@ import { FeatureItem } from "./feature-item";
 type Interval = "annual" | "monthly";
 
 export const PricingCards: React.FC = () => {
+  //* State
   const { t } = useTranslation();
   const [interval, setInterval] = React.useState<Interval>("monthly");
 
+  //* Handlers
   const pill = (value: Interval, label: string) => {
     const active = interval === value;
     const handleButtonOnClick = () => setInterval(value);

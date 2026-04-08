@@ -18,9 +18,11 @@ export type EndpointSectionProps = {
 export const EndpointSection: React.FC<EndpointSectionProps> = (props) => {
   const { baseUrl, endpoint, highlightedExamples } = props;
 
+  //* State
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = React.useState(false);
 
+  //* Variables
   const methodUpper = endpoint.method.toUpperCase();
   const showTryIt = endpoint.method === "get";
 
@@ -32,6 +34,7 @@ export const EndpointSection: React.FC<EndpointSectionProps> = (props) => {
     python: { code: endpoint.codeExamples.python, html: highlightedExamples.python },
   };
 
+  //* Handlers
   const handleToggle = React.useCallback(() => {
     setIsOpen((prev) => {
       return !prev;

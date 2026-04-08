@@ -11,6 +11,7 @@ export type StatusBadgeProps = {
 export const StatusBadge: React.FC<StatusBadgeProps> = (props) => {
   const { status } = props;
 
+  //* State
   const { t } = useTranslation();
 
   return (

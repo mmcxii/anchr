@@ -13,9 +13,11 @@ export type CodeExamplesProps = {
 export const CodeExamples: React.FC<CodeExamplesProps> = (props) => {
   const { examples } = props;
 
+  //* State
   const { t } = useTranslation();
   const [active, setActive] = React.useState<CodeLang>("curl");
 
+  //* Handlers
   const handleTabClick = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const lang = e.currentTarget.dataset.lang as CodeLang;
     setActive(lang);
