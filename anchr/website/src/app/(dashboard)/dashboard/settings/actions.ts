@@ -25,7 +25,20 @@ import { auth } from "@clerk/nextjs/server";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-export type ActionResult = { error: string; success: false } | { success: true; url?: string };
+export type ActionResult =
+  | {
+      /**
+       * Human-readable server-side detail (e.g. a Stripe error message),
+       * intended for debugging and captured by smoke tests via
+       * console.error. Never rendered to end users — the translated
+       * `error` key is what the UI shows. Truncated to 500 chars by
+       * convention so we don't leak anything sensitive.
+       */
+      debug?: string;
+      error: string;
+      success: false;
+    }
+  | { success: true; url?: string };
 
 type RedeemReferralCodeResult =
   | { durationDays: null | number; referrerName: null | string; success: true }
@@ -136,13 +149,17 @@ export async function createCheckoutSession(): Promise<ActionResult> {
   const { userId } = await auth();
 
   if (userId == null) {
-    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    return { debug: "no authenticated user", error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
   if (user == null) {
-    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    return {
+      debug: `no users row for userId=${userId}`,
+      error: "somethingWentWrongPleaseTryAgain",
+      success: false,
+    };
   }
 
   try {
@@ -156,13 +173,21 @@ export async function createCheckoutSession(): Promise<ActionResult> {
     });
 
     if (session.url == null) {
-      return { error: "somethingWentWrongPleaseTryAgain", success: false };
+      return {
+        debug: "stripe.checkout.sessions.create returned session with no url",
+        error: "somethingWentWrongPleaseTryAgain",
+        success: false,
+      };
     }
 
     return { success: true, url: session.url };
   } catch (error) {
     console.error("[createCheckoutSession]", error);
-    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    return {
+      debug: stripeErrorDetail(error),
+      error: "somethingWentWrongPleaseTryAgain",
+      success: false,
+    };
   }
 }
 
@@ -170,13 +195,17 @@ export async function createPortalSession(): Promise<ActionResult> {
   const { userId } = await auth();
 
   if (userId == null) {
-    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    return { debug: "no authenticated user", error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
   if (user?.stripeCustomerId == null) {
-    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    return {
+      debug: `no stripeCustomerId for userId=${userId}`,
+      error: "somethingWentWrongPleaseTryAgain",
+      success: false,
+    };
   }
 
   try {
@@ -188,8 +217,34 @@ export async function createPortalSession(): Promise<ActionResult> {
     return { success: true, url: session.url };
   } catch (error) {
     console.error("[createPortalSession]", error);
-    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+    return {
+      debug: stripeErrorDetail(error),
+      error: "somethingWentWrongPleaseTryAgain",
+      success: false,
+    };
   }
+}
+
+/**
+ * Extract a compact, developer-facing summary of a Stripe error. Truncated
+ * to 500 chars and intentionally excludes any field that could contain
+ * sensitive data; Stripe error messages are safe to surface in the browser
+ * console for smoke-test observability.
+ */
+function stripeErrorDetail(error: unknown): string {
+  if (error == null) {
+    return "unknown error";
+  }
+  if (typeof error === "object" && error != null) {
+    const e = error as { code?: string; message?: string; statusCode?: number; type?: string };
+    const parts = [e.type, e.code, e.statusCode != null ? `status=${e.statusCode}` : null, e.message]
+      .filter((p): p is string => p != null && p !== "")
+      .join(" | ");
+    if (parts !== "") {
+      return parts.slice(0, 500);
+    }
+  }
+  return String(error).slice(0, 500);
 }
 
 export async function updateProfile(displayName: string, bio: string): Promise<ActionResult> {

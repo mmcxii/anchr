@@ -28,8 +28,16 @@ export function useStripeCheckout(): { loading: boolean; startCheckout: () => Pr
         }
         return;
       }
+      // Log the server-side detail so smoke/e2e tests capturing page
+      // console output can see why the action failed instead of a
+      // generic translated toast. Safe: Stripe error messages don't
+      // include secrets or customer data.
+      if (result.debug != null) {
+        console.error("[createCheckoutSession] failed:", result.debug);
+      }
       toast.error(t(result.error as TranslationKey));
-    } catch {
+    } catch (err) {
+      console.error("[createCheckoutSession] threw:", err);
       toast.error(t("somethingWentWrongPleaseTryAgain"));
     } finally {
       setLoading(false);
