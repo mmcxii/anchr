@@ -33,7 +33,7 @@ export function buildCheckoutCompletedPayload(options: {
         client_reference_id: options.clerkUserId,
         customer: options.customerId ?? "cus_e2e_signed",
         id: `cs_test_${randomHex(24)}`,
-        subscription: options.subscriptionId ?? "sub_e2e_signed",
+        ...(options.subscriptionId != null && { subscription: options.subscriptionId }),
       },
     },
     id: `evt_e2e_${randomHex(20)}`,

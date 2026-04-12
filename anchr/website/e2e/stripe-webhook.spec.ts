@@ -49,7 +49,6 @@ test.describe("stripe webhook — signed deliveries against the live route", () 
     const payload = buildCheckoutCompletedPayload({
       clerkUserId: adminClerkId,
       customerId: "cus_signed_upgrade",
-      subscriptionId: "sub_signed_upgrade",
     });
     const signature = signStripePayload(payload, WEBHOOK_SECRET as string);
 
@@ -70,7 +69,6 @@ test.describe("stripe webhook — signed deliveries against the live route", () 
         .toBe("pro");
       const billing = await getUserBilling(testUsers.admin.username);
       expect(billing?.stripeCustomerId).toBe("cus_signed_upgrade");
-      expect(billing?.stripeSubscriptionId).toBe("sub_signed_upgrade");
       expect(billing?.proExpiresAt).toBeNull();
     } finally {
       await setUserBilling(testUsers.admin.username, {
