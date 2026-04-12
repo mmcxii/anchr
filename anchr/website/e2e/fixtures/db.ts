@@ -6,14 +6,19 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { boolean, integer, jsonb, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
 
 const usersTable = pgTable("users", {
+  billingInterval: text("billing_interval"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  domainRemovedAt: timestamp("domain_removed_at"),
   id: text("id").primaryKey(),
   pageDarkEnabled: boolean("page_dark_enabled").default(true).notNull(),
   pageDarkTheme: text("page_dark_theme").default("dark-depths").notNull(),
   pageLightEnabled: boolean("page_light_enabled").default(true).notNull(),
   pageLightTheme: text("page_light_theme").default("stateroom").notNull(),
+  paymentFailedAt: timestamp("payment_failed_at"),
   proExpiresAt: timestamp("pro_expires_at"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionCancelAt: timestamp("subscription_cancel_at"),
   tier: text("tier").default("free").notNull(),
   username: text("username").unique().notNull(),
 });
@@ -95,9 +100,14 @@ export async function getUserIdByUsername(username: string): Promise<null | stri
 export async function setUserBilling(
   username: string,
   billing: {
+    billingInterval?: null | string;
+    currentPeriodEnd?: null | Date;
+    domainRemovedAt?: null | Date;
+    paymentFailedAt?: null | Date;
     proExpiresAt?: null | Date;
     stripeCustomerId?: null | string;
     stripeSubscriptionId?: null | string;
+    subscriptionCancelAt?: null | Date;
     tier: "free" | "pro";
   },
 ) {
@@ -105,9 +115,14 @@ export async function setUserBilling(
   await db
     .update(usersTable)
     .set({
+      billingInterval: billing.billingInterval ?? null,
+      currentPeriodEnd: billing.currentPeriodEnd ?? null,
+      domainRemovedAt: billing.domainRemovedAt ?? null,
+      paymentFailedAt: billing.paymentFailedAt ?? null,
       proExpiresAt: billing.proExpiresAt ?? null,
       stripeCustomerId: billing.stripeCustomerId ?? null,
       stripeSubscriptionId: billing.stripeSubscriptionId ?? null,
+      subscriptionCancelAt: billing.subscriptionCancelAt ?? null,
       tier: billing.tier,
     })
     .where(eq(usersTable.username, username));

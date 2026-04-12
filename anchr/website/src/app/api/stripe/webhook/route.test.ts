@@ -4,6 +4,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 const mockConstructEvent = vi.fn();
+const mockSubscriptionsRetrieve = vi.fn();
 const mockUpdate = vi.fn();
 const mockSelect = vi.fn();
 const mockEnsureQuickLinksGroup = vi.fn();
@@ -12,6 +13,9 @@ const mockGrantPro = vi.fn();
 
 vi.mock("@/lib/stripe", () => ({
   stripe: {
+    subscriptions: {
+      retrieve: (...args: unknown[]) => mockSubscriptionsRetrieve(...args),
+    },
     webhooks: {
       constructEvent: (...args: unknown[]) => mockConstructEvent(...args),
     },
@@ -114,6 +118,16 @@ describe("POST /api/stripe/webhook", () => {
     // unconsumed `.mockReturnValueOnce(...)` return values leak forward and
     // return the wrong chain object in the next test.
     mockConstructEvent.mockReset();
+    mockSubscriptionsRetrieve.mockReset().mockResolvedValue({
+      items: {
+        data: [
+          {
+            current_period_end: 1735689600,
+            price: { recurring: { interval: "month", interval_count: 1 } },
+          },
+        ],
+      },
+    });
     mockUpdate.mockReset();
     mockSelect.mockReset();
     mockEnsureQuickLinksGroup.mockReset().mockResolvedValue(undefined);
@@ -181,7 +195,12 @@ describe("POST /api/stripe/webhook", () => {
     function emitCompleted(
       overrides: Partial<Stripe.Checkout.Session> = {},
       referredBy: null | string = null,
-    ): { clearReferrer: UpdateChain; proUpdate: UpdateChain; referredSelect: SelectChain } {
+    ): {
+      billingMetadataUpdate: UpdateChain;
+      clearReferrer: UpdateChain;
+      proUpdate: UpdateChain;
+      referredSelect: SelectChain;
+    } {
       mockConstructEvent.mockReturnValue({
         data: {
           object: {
@@ -195,13 +214,17 @@ describe("POST /api/stripe/webhook", () => {
       } as Stripe.Event);
 
       const proUpdate = buildUpdateChain();
+      const billingMetadataUpdate = buildUpdateChain();
       const clearReferrer = buildUpdateChain();
-      mockUpdate.mockReturnValueOnce(proUpdate.root).mockReturnValueOnce(clearReferrer.root);
+      mockUpdate
+        .mockReturnValueOnce(proUpdate.root)
+        .mockReturnValueOnce(billingMetadataUpdate.root)
+        .mockReturnValueOnce(clearReferrer.root);
 
       const referredSelect = buildSelectChain([{ referredBy }]);
       mockSelect.mockReturnValueOnce(referredSelect.root);
 
-      return { clearReferrer, proUpdate, referredSelect };
+      return { billingMetadataUpdate, clearReferrer, proUpdate, referredSelect };
     }
 
     it("upgrades the user to pro and records stripe ids", async () => {
@@ -285,12 +308,14 @@ describe("POST /api/stripe/webhook", () => {
         type: "checkout.session.completed",
       } as Stripe.Event);
 
-      // First delivery: proUpdate → select(referredBy=referrer-1) → clearReferrer
+      // First delivery: proUpdate → billingMetadata → select(referredBy=referrer-1) → clearReferrer
+      // Second delivery: proUpdate → billingMetadata → select(referredBy=null)
       mockUpdate
-        .mockReturnValueOnce(buildUpdateChain().root)
-        .mockReturnValueOnce(buildUpdateChain().root)
-        // Second delivery: proUpdate (no clearReferrer because referredBy is null)
-        .mockReturnValueOnce(buildUpdateChain().root);
+        .mockReturnValueOnce(buildUpdateChain().root) // 1st: proUpdate
+        .mockReturnValueOnce(buildUpdateChain().root) // 1st: billingMetadata
+        .mockReturnValueOnce(buildUpdateChain().root) // 1st: clearReferrer
+        .mockReturnValueOnce(buildUpdateChain().root) // 2nd: proUpdate
+        .mockReturnValueOnce(buildUpdateChain().root); // 2nd: billingMetadata
       mockSelect
         .mockReturnValueOnce(buildSelectChain([{ referredBy: "referrer-1" }]).root)
         .mockReturnValueOnce(buildSelectChain([{ referredBy: null }]).root);
@@ -310,19 +335,29 @@ describe("POST /api/stripe/webhook", () => {
   });
 
   describe("customer.subscription.updated", () => {
-    function emitUpdated(status: Stripe.Subscription.Status) {
+    function emitUpdated(status: Stripe.Subscription.Status, overrides: Record<string, unknown> = {}) {
       mockConstructEvent.mockReturnValue({
         data: {
           object: {
+            cancel_at: null,
             customer: "cus_test_1",
+            items: {
+              data: [
+                {
+                  current_period_end: 1735689600,
+                  price: { recurring: { interval: "month", interval_count: 1 } },
+                },
+              ],
+            },
             status,
-          } as Stripe.Subscription,
+            ...overrides,
+          } as unknown as Stripe.Subscription,
         },
         type: "customer.subscription.updated",
       } as Stripe.Event);
     }
 
-    it("upgrades to pro and ensures quick-links group when status is active", async () => {
+    it("upgrades to pro, clears warning flags, and sets billing metadata when active", async () => {
       //* Arrange
       emitUpdated("active");
       const activeUpdate = buildUpdateChain([{ id: "user-42" }]);
@@ -334,7 +369,14 @@ describe("POST /api/stripe/webhook", () => {
 
       //* Assert
       expect(res.status).toBe(200);
-      expect(activeUpdate.set).toHaveBeenCalledWith(expect.objectContaining({ tier: "pro" }));
+      expect(activeUpdate.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          billingInterval: "monthly",
+          paymentFailedAt: null,
+          subscriptionCancelAt: null,
+          tier: "pro",
+        }),
+      );
       expect(mockEnsureQuickLinksGroup).toHaveBeenCalledWith("user-42");
     });
 
@@ -351,9 +393,53 @@ describe("POST /api/stripe/webhook", () => {
       expect(mockEnsureQuickLinksGroup).not.toHaveBeenCalled();
     });
 
-    it.each(["canceled", "past_due", "unpaid"] as const)("downgrades the user when status is %s", async (status) => {
+    it("sets subscriptionCancelAt and keeps Pro when status is canceled", async () => {
       //* Arrange
-      emitUpdated(status);
+      emitUpdated("canceled", { cancel_at: 1735776000 });
+      const cancelUpdate = buildUpdateChain();
+      mockUpdate.mockReturnValueOnce(cancelUpdate.root);
+      const { POST } = await import("./route");
+
+      //* Act
+      const res = await POST(buildRequest());
+
+      //* Assert — flags set, NO downgrade
+      expect(res.status).toBe(200);
+      expect(cancelUpdate.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subscriptionCancelAt: new Date(1735776000 * 1000),
+        }),
+      );
+      const setArg = cancelUpdate.set.mock.calls[0]?.[0] as Record<string, unknown>;
+      expect(setArg).not.toHaveProperty("tier");
+      expect(mockSelect).not.toHaveBeenCalled();
+    });
+
+    it("sets paymentFailedAt and keeps Pro when status is past_due", async () => {
+      //* Arrange
+      emitUpdated("past_due");
+      const pastDueUpdate = buildUpdateChain();
+      mockUpdate.mockReturnValueOnce(pastDueUpdate.root);
+      const { POST } = await import("./route");
+
+      //* Act
+      const res = await POST(buildRequest());
+
+      //* Assert — flags set, NO downgrade
+      expect(res.status).toBe(200);
+      expect(pastDueUpdate.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paymentFailedAt: expect.any(Date),
+        }),
+      );
+      const setArg = pastDueUpdate.set.mock.calls[0]?.[0] as Record<string, unknown>;
+      expect(setArg).not.toHaveProperty("tier");
+      expect(mockSelect).not.toHaveBeenCalled();
+    });
+
+    it("fully downgrades when status is unpaid (all retry attempts exhausted)", async () => {
+      //* Arrange
+      emitUpdated("unpaid");
       mockSelect.mockReturnValueOnce(
         buildSelectChain([{ customDomain: null, id: "user-99", proExpiresAt: null }]).root,
       );
@@ -370,7 +456,6 @@ describe("POST /api/stripe/webhook", () => {
         expect.objectContaining({
           customDomain: null,
           customDomainVerified: false,
-          proExpiresAt: null,
           stripeSubscriptionId: null,
           tier: "free",
         }),

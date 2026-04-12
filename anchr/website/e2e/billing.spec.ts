@@ -65,7 +65,8 @@ test.describe("billing — upgrade & downgrade", () => {
       //* Assert — Current Plan card now offers Manage billing, not Upgrade
       const main = page.getByRole("main");
       await expect(main.getByRole("button", { name: t.manageBilling })).toBeVisible();
-      await expect(main.getByRole("button", { name: t.upgradeToPro })).toHaveCount(0);
+      await expect(main.getByRole("button", { name: `${t.$5Mo} ${t.annual}` })).toHaveCount(0);
+      await expect(main.getByRole("button", { name: `${t.$7Mo} ${t.monthly}` })).toHaveCount(0);
 
       //* Act — navigate to the marketing pricing page
       await page.goto("/pricing");
@@ -100,7 +101,7 @@ test.describe("billing — upgrade & downgrade", () => {
 
       //* Assert — Current Plan card now offers Upgrade, not Manage billing
       const main = page.getByRole("main");
-      await expect(main.getByRole("button", { name: t.upgradeToPro })).toBeEnabled();
+      await expect(main.getByRole("button", { name: `${t.$5Mo} ${t.annual}` })).toBeEnabled();
       await expect(main.getByRole("button", { name: t.manageBilling })).toHaveCount(0);
 
       //* Act — navigate to the marketing pricing page
@@ -149,6 +150,81 @@ test.describe("billing — upgrade & downgrade", () => {
         tier: "free",
       });
     }
+  });
+
+  test("payment-failed banner shows for pro user with paymentFailedAt set", async ({ proUser: page }) => {
+    try {
+      //* Act — seed the pro user with a payment failure flag and reload
+      await setUserBilling(testUsers.pro.username, {
+        paymentFailedAt: new Date(),
+        stripeCustomerId: "cus_e2e_pf",
+        stripeSubscriptionId: "sub_e2e_pf",
+        tier: "pro",
+      });
+      await page.reload();
+      await page.getByRole("heading", { exact: true, name: t.links }).waitFor();
+
+      //* Assert — the payment-failed banner is visible
+      await expect(page.getByText(t.yourLastPaymentFailedUpdateYourPaymentMethodToKeepPro)).toBeVisible();
+      await expect(page.getByRole("link", { name: t.updatePaymentMethod })).toBeVisible();
+    } finally {
+      await setUserBilling(testUsers.pro.username, {
+        paymentFailedAt: null,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        tier: "pro",
+      });
+    }
+  });
+
+  test("canceling-subscription state shows end date and resubscribe CTA in settings", async ({ proUser: page }) => {
+    const cancelDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days out
+
+    try {
+      //* Act — seed cancellation state
+      await setUserBilling(testUsers.pro.username, {
+        stripeCustomerId: "cus_e2e_cancel",
+        stripeSubscriptionId: "sub_e2e_cancel",
+        subscriptionCancelAt: cancelDate,
+        tier: "pro",
+      });
+      await page.goto("/dashboard/settings");
+      await page.getByRole("heading", { exact: true, name: t.settings }).waitFor();
+
+      //* Assert — shows end date and resubscribe button
+      const main = page.getByRole("main");
+      await expect(main.getByRole("button", { name: t.resubscribe })).toBeVisible();
+      await expect(main.getByRole("button", { name: t.manageBilling })).toBeVisible();
+    } finally {
+      await setUserBilling(testUsers.pro.username, {
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        subscriptionCancelAt: null,
+        tier: "pro",
+      });
+    }
+  });
+
+  test("free user sees both annual (primary) and monthly (secondary) upgrade buttons", async ({ freeUser: page }) => {
+    //* Act
+    await page.goto("/dashboard/settings");
+    await page.getByRole("heading", { exact: true, name: t.settings }).waitFor();
+    const main = page.getByRole("main");
+
+    //* Assert — annual button is primary (first), monthly is secondary
+    const annualButton = main.getByRole("button", { name: `${t.$5Mo} ${t.annual}` });
+    const monthlyButton = main.getByRole("button", { name: `${t.$7Mo} ${t.monthly}` });
+    await expect(annualButton).toBeVisible();
+    await expect(monthlyButton).toBeVisible();
+  });
+
+  test("checkout cancelled query param shows a toast", async ({ freeUser: page }) => {
+    //* Act
+    await page.goto("/dashboard/settings?checkout=cancelled");
+    await page.getByRole("heading", { exact: true, name: t.settings }).waitFor();
+
+    //* Assert
+    await expect(page.getByText(t.checkoutWasCancelledYouCanUpgradeAnytime)).toBeVisible();
   });
 
   test("clicking manage billing for a pro user without a stripe customer shows an error toast", async ({

@@ -70,6 +70,13 @@
       "tag": "0009_gorgeous_molten_man",
       "version": "7",
       "when": 1775455461981
+    },
+    {
+      "breakpoints": true,
+      "idx": 10,
+      "tag": "0010_nostalgic_beast",
+      "version": "7",
+      "when": 1775976951591
     }
   ],
   "version": "7"
