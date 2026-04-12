@@ -147,7 +147,7 @@ describe("createCheckoutSession", () => {
     expect(mockCheckoutSessionsCreate).toHaveBeenCalledTimes(1);
     const params = mockCheckoutSessionsCreate.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(params).toMatchObject({
-      cancel_url: "https://test.anchr.to/dashboard/settings",
+      cancel_url: "https://test.anchr.to/dashboard/settings?checkout=cancelled",
       client_reference_id: "user-1",
       line_items: [{ price: "price_test_pro_monthly", quantity: 1 }],
       mode: "subscription",

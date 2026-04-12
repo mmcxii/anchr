@@ -18,6 +18,7 @@ const SettingsPage: React.FC<SettingsPageProps> = async (props) => {
   const { searchParams } = props;
   const params = await searchParams;
   const checkoutSuccess = params.checkout === "success";
+  const checkoutCancelled = params.checkout === "cancelled";
 
   const user = await requireUser();
   const { t } = await initTranslations();
@@ -33,6 +34,7 @@ const SettingsPage: React.FC<SettingsPageProps> = async (props) => {
     <div>
       <h1 className="mb-6 text-2xl font-bold">{t("settings")}</h1>
       <SettingsContent
+        checkoutCancelled={checkoutCancelled}
         checkoutSuccess={checkoutSuccess}
         email={email}
         hideBranding={user.hideBranding}

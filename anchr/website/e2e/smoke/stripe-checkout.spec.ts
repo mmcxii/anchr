@@ -73,7 +73,9 @@ test.describe("stripe upgrade — stage smoke", () => {
       await page.goto("/dashboard/settings");
       await page.getByRole("heading", { exact: true, name: t.settings }).waitFor();
       const main = page.getByRole("main");
-      await main.getByRole("button", { name: t.upgradeToPro }).click();
+      // Settings shows two upgrade buttons (annual primary, monthly secondary).
+      // Click the annual one to prove the interval plumbing works end-to-end.
+      await main.getByRole("button", { name: `${t.$5Mo} ${t.annual}` }).click();
       const stripeNavigation = page
         .waitForURL(/checkout\.stripe\.com/, { timeout: 30_000 })
         .then(() => "stripe" as const);

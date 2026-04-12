@@ -46,6 +46,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 export type SettingsContentProps = {
+  checkoutCancelled?: boolean;
   checkoutSuccess?: boolean;
   email: string;
   hideBranding: boolean;
@@ -55,7 +56,7 @@ export type SettingsContentProps = {
 };
 
 export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
-  const { checkoutSuccess, email, hideBranding, pageDarkThemeId, pageLightThemeId, user } = props;
+  const { checkoutCancelled, checkoutSuccess, email, hideBranding, pageDarkThemeId, pageLightThemeId, user } = props;
 
   const { t } = useTranslation();
   const { user: clerkUser } = useUser();
@@ -142,7 +143,17 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
     if (checkoutSuccess) {
       window.history.replaceState(null, "", "/dashboard/settings");
     }
-  }, [checkoutSuccess]);
+    if (checkoutCancelled) {
+      window.history.replaceState(null, "", "/dashboard/settings");
+      // Delay toast slightly so Sonner is mounted and ready after hydration.
+      // Without this, the toast fires during the initial effect flush and gets
+      // swallowed because the Toaster component hasn't rendered yet.
+      setTimeout(() => {
+        toast.info(t("checkoutWasCancelledYouCanUpgradeAnytime"));
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t is stable after mount; including it causes re-fire on hydration
+  }, [checkoutCancelled, checkoutSuccess]);
 
   React.useEffect(() => {
     void getOrCreateUserReferralCode().then((result) => {
@@ -558,8 +569,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
   // The settings Current Plan card has no interval picker — defaults to
   // monthly. Wrapped in a named handler (rather than `onClick={() => …}`)
   // to satisfy november-sierra/no-inline-function-props.
-  const handleUpgradeClick = () => {
-    void startStripeCheckout();
+  const handleUpgradeMonthly = () => {
+    void startStripeCheckout("monthly");
+  };
+
+  const handleUpgradeAnnual = () => {
+    void startStripeCheckout("annual");
   };
 
   const handleManageBilling = async () => {
@@ -956,9 +971,37 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {isPro ? (
+            {isPro && user.subscriptionCancelAt != null && (
               <div className="space-y-3">
-                {user.proExpiresAt != null && user.proExpiresAt > new Date() && (
+                <p className="text-muted-foreground text-sm">
+                  {t("yourProSubscriptionEndsOn{{date}}", {
+                    date: user.subscriptionCancelAt.toLocaleDateString(),
+                  })}
+                </p>
+                <div className="flex gap-2">
+                  <Button disabled={upgradeLoading} onClick={handleUpgradeAnnual}>
+                    {upgradeLoading && <Loader2 className="size-3.5 animate-spin" />}
+                    {t("resubscribe")}
+                  </Button>
+                  <Button disabled={manageBillingLoading} onClick={handleManageBilling} variant="tertiary">
+                    {t("manageBilling")}
+                  </Button>
+                </div>
+              </div>
+            )}
+            {isPro && user.subscriptionCancelAt == null && (
+              <div className="space-y-3">
+                {user.billingInterval != null && (
+                  <p className="text-muted-foreground text-sm">
+                    {user.billingInterval === "annual" ? t("annual") : t("monthly")}
+                  </p>
+                )}
+                {user.currentPeriodEnd != null && user.stripeSubscriptionId != null && (
+                  <p className="text-muted-foreground text-sm">
+                    {t("renewsOn{{date}}", { date: user.currentPeriodEnd.toLocaleDateString() })}
+                  </p>
+                )}
+                {user.proExpiresAt != null && user.stripeSubscriptionId == null && (
                   <p className="text-muted-foreground text-sm">
                     {t("proAccessExpiresOn{{date}}", { date: user.proExpiresAt.toLocaleDateString() })}
                   </p>
@@ -967,15 +1010,21 @@ export const SettingsContent: React.FC<SettingsContentProps> = (props) => {
                   {t("manageBilling")}
                 </Button>
               </div>
-            ) : (
+            )}
+            {!isPro && (
               <div className="space-y-3">
                 <p className="text-muted-foreground text-sm">
                   {t("upgradeToUnlockUnlimitedLinksCustomDomainsAndMore")}
                 </p>
-                <Button disabled={upgradeLoading} onClick={handleUpgradeClick}>
-                  {upgradeLoading && <Loader2 className="size-3.5 animate-spin" />}
-                  {t("upgradeToPro")}
-                </Button>
+                <div className="flex gap-2">
+                  <Button disabled={upgradeLoading} onClick={handleUpgradeAnnual}>
+                    {upgradeLoading && <Loader2 className="size-3.5 animate-spin" />}
+                    {t("$5Mo")} {t("annual")}
+                  </Button>
+                  <Button disabled={upgradeLoading} onClick={handleUpgradeMonthly} variant="secondary">
+                    {t("$7Mo")} {t("monthly")}
+                  </Button>
+                </div>
               </div>
             )}
 

@@ -62,9 +62,10 @@ test.describe("settings", () => {
     //* Assert
     await expect(page.getByText(t.upgradeToProToUseACustomDomain)).toBeVisible();
     await expect(page.getByText(t.upgradeToProToHideBranding)).toBeVisible();
-    // Current Plan card exposes an enabled "Upgrade to Pro" button for free users.
+    // Current Plan card exposes annual + monthly upgrade buttons for free users.
     const main = page.getByRole("main");
-    await expect(main.getByRole("button", { name: t.upgradeToPro })).toBeEnabled();
+    await expect(main.getByRole("button", { name: `${t.$5Mo} ${t.annual}` })).toBeEnabled();
+    await expect(main.getByRole("button", { name: `${t.$7Mo} ${t.monthly}` })).toBeEnabled();
   });
 
   test("Pro user has manage billing button and referral code input", async ({ proUser: page }) => {

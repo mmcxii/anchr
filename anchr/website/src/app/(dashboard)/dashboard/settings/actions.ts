@@ -176,7 +176,7 @@ export async function createCheckoutSession(interval: CheckoutInterval = "monthl
     const session = await stripe.checkout.sessions.create({
       client_reference_id: userId,
       ...(user.stripeCustomerId != null && { customer: user.stripeCustomerId }),
-      cancel_url: `${envSchema.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
+      cancel_url: `${envSchema.NEXT_PUBLIC_APP_URL}/dashboard/settings?checkout=cancelled`,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${envSchema.NEXT_PUBLIC_APP_URL}/dashboard/settings?checkout=success`,
@@ -741,4 +741,24 @@ export async function getOrCreateUserReferralCode(): Promise<ReferralCodeResult>
   });
 
   return { code, success: true };
+}
+
+// ─── Billing Banner Actions ────────────────────────────────────────────────
+
+/**
+ * Dismiss the "your custom domain was removed" dashboard banner by
+ * clearing `domainRemovedAt`. Called when the user clicks the X button.
+ */
+export async function dismissDomainRemovedBanner(): Promise<ActionResult> {
+  const { userId } = await auth();
+
+  if (userId == null) {
+    return { error: "somethingWentWrongPleaseTryAgain", success: false };
+  }
+
+  await db.update(usersTable).set({ domainRemovedAt: null, updatedAt: new Date() }).where(eq(usersTable.id, userId));
+
+  revalidatePath("/dashboard");
+
+  return { success: true };
 }
