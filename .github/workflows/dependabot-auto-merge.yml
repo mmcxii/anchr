@@ -1,0 +1,46 @@
+name: "Dependabot: Auto-merge"
+
+# Auto-approve and enable rebase auto-merge for non-major Dependabot PRs.
+# Major version bumps are left for manual review.
+# Requires a GitHub App with contents:write + pull-requests:write permissions.
+# Store its credentials as DEPENDABOT_APP_ID and DEPENDABOT_APP_PRIVATE_KEY secrets.
+on:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto-approve & merge
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate GitHub App token
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DEPENDABOT_APP_ID }}
+          private-key: ${{ secrets.DEPENDABOT_APP_PRIVATE_KEY }}
+
+      - name: Approve PR
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr review "$PR_URL" --approve
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Enable auto-merge (rebase)
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major' }}
+        run: gh pr merge "$PR_URL" --auto --rebase
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
