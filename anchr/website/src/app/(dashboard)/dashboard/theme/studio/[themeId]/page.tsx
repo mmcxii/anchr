@@ -2,8 +2,9 @@ import { ThemeStudioContent } from "@/components/dashboard/theme-studio-content"
 import { requireUser } from "@/lib/auth";
 import { getCustomThemeById, getCustomThemesByUserId } from "@/lib/db/queries/custom-theme";
 import { initTranslations } from "@/lib/i18n/server";
+import { isProUser } from "@/lib/tier";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import * as React from "react";
 
 export const metadata: Metadata = {
@@ -18,6 +19,9 @@ const EditThemePage: React.FC<EditThemePageProps> = async (props) => {
   const { params } = props;
   const { themeId } = await params;
   const user = await requireUser();
+  if (!isProUser(user)) {
+    redirect("/dashboard/theme");
+  }
   const { t } = await initTranslations();
 
   const theme = await getCustomThemeById(themeId, user.id);

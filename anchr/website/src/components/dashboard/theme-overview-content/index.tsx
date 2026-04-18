@@ -15,7 +15,7 @@ import type { TranslationKey } from "@/lib/i18n/i18next.d";
 import { DARK_THEME_ID_LIST, LIGHT_THEME_ID_LIST, THEMES, type ThemeId } from "@/lib/themes";
 import { isProUser } from "@/lib/tier";
 import { deriveSwatchFromVariables } from "@/lib/utils/custom-theme";
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -193,18 +193,30 @@ export const ThemeOverviewContent: React.FC<ThemeOverviewContentProps> = (props)
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>{t("customTheme")}</CardTitle>
-          <Button asChild size="sm">
-            <Link href="/dashboard/theme/studio/new">
-              <Plus className="size-4" />
-              {t("createTheme")}
-            </Link>
-          </Button>
+          {isPro ? (
+            <Button asChild size="sm">
+              <Link href="/dashboard/theme/studio/new">
+                <Plus className="size-4" />
+                {t("createTheme")}
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild size="sm" variant="secondary">
+              <Link href="/pricing">{t("upgradeToPro")}</Link>
+            </Button>
+          )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {!isPro && (
+            <div className="flex items-center gap-2">
+              <Lock className="text-muted-foreground size-4" />
+              <p className="text-muted-foreground text-sm">{t("upgradeToProToManageCustomThemes")}</p>
+            </div>
+          )}
           {customThemes.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              {t("youCanCreate{{max}}CustomThemes", { max: isPro ? 10 : 2 })}
-            </p>
+            isPro && (
+              <p className="text-muted-foreground text-sm">{t("youCanCreate{{max}}CustomThemes", { max: 10 })}</p>
+            )
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {customThemes.map((theme) => {
@@ -223,20 +235,24 @@ export const ThemeOverviewContent: React.FC<ThemeOverviewContentProps> = (props)
                       variant="page"
                     />
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Link
-                        className="bg-background/80 hover:bg-background rounded p-1 backdrop-blur-sm"
-                        href={`/dashboard/theme/studio/${theme.id}`}
-                        title={t("editTheme")}
-                      >
-                        <Pencil className="size-3.5" />
-                      </Link>
-                      <Link
-                        className="bg-background/80 hover:bg-background rounded p-1 backdrop-blur-sm"
-                        href={`/dashboard/theme/studio/new?from=${theme.id}`}
-                        title={t("customize")}
-                      >
-                        <Copy className="size-3.5" />
-                      </Link>
+                      {isPro && (
+                        <>
+                          <Link
+                            className="bg-background/80 hover:bg-background rounded p-1 backdrop-blur-sm"
+                            href={`/dashboard/theme/studio/${theme.id}`}
+                            title={t("editTheme")}
+                          >
+                            <Pencil className="size-3.5" />
+                          </Link>
+                          <Link
+                            className="bg-background/80 hover:bg-background rounded p-1 backdrop-blur-sm"
+                            href={`/dashboard/theme/studio/new?from=${theme.id}`}
+                            title={t("customize")}
+                          >
+                            <Copy className="size-3.5" />
+                          </Link>
+                        </>
+                      )}
                       <button
                         className="bg-background/80 hover:bg-background text-destructive rounded p-1 backdrop-blur-sm"
                         disabled={deletingId === theme.id}
