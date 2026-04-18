@@ -3,6 +3,7 @@ import { and, count, desc, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { db } from "../client";
 import { clicksTable } from "../schema/click";
 import { linksTable } from "../schema/link";
+import { shortLinksTable } from "../schema/short-link";
 
 export type DateRange = "30d" | "7d" | "all";
 
@@ -160,6 +161,74 @@ export async function getPerLinkTrends(userId: string, range: DateRange) {
       and(eq(clicksTable.userId, userId), isNotNull(clicksTable.linkId), gte(clicksTable.createdAt, previousStart)),
     )
     .groupBy(clicksTable.linkId);
+
+  return rows;
+}
+
+export async function getTopShortLinks(userId: string, range: DateRange) {
+  const dateFilter = rangeFilter(range);
+  const conditions =
+    dateFilter != null ? and(eq(clicksTable.userId, userId), dateFilter) : eq(clicksTable.userId, userId);
+
+  return db
+    .select({
+      clicks: count(),
+      customSlug: shortLinksTable.customSlug,
+      shortLinkId: shortLinksTable.id,
+      slug: shortLinksTable.slug,
+    })
+    .from(clicksTable)
+    .innerJoin(shortLinksTable, eq(clicksTable.shortLinkId, shortLinksTable.id))
+    .where(conditions)
+    .groupBy(shortLinksTable.id, shortLinksTable.slug, shortLinksTable.customSlug)
+    .orderBy(desc(count()));
+}
+
+export async function getPerShortLinkSparklines(userId: string) {
+  const start = new Date();
+  start.setDate(start.getDate() - 7);
+  start.setHours(0, 0, 0, 0);
+
+  const dateExpr = sql<string>`to_char(${clicksTable.createdAt}, 'YYYY-MM-DD')`;
+
+  return db
+    .select({ clicks: count(), date: dateExpr, shortLinkId: clicksTable.shortLinkId })
+    .from(clicksTable)
+    .where(and(eq(clicksTable.userId, userId), isNotNull(clicksTable.shortLinkId), gte(clicksTable.createdAt, start)))
+    .groupBy(clicksTable.shortLinkId, dateExpr)
+    .orderBy(dateExpr);
+}
+
+export async function getPerShortLinkTrends(userId: string, range: DateRange) {
+  if (range === "all") {
+    return [];
+  }
+
+  const days = range === "7d" ? 7 : 30;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const currentStart = new Date(now);
+  currentStart.setDate(currentStart.getDate() - days);
+
+  const previousStart = new Date(currentStart);
+  previousStart.setDate(previousStart.getDate() - days);
+
+  const rows = await db
+    .select({
+      clicks: sql<number>`count(*) filter (where ${clicksTable.createdAt} >= ${currentStart})`,
+      previousClicks: sql<number>`count(*) filter (where ${clicksTable.createdAt} < ${currentStart})`,
+      shortLinkId: clicksTable.shortLinkId,
+    })
+    .from(clicksTable)
+    .where(
+      and(
+        eq(clicksTable.userId, userId),
+        isNotNull(clicksTable.shortLinkId),
+        gte(clicksTable.createdAt, previousStart),
+      ),
+    )
+    .groupBy(clicksTable.shortLinkId);
 
   return rows;
 }

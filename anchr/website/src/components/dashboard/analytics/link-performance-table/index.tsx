@@ -16,11 +16,12 @@ export type LinkPerformanceRow = {
 };
 
 export type LinkPerformanceTableProps = {
+  heading: string;
   links: LinkPerformanceRow[];
 };
 
 export const LinkPerformanceTable: React.FC<LinkPerformanceTableProps> = (props) => {
-  const { links } = props;
+  const { heading, links } = props;
 
   //* State
   const { t } = useTranslation();
@@ -31,7 +32,7 @@ export const LinkPerformanceTable: React.FC<LinkPerformanceTableProps> = (props)
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm font-medium">{t("linkPerformance")}</CardTitle>
+        <CardTitle className="text-sm font-medium">{heading}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
