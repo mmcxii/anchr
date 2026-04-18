@@ -9,8 +9,11 @@ import {
   getClickHistory,
   getPerLinkSparklines,
   getPerLinkTrends,
+  getPerShortLinkSparklines,
+  getPerShortLinkTrends,
   getPreviousPeriodClicks,
   getTopLinks,
+  getTopShortLinks,
 } from "@/lib/db/queries/analytics";
 import { initTranslations } from "@/lib/i18n/server";
 import { isProUser } from "@/lib/tier";
@@ -39,13 +42,26 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = async (props) => {
   const range: DateRange = allowedRanges.has(params.range as DateRange) ? (params.range as DateRange) : "7d";
   const isAllTime = range === "all";
 
-  const [summary, clickHistory, topLinks, previousPeriod, sparklineRows, perLinkTrends] = await Promise.all([
+  const [
+    summary,
+    clickHistory,
+    topLinks,
+    previousPeriod,
+    sparklineRows,
+    perLinkTrends,
+    topShortLinks,
+    shortLinkSparklineRows,
+    perShortLinkTrends,
+  ] = await Promise.all([
     getAnalyticsSummary(user.id, range),
     getClickHistory(user.id, range),
     getTopLinks(user.id, range),
     isAllTime ? Promise.resolve({ totalClicks: 0 }) : getPreviousPeriodClicks(user.id, range),
     getPerLinkSparklines(user.id),
     isAllTime ? Promise.resolve([]) : getPerLinkTrends(user.id, range),
+    getTopShortLinks(user.id, range),
+    getPerShortLinkSparklines(user.id),
+    isAllTime ? Promise.resolve([]) : getPerShortLinkTrends(user.id, range),
   ]);
 
   if (summary.totalClicks === 0) {
@@ -89,6 +105,36 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = async (props) => {
     trendPercent: isAllTime ? null : (trendMap.get(link.linkId) ?? null),
   }));
 
+  const shortLinkSparklineMap = new Map<string, { clicks: number; date: string }[]>();
+  for (const row of shortLinkSparklineRows) {
+    if (row.shortLinkId == null) {
+      continue;
+    }
+    const existing = shortLinkSparklineMap.get(row.shortLinkId);
+    if (existing != null) {
+      existing.push({ clicks: row.clicks, date: row.date });
+    } else {
+      shortLinkSparklineMap.set(row.shortLinkId, [{ clicks: row.clicks, date: row.date }]);
+    }
+  }
+
+  const shortLinkTrendMap = new Map<string, number>();
+  for (const row of perShortLinkTrends) {
+    if (row.shortLinkId == null) {
+      continue;
+    }
+    shortLinkTrendMap.set(row.shortLinkId, computeTrendPercent(Number(row.clicks), Number(row.previousClicks)));
+  }
+
+  const shortLinkPerformance: LinkPerformanceRow[] = topShortLinks.map((link) => ({
+    clicks: link.clicks,
+    linkId: link.shortLinkId,
+    slug: link.slug,
+    sparklineData: fillDateGaps(shortLinkSparklineMap.get(link.shortLinkId) ?? [], 7),
+    title: link.customSlug ?? link.slug,
+    trendPercent: isAllTime ? null : (shortLinkTrendMap.get(link.shortLinkId) ?? null),
+  }));
+
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold">{t("analytics")}</h1>
@@ -103,7 +149,11 @@ const AnalyticsPage: React.FC<AnalyticsPageProps> = async (props) => {
 
         <ClicksChart data={clickHistory} isPro={isPro} />
 
-        {linkPerformance.length > 0 && <LinkPerformanceTable links={linkPerformance} />}
+        {linkPerformance.length > 0 && <LinkPerformanceTable heading={t("linkPerformance")} links={linkPerformance} />}
+
+        {shortLinkPerformance.length > 0 && (
+          <LinkPerformanceTable heading={t("shortLinkPerformance")} links={shortLinkPerformance} />
+        )}
       </div>
     </div>
   );
