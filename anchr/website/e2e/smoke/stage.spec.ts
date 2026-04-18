@@ -72,7 +72,8 @@ test.describe("stage deployment smoke tests", () => {
       //  destination. This is the end-to-end check: middleware + /r/[slug] +
       //  DB lookup all reachable from the internet post-deploy.
       expect(createResp.status()).toBe(201);
-      expect(createdBody?.data.shortUrl).toMatch(/^https:\/\/anch\.to\/[a-z0-9]+$/);
+      // Stage uses stage.anch.to; prod uses anch.to. Match both.
+      expect(createdBody?.data.shortUrl).toMatch(/^https:\/\/(?:[a-z0-9-]+\.)*anch\.to\/[a-z0-9]+$/);
       expect(redirectResp?.status()).toBeGreaterThanOrEqual(300);
       expect(redirectResp?.status()).toBeLessThan(400);
       expect(redirectResp?.headers().location).toBe("https://anchr-e2e-testing.site");
@@ -160,8 +161,9 @@ test.describe("stage deployment smoke tests", () => {
       await page.waitForTimeout(1000);
     }
 
-    // Add domain
-    const domainInput = page.getByPlaceholder("yourdomain.com");
+    // Add domain — use exact match so we don't collide with the short-domain
+    // input ("go.yourdomain.com") that lives in the same settings page.
+    const domainInput = page.getByPlaceholder("yourdomain.com", { exact: true });
     await domainInput.clear();
     await domainInput.pressSequentially(testDomain.subdomain, { delay: 20 });
     await page.getByRole("button", { name: t.addDomain }).click();
@@ -451,14 +453,18 @@ baseTest.describe("MCP server smoke tests", () => {
       //* Act — list available tools
       const toolsBody = await mcp.rpc("tools/list", {});
 
-      //* Assert — all 20 tools are listed
+      //* Assert — all 24 tools are listed (3 profile + 7 link + 4 group + 4 short-link + 5 analytics + 1 discovery)
       const toolNames: string[] = toolsBody.result.tools.map((tool: { name: string }) => tool.name);
-      baseExpect(toolNames).toHaveLength(20);
+      baseExpect(toolNames).toHaveLength(24);
       baseExpect(toolNames).toContain("get_profile");
       baseExpect(toolNames).toContain("create_link");
       baseExpect(toolNames).toContain("list_groups");
       baseExpect(toolNames).toContain("get_analytics");
       baseExpect(toolNames).toContain("lookup_profile");
+      baseExpect(toolNames).toContain("list_short_links");
+      baseExpect(toolNames).toContain("create_short_link");
+      baseExpect(toolNames).toContain("update_short_link");
+      baseExpect(toolNames).toContain("delete_short_link");
     } finally {
       //* Cleanup
       await mcp.cleanup();
