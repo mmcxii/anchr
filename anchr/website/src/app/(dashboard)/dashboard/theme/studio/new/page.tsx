@@ -4,7 +4,9 @@ import { PRESET_THEME_VARIABLES, type ThemeVariables } from "@/lib/custom-themes
 import { getCustomThemeById, getCustomThemesByUserId } from "@/lib/db/queries/custom-theme";
 import { initTranslations } from "@/lib/i18n/server";
 import { isValidThemeId } from "@/lib/themes";
+import { isProUser } from "@/lib/tier";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import * as React from "react";
 
 export const metadata: Metadata = {
@@ -19,6 +21,9 @@ const NewThemePage: React.FC<NewThemePageProps> = async (props) => {
   const { searchParams } = props;
   const params = await searchParams;
   const user = await requireUser();
+  if (!isProUser(user)) {
+    redirect("/dashboard/theme");
+  }
   const { t } = await initTranslations();
 
   // Determine starting variables

@@ -2,6 +2,7 @@ import { db } from "@/lib/db/client";
 import { ensureQuickLinksGroup } from "@/lib/db/queries/quick-links";
 import { usersTable } from "@/lib/db/schema/user";
 import { stripe } from "@/lib/stripe";
+import { isValidThemeId } from "@/lib/themes";
 import { grantPro } from "@/lib/tier.server";
 import { removeDomain } from "@/lib/vercel";
 import { eq } from "drizzle-orm";
@@ -23,6 +24,8 @@ async function handleDowngrade(customerId: string): Promise<void> {
     .select({
       customDomain: usersTable.customDomain,
       id: usersTable.id,
+      pageDarkTheme: usersTable.pageDarkTheme,
+      pageLightTheme: usersTable.pageLightTheme,
       proExpiresAt: usersTable.proExpiresAt,
       shortDomain: usersTable.shortDomain,
     })
@@ -57,6 +60,13 @@ async function handleDowngrade(customerId: string): Promise<void> {
   // If user has remaining referral Pro time, keep Pro until it expires
   const hasReferralPro = user.proExpiresAt != null && user.proExpiresAt > new Date();
 
+  // Custom-theme slot assignments are Pro-only. If either slot points at a
+  // custom theme (i.e. not a preset ID), reset it to the preset default so the
+  // bio page does not keep rendering Pro theming after the user loses Pro.
+  // Theme rows are intentionally preserved; re-upgrading restores access.
+  const shouldResetDarkSlot = !hasReferralPro && !isValidThemeId(user.pageDarkTheme);
+  const shouldResetLightSlot = !hasReferralPro && !isValidThemeId(user.pageLightTheme);
+
   await db
     .update(usersTable)
     .set({
@@ -67,6 +77,8 @@ async function handleDowngrade(customerId: string): Promise<void> {
       // Flag that the domain was removed so the dashboard can show a banner
       // on the user's next visit explaining what happened.
       ...(user.customDomain != null && { domainRemovedAt: new Date() }),
+      ...(shouldResetDarkSlot && { pageDarkTheme: "dark-depths" }),
+      ...(shouldResetLightSlot && { pageLightTheme: "stateroom" }),
       paymentFailedAt: null,
       shortDomain: null,
       shortDomainVerified: false,

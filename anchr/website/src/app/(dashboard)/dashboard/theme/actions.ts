@@ -1,7 +1,7 @@
 "use server";
 
 import { sanitizeCss } from "@/lib/css-sanitizer";
-import { FREE_THEME_LIMIT, PRO_THEME_LIMIT } from "@/lib/custom-themes";
+import { PRO_THEME_LIMIT } from "@/lib/custom-themes";
 import { db } from "@/lib/db/client";
 import { countCustomThemesByUserId, getCustomThemeById, getCustomThemesByUserId } from "@/lib/db/queries/custom-theme";
 import { customThemesTable } from "@/lib/db/schema/custom-theme";
@@ -43,11 +43,13 @@ export async function createCustomTheme(data: CustomThemeInput): Promise<ActionR
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
-  const isPro = isProUser(user);
-  const limit = isPro ? PRO_THEME_LIMIT : FREE_THEME_LIMIT;
+  if (!isProUser(user)) {
+    return { error: "upgradeToProToManageCustomThemes", success: false };
+  }
+
   const currentCount = await countCustomThemesByUserId(user.id);
 
-  if (currentCount >= limit) {
+  if (currentCount >= PRO_THEME_LIMIT) {
     return { error: "themeLimitReached", success: false };
   }
 
@@ -59,7 +61,7 @@ export async function createCustomTheme(data: CustomThemeInput): Promise<ActionR
   // Sanitize raw CSS if present
   let rawCss: null | string = null;
   let sanitizationErrors: string[] = [];
-  if (isPro && data.rawCss != null && data.rawCss.trim() !== "") {
+  if (data.rawCss != null && data.rawCss.trim() !== "") {
     const result = sanitizeCss(data.rawCss);
     rawCss = result.sanitized || null;
     sanitizationErrors = result.errors;
@@ -69,18 +71,17 @@ export async function createCustomTheme(data: CustomThemeInput): Promise<ActionR
     }
   }
 
-  // Strip Pro-only fields for free users
   let themeId: string;
   try {
     const [theme] = await db
       .insert(customThemesTable)
       .values({
-        backgroundImage: isPro ? (data.backgroundImage ?? null) : null,
-        borderRadius: isPro ? (data.borderRadius ?? null) : null,
-        font: isPro ? (data.font ?? null) : null,
+        backgroundImage: data.backgroundImage ?? null,
+        borderRadius: data.borderRadius ?? null,
+        font: data.font ?? null,
         name,
-        overlayColor: isPro ? (data.overlayColor ?? null) : null,
-        overlayOpacity: isPro ? (data.overlayOpacity ?? null) : null,
+        overlayColor: data.overlayColor ?? null,
+        overlayOpacity: data.overlayOpacity ?? null,
         rawCss,
         userId: user.id,
         variables: data.variables,
@@ -105,17 +106,19 @@ export async function updateCustomTheme(themeId: string, data: CustomThemeInput)
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
+  if (!isProUser(user)) {
+    return { error: "upgradeToProToManageCustomThemes", success: false };
+  }
+
   const existing = await getCustomThemeById(themeId, user.id);
   if (existing == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
-  const isPro = isProUser(user);
-
   // Sanitize raw CSS if present
   let rawCss: null | string = existing.rawCss;
   let sanitizationErrors: string[] = [];
-  if (isPro && data.rawCss != null) {
+  if (data.rawCss != null) {
     const result = sanitizeCss(data.rawCss);
     rawCss = result.sanitized || null;
     sanitizationErrors = result.errors;
@@ -125,17 +128,16 @@ export async function updateCustomTheme(themeId: string, data: CustomThemeInput)
     }
   }
 
-  // Free users can only update colors (variables). Pro fields are preserved from existing.
   await db
     .update(customThemesTable)
     .set({
-      backgroundImage: isPro ? (data.backgroundImage ?? null) : existing.backgroundImage,
-      borderRadius: isPro ? (data.borderRadius ?? null) : existing.borderRadius,
-      font: isPro ? (data.font ?? null) : existing.font,
+      backgroundImage: data.backgroundImage ?? null,
+      borderRadius: data.borderRadius ?? null,
+      font: data.font ?? null,
       name: data.name,
-      overlayColor: isPro ? (data.overlayColor ?? null) : existing.overlayColor,
-      overlayOpacity: isPro ? (data.overlayOpacity ?? null) : existing.overlayOpacity,
-      rawCss: isPro ? rawCss : existing.rawCss,
+      overlayColor: data.overlayColor ?? null,
+      overlayOpacity: data.overlayOpacity ?? null,
+      rawCss,
       updatedAt: new Date(),
       variables: data.variables,
     })
@@ -150,6 +152,8 @@ export async function deleteCustomTheme(themeId: string): Promise<ActionResult> 
   if (user == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
+
+  // Intentionally not Pro-gated: free users (downgraded) can still clean up their legacy themes.
 
   const existing = await getCustomThemeById(themeId, user.id);
   if (existing == null) {
@@ -186,6 +190,10 @@ export async function assignThemeToSlot(
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
 
+  if (!isProUser(user)) {
+    return { error: "upgradeToProToManageCustomThemes", success: false };
+  }
+
   // Validate: either a preset ID or a custom theme owned by this user
   if (!isValidThemeId(themeId)) {
     const customTheme = await getCustomThemeById(themeId, user.id);
@@ -214,6 +222,10 @@ export async function updateThemeToggles(lightEnabled: boolean, darkEnabled: boo
   if (user == null) {
     return { error: "somethingWentWrongPleaseTryAgain", success: false };
   }
+
+  // Intentionally not Pro-gated: enabling/disabling the light or dark slot
+  // applies to preset themes too, so free users can still choose a light-only
+  // or dark-only bio page.
 
   await db
     .update(usersTable)

@@ -6,39 +6,32 @@ import { testUsers } from "./fixtures/test-users";
 // ─── Free User ────────────────────────────────────────────────────────────────
 
 test.describe("Theme Studio — Free User", () => {
-  test("creates a theme with color pickers, Pro features are locked", async ({ freeUser: page }) => {
+  test("overview renders the upsell CTA instead of a Create theme link", async ({ freeUser: page }) => {
     //* Arrange
     await resetCustomThemes(testUsers.admin.username);
     await setUserTier(testUsers.admin.username, "free");
+
+    //* Act
     await page.goto("/dashboard/theme");
     await page.getByRole("heading", { exact: true, name: t.theme }).waitFor();
 
-    //* Act — navigate to studio and save a theme
-    await page.getByRole("link", { name: t.createTheme }).click();
-    await page.waitForURL("**/theme/studio/new**");
-    await page.getByRole("button", { name: t.saveTheme }).click();
-
-    //* Assert — theme saved, Pro inputs disabled
-    await expect(page.getByText(t.themeCreated)).toBeVisible();
-    await expect(page.getByPlaceholder("Inter")).toBeDisabled();
-    await expect(page.locator('input[type="range"]')).toBeDisabled();
-    await expect(page.getByText(t.upgradeToProToUseTheRawCssEditor)).toBeVisible();
+    //* Assert
+    await expect(page.getByRole("link", { name: t.upgradeToPro })).toBeVisible();
+    await expect(page.getByText(t.upgradeToProToManageCustomThemes)).toBeVisible();
+    await expect(page.getByRole("link", { name: t.createTheme })).toHaveCount(0);
   });
 
-  test("cannot create more than 2 themes", async ({ freeUser: page }) => {
-    //* Arrange — insert 2 themes via DB to reach the free limit
+  test("studio routes redirect back to the overview", async ({ freeUser: page }) => {
+    //* Arrange
     await resetCustomThemes(testUsers.admin.username);
     await setUserTier(testUsers.admin.username, "free");
-    await insertCustomTheme(testUsers.admin.username, { name: "Limit Test 1" });
-    await insertCustomTheme(testUsers.admin.username, { name: "Limit Test 2" });
 
-    //* Act — attempt to create a 3rd theme via UI
+    //* Act
     await page.goto("/dashboard/theme/studio/new");
-    await page.waitForLoadState("domcontentloaded");
-    await page.getByRole("button", { name: t.saveTheme }).click();
+    await page.waitForURL("**/dashboard/theme");
 
     //* Assert
-    await expect(page.getByText(t.themeLimitReached)).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard\/theme$/);
   });
 });
 
@@ -202,28 +195,45 @@ test.describe("Theme Studio — Deletion", () => {
 // ─── Downgrade Behavior ──────────────────────────────────────────────────────
 
 test.describe("Theme Studio — Downgrade", () => {
-  test("downgraded user's custom theme still renders on public page but studio locks Pro fields", async ({
-    proUser: page,
-  }) => {
-    //* Arrange — insert a theme with a custom font as Pro, assign to both slots
+  test("preserved custom theme still renders on the public page after downgrade", async ({ proUser: page }) => {
+    //* Arrange — Pro user with a custom-font theme assigned to both slots
     await resetCustomThemes(testUsers.pro.username);
     await setUserTier(testUsers.pro.username, "pro");
     const themeId = await insertCustomTheme(testUsers.pro.username, { font: "Roboto" });
     await assignThemeSlotsDirectly(testUsers.pro.username, themeId);
 
-    //* Act — downgrade to free, then visit public page
-    await setUserTier(testUsers.pro.username, "free");
-    await page.goto(`/${testUsers.pro.username}`, { waitUntil: "domcontentloaded" });
+    try {
+      //* Act — downgrade to free and load the public page. Slot-reset lives in the Stripe
+      //* webhook's handleDowngrade, not in setUserTier, so the slot still points at the theme.
+      await setUserTier(testUsers.pro.username, "free");
+      await page.goto(`/${testUsers.pro.username}`, { waitUntil: "domcontentloaded" });
 
-    //* Assert — Google Font link is still rendered, studio locks Pro inputs
-    const hasGoogleFontLink = await page.locator('link[href*="fonts.googleapis.com/css2?family=Roboto"]').count();
-    expect(hasGoogleFontLink).toBeGreaterThan(0);
-    await page.goto(`/dashboard/theme/studio/${themeId}`);
-    await page.waitForLoadState("domcontentloaded");
-    await expect(page.getByPlaceholder("Inter")).toBeDisabled();
+      //* Assert — the preserved theme's Google Font link still renders
+      const hasGoogleFontLink = await page.locator('link[href*="fonts.googleapis.com/css2?family=Roboto"]').count();
+      expect(hasGoogleFontLink).toBeGreaterThan(0);
+    } finally {
+      await setUserTier(testUsers.pro.username, "pro");
+    }
+  });
 
-    //* Cleanup — restore Pro tier
+  test("downgraded user is redirected away from the edit studio", async ({ proUser: page }) => {
+    //* Arrange — Pro user with a saved custom theme, then downgraded to free
+    await resetCustomThemes(testUsers.pro.username);
     await setUserTier(testUsers.pro.username, "pro");
+    const themeId = await insertCustomTheme(testUsers.pro.username);
+
+    try {
+      await setUserTier(testUsers.pro.username, "free");
+
+      //* Act
+      await page.goto(`/dashboard/theme/studio/${themeId}`);
+      await page.waitForURL("**/dashboard/theme");
+
+      //* Assert
+      await expect(page).toHaveURL(/\/dashboard\/theme$/);
+    } finally {
+      await setUserTier(testUsers.pro.username, "pro");
+    }
   });
 });
 
