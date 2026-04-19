@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { generateRandomSlug } from "@/lib/utils/slug-alphabet";
 import { ArrowDown } from "lucide-react";
 import * as React from "react";
 import {
@@ -8,25 +9,35 @@ import {
   LONG_URL,
   PAUSE_LONG_MS,
   PAUSE_SHORT_MS,
-  SHORT_URL,
+  SHORT_URL_PREFIX,
+  SHORT_URL_SLUG_LENGTH,
   TYPE_SPEED_MS,
   type Phase,
 } from "./constants";
 
 /**
  * Typewriter URL transformation. Animates a long marketing URL being typed,
- * deleted, and replaced with an `anch.to/launch` short URL. Loops. For
- * `prefers-reduced-motion` we bail to a static stacked view (long → arrow →
- * short) so the narrative still reads without motion.
+ * deleted, and replaced with an `anch.to/{slug}` short URL where the slug is
+ * drawn fresh from the same CSPRNG-backed SAFE_ALPHABET the real shortener
+ * uses (see `src/lib/utils/slug-alphabet.ts`). A new slug is minted at every
+ * `deleting-long → typing-short` transition so visitors see variety across
+ * loops — and, more importantly, so the visual advertises exactly the
+ * output shape a free-tier anch.to user actually receives rather than a
+ * pretend custom slug that they couldn't set without a Pro-verified
+ * custom short domain.
+ *
+ * For `prefers-reduced-motion` we bail to a static stacked view (long →
+ * arrow → short) so the narrative still reads without motion; the slug is
+ * generated once on mount for that fallback.
  *
  * Rendered in two places: the homepage Short Links showcase section and the
- * `/short-links` hero. Same component, same states; dedicated visual so we're
- * not repeating the design token vocabulary.
+ * `/short-links` hero.
  */
 export const TypewriterUrlVisual: React.FC = () => {
   //* State
   const [text, setText] = React.useState("");
   const [phase, setPhase] = React.useState<Phase>("typing-long");
+  const [shortUrl, setShortUrl] = React.useState(() => SHORT_URL_PREFIX + generateRandomSlug(SHORT_URL_SLUG_LENGTH));
   const [reducedMotion, setReducedMotion] = React.useState(false);
 
   //* Variables
@@ -47,6 +58,15 @@ export const TypewriterUrlVisual: React.FC = () => {
       mq.removeEventListener("change", handleChange);
     };
   }, []);
+
+  // Mint a new slug when transitioning INTO the short-URL typing phase.
+  // Runs once per loop (on the empty-text entry to `typing-short`) so the
+  // typed-out value is set before any characters render.
+  React.useEffect(() => {
+    if (phase === "typing-short" && text.length === 0) {
+      setShortUrl(SHORT_URL_PREFIX + generateRandomSlug(SHORT_URL_SLUG_LENGTH));
+    }
+  }, [phase, text.length]);
 
   React.useEffect(() => {
     if (reducedMotion) {
@@ -83,9 +103,9 @@ export const TypewriterUrlVisual: React.FC = () => {
         break;
 
       case "typing-short":
-        if (text.length < SHORT_URL.length) {
+        if (text.length < shortUrl.length) {
           timeoutId = setTimeout(() => {
-            setText(SHORT_URL.slice(0, text.length + 1));
+            setText(shortUrl.slice(0, text.length + 1));
           }, TYPE_SPEED_MS);
         } else {
           setPhase("pause-short");
@@ -114,7 +134,7 @@ export const TypewriterUrlVisual: React.FC = () => {
         clearTimeout(timeoutId);
       }
     };
-  }, [text, phase, reducedMotion]);
+  }, [text, phase, shortUrl, reducedMotion]);
 
   //* Render — reduced motion fallback
 
@@ -127,8 +147,7 @@ export const TypewriterUrlVisual: React.FC = () => {
         </div>
         <ArrowDown className="m-muted-25 size-4 shrink-0" strokeWidth={1.5} />
         <div className="m-accent-05-bg m-accent-18-border w-full rounded-lg px-3 py-2">
-          { }
-          <span className="m-accent-60-color">{SHORT_URL}</span>
+          <span className="m-accent-60-color">{shortUrl}</span>
         </div>
       </div>
     );

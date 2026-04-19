@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
-import { generateRandomSlug } from "./short-slug";
+import { describe, expect, it } from "vitest";
+import { SAFE_ALPHABET, generateRandomSlug } from "./slug-alphabet";
 
-vi.mock("@/lib/db/client", () => ({ db: {} }));
-vi.mock("@/lib/db/schema/short-slug", () => ({ shortSlugsTable: {} }));
-
-const SAFE_ALPHABET = "23456789abcdefghjkmnpqrstuvwxyz";
+// Characters deliberately excluded from SAFE_ALPHABET because they're easy to
+// confuse at a glance on a phone screen. If any of these slip through, the
+// whole point of the safe-alphabet design — "can a user read this short URL
+// off a sticker and type it into a browser?" — falls apart.
 const AMBIGUOUS_CHARS = ["0", "O", "1", "l", "I"];
 
 describe("generateRandomSlug", () => {
@@ -59,8 +59,21 @@ describe("generateRandomSlug", () => {
       slugs.add(generateRandomSlug(6));
     }
 
-    //* Assert
-    // With 30^6 possible combinations, 50 slugs should all be unique
+    //* Assert — with 31^6 possible combinations, 50 slugs should all be unique
     expect(slugs.size).toBe(50);
+  });
+});
+
+describe("SAFE_ALPHABET", () => {
+  it("excludes every ambiguous character", () => {
+    //* Act
+    const alphabet = SAFE_ALPHABET;
+
+    //* Assert — regression guard. The marketing typewriter and the production
+    //  slug generator both read from this constant, so a typo that slipped an
+    //  "0" or "l" back in would fail both places at once.
+    for (const char of AMBIGUOUS_CHARS) {
+      expect(alphabet).not.toContain(char);
+    }
   });
 });
